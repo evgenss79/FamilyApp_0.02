@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+
 import '../models/family_member.dart';
 import '../providers/family_data.dart';
 
@@ -13,8 +14,8 @@ class AddMemberScreen extends StatefulWidget {
 
 class _AddMemberScreenState extends State<AddMemberScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _relationshipController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _relationshipController = TextEditingController();
   DateTime? _birthday;
 
   @override
@@ -74,13 +75,14 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                       relationship: _relationshipController.text,
                       birthday: _birthday,
                     );
-                    Provider.of<FamilyData>(context, listen: false)
+                    Provider.of<FamilyData>(contex , listen: false)
                         .addMember(newMember);
                     Navigator.pop(context);
-         
-               },
+                  }
+                },
                 child: const Text('Save'),
               ),
+                    }
             ],
           ),
         ),
