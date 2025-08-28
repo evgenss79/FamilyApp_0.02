@@ -15,7 +15,7 @@ class Task {
   final DateTime? dueDate;
 
   /// Identifier of the member assigned to the task, if any.
-  final String? assignedMemberId;
+ String? assignedMemberId;
 
   Task({
     String? id,
