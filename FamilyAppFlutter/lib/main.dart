@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import 'models/family_member.dart';
-import 'models/task.dart';
-import 'models/event.dart';
+import 'providers/family_data.dart';
 import 'screens/members_screen.dart';
 import 'screens/tasks_screen.dart';
 import 'screens/events_screen.dart';
 
-/// Entry point for the cross‑platform FamilyApp built with Flutter.
 void main() {
-  runApp(const FamilyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => FamilyData(),
+      child: const FamilyApp(),
+    ),
+  );
 }
 
 /// Root widget wrapping the entire application.
@@ -38,27 +41,28 @@ class HomeTabs extends StatefulWidget {
 }
 
 class _HomeTabsState extends State<HomeTabs> {
-  int _currentIndex = 0;
+  int _selectedIndex = 0;
 
-  // List of tab widgets displayed in the bottom navigation bar.
-  final List<Widget> _tabs = const [
+  static final List<Widget> _screens = <Widget>[
     MembersScreen(),
     TasksScreen(),
     EventsScreen(),
   ];
 
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _tabs[_currentIndex],
+      body: _screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() => _currentIndex = index);
-        },
-        items: const [
+        items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.group),
+            icon: Icon(Icons.people),
             label: 'Members',
           ),
           BottomNavigationBarItem(
@@ -70,6 +74,8 @@ class _HomeTabsState extends State<HomeTabs> {
             label: 'Events',
           ),
         ],
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
       ),
     );
   }
