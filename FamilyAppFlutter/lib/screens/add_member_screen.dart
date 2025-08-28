@@ -74,10 +74,10 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                       relationship: _relationshipController.text,
                       birthday: _birthday,
                     );
-                    Provider.of<FamilyData>(contex, listen: false)
+                    Provider.of<FamilyData>(context, listen: false)
                         .addMember(newMember);
                     Navigator.pop(context);
-                  }
+          }t
                 },
                 child: const Text('Save'),
               ),
