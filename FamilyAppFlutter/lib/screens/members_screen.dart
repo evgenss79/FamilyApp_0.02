@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import '../models/family_member.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/family_data.dart';
+import '../screens/add_member_screen.dart';
 
 /// Screen displaying a list of family members.
 class MembersScreen extends StatelessWidget {
@@ -7,32 +10,40 @@ class MembersScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Placeholder list of members. Later this will come from a data store or backend.
-    final List<FamilyMember> members = [];
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Members'),
-      ),
-      body: members.isEmpty
-          ? const Center(child: Text('No members added yet.'))
-          : ListView.builder(
-              itemCount: members.length,
-              itemBuilder: (context, index) {
-                final member = members[index];
-                return ListTile(
-                  leading: const CircleAvatar(child: Icon(Icons.person)),
-                  title: Text(member.name),
-                  subtitle: Text(member.relationship),
-                );
-              },
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: navigate to add member screen / show dialog.
-        },
-        child: const Icon(Icons.add),
-      ),
+    return Consumer<FamilyData>(
+      builder: (context, data, _) {
+        final members = data.members;
+        return Scaffold(
+          appBar: AppBar(title: const Text('Members')),
+          body: members.isEmpty
+              ? const Center(child: Text('No members added yet.'))
+              : ListView.builder(
+                  itemCount: members.length,
+                  itemBuilder: (context, index) {
+                    final member = members[index];
+                    return ListTile(
+                      leading: const CircleAvatar(child: Icon(Icons.person)),
+                      title: Text(member.name),
+                      subtitle: Text(member.relationship),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () {
+                          data.removeMember(member);
+                        },
+                      ),
+                    );
+                  },
+                ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const AddMemberScreen()),
+              );
+            },
+            child: const Icon(Icons.add),
+          ),
+        );
+      },
     );
   }
 }
