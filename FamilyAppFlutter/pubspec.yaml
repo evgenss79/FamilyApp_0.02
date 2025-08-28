@@ -1,0 +1,24 @@
+name: family_app_flutter
+description: A cross‑platform family management app built with Flutter.
+version: 0.0.1
+
+# Specify the Flutter SDK version and Dart SDK constraints.
+environment:
+  sdk: ">=2.17.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  # State management
+  provider: ^6.0.0
+  # Generate unique identifiers
+  uuid: ^3.0.6
+  # Placeholders for messaging, storage and other services; to be added later.
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
