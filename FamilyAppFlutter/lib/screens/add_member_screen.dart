@@ -77,8 +77,8 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                     Provider.of<FamilyData>(context, listen: false)
                         .addMember(newMember);
                     Navigator.pop(context);
-          }t
-                },
+         
+               },
                 child: const Text('Save'),
               ),
             ],
