@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../models/family_member.dart';
 import '../providers/family_data.dart';
 
+/// Экран добавления нового члена семьи.
 class AddMemberScreen extends StatefulWidget {
   const AddMemberScreen({super.key});
 
@@ -14,9 +15,44 @@ class AddMemberScreen extends StatefulWidget {
 
 class _AddMemberScreenState extends State<AddMemberScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _relationshipController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _relationshipController = TextEditingController();
   DateTime? _birthday;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _relationshipController.dispose();
+    super.dispose();
+  }
+
+  void _pickBirthday() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: DateTime(1900),
+      lastDate: DateTime(now.year + 10),
+    );
+    if (picked != null) {
+      setState(() => _birthday = picked);
+    }
+  }
+
+  void _save() {
+    if (_formKey.currentState?.validate() ?? false) {
+      final newMember = FamilyMember(
+        id: const Uuid().v4(),
+        name: _nameController.text.trim(),
+        relationship: _relationshipController.text.trim(),
+        birthday: _birthday,
+      );
+      // Вызов провайдера для добавления нового участника.
+      Provider.of<FamilyData>(context, listen: false).addMember(newMember);
+      // Закрываем экран после сохранения.
+      Navigator.of(context).pop();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,63 +62,42 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: Column(
+          child: ListView(
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
+                decoration: const InputDecoration(
+                  labelText: 'Name',
+                ),
                 validator: (value) =>
-                    value == null || value.isEmpty ? 'Please enter a name' : null,
+                    (value == null || value.trim().isEmpty) ? 'Enter a name' : null,
               ),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: _relationshipController,
-                decoration: const InputDecoration(labelText: 'Relationship'),
+                decoration: const InputDecoration(
+                  labelText: 'Relationship',
+                ),
+                validator: (value) => (value == null || value.trim().isEmpty)
+                    ? 'Enter a relationship'
+                    : null,
               ),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      _birthday == null
-                          ? 'No birthday selected'
-                          : 'Birthday: ${_birthday!.toLocal().toString().split(' ')[0]}',
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final date = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: DateTime(1900),
-                        lastDate: DateTime(2100),
-                      );
-                      if (date != null) {
-                        setState(() {
-                          _birthday = date;
-                        });
-                      }
-                    },
-                    child: const Text('Select Birthday'),
-                  ),
-                ],
+              const SizedBox(height: 12),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(_birthday == null
+                    ? 'No birthday selected'
+                    : 'Birthday: ${_birthday!.toLocal().toString().split(' ')[0]}'),
+                trailing: IconButton(
+                  icon: const Icon(Icons.calendar_today),
+                  onPressed: _pickBirthday,
+                ),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    final newMember = FamilyMember(
-                      id: const Uuid().v4(),
-                      name: _nameController.text,
-                      relationship: _relationshipController.text,
-                      birthday: _birthday,
-                    );
-                    Provider.of<FamilyData>(contex , listen: false)
-                        .addMember(newMember);
-                    Navigator.pop(context);
-                  }
-                },
+                onPressed: _save,
                 child: const Text('Save'),
               ),
-                    }
             ],
           ),
         ),
