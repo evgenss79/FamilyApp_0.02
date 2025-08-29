@@ -71,6 +71,15 @@ class MembersScreenV001 extends StatelessWidget {
                       }
                     }
                   }
+                  // Calculate earned points by summing points from completed tasks assigned to this member.
+                  final int points = data.tasks
+                      .where((task) =>
+                          task.assignedMemberId == member.id &&
+                          task.status.toLowerCase() == 'completed')
+                      .fold<int>(0, (sum, task) => sum + task.points);
+                  if (points > 0) {
+                    details.add('Points: $points');
+                  }
                   return ListTile(
                     leading: CircleAvatar(
                       child: Text(member.name.isNotEmpty ? member.name[0] : '?'),
