@@ -15,7 +15,9 @@ class EventsScreenV001 extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<FamilyDataV001>(
       builder: (context, data, child) {
+        // Cast events to a typed list so that the date property is available.
         final events = List<Event>.from(data.events);
+        // Sort events by their scheduled date/time.
         events.sort((a, b) => a.date.compareTo(b.date));
         return Scaffold(
           appBar: AppBar(
@@ -29,7 +31,8 @@ class EventsScreenV001 extends StatelessWidget {
                     final event = events[index];
                     final date = event.date;
                     final dateString = date != null
-                        ? '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}'
+                        ? '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year} '
+                          '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}'
                         : '';
                     return ListTile(
                       title: Text(event.title),
