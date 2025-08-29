@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/family_data.dart';
+import '../models/event.dart';
 import 'add_event_screen.dart';
 
 /// Displays a list of family events sorted by date.  Allows users to add
