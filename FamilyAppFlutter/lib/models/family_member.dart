@@ -19,5 +19,20 @@ class FamilyMember {
     required this.name,
     required this.relationship,
     this.birthday,
+  
+  
   }) : id = id ?? const Uuid().v4();
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'name': name,
+    'relationship': relationship,
+    'birthday': birthday?.toIso8601String(),
+  };
+
+  static FamilyMember fromMap(Map<String, dynamic> map) => FamilyMember(
+    id: map['id'] as String?,
+    name: map['name'] as String,
+    relationship: map['relationship'] as String,
+    birthday: map['birthday'] != null ? DateTime.parse(map['birthday'] as String) : null,
+  );
 }
