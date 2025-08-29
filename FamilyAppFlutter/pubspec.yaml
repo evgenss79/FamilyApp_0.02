@@ -14,8 +14,11 @@ dependencies:
   provider: ^6.0.0
   # Generate unique identifiers
   uuid: ^3.0.6
+  # Plac
+    hive: ^2.2.3
+  
+    hive_flutter: ^1.1.0
   # Placeholders for messaging, storage and other services; to be added later.
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
