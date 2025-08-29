@@ -1,6 +1,12 @@
 import 'package:uuid/uuid.dart';
 
 /// Model representing a task that can be assigned to one or more family members.
+///
+/// This version extends the original `Task` model by including a
+/// status string (e.g. 'pending', 'inProgress', 'done'), a points
+/// counter and an optional reminder date. These fields allow tasks
+/// to track completion state, reward points for completing chores
+/// and set reminders independent of the due date.
 class Task {
   /// Unique identifier for the task.
   final String id;
@@ -15,7 +21,16 @@ class Task {
   final DateTime? dueDate;
 
   /// Identifier of the member assigned to the task, if any.
-  String? assignedMemberId;
+  final String? assignedMemberId;
+
+  /// Status of the task ('pending' by default).
+  String status;
+
+  /// Points awarded upon completion of the task.
+  int points;
+
+  /// Optional reminder date independent of the due date.
+  DateTime? reminderDate;
 
   Task({
     String? id,
@@ -23,9 +38,12 @@ class Task {
     this.description,
     this.dueDate,
     this.assignedMemberId,
+    this.status = 'pending',
+    this.points = 0,
+    this.reminderDate,
   }) : id = id ?? const Uuid().v4();
 
-  /// Convert object to a map for persistence.
+  /// Convert this task to a map for persistence.
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -33,17 +51,27 @@ class Task {
       'description': description,
       'dueDate': dueDate?.toIso8601String(),
       'assignedMemberId': assignedMemberId,
+      'status': status,
+      'points': points,
+      'reminderDate': reminderDate?.toIso8601String(),
     };
   }
 
-  /// Construct a Task from a map.
+  /// Construct a task from a persisted map.
   static Task fromMap(Map<String, dynamic> map) {
     return Task(
-      id: map['id'] as String?,
-      title: map['title'] ?? '',
-      description: map['description'] as String?,
-      dueDate: map['dueDate'] != null ? DateTime.parse(map['dueDate']) : null,
-      assignedMemberId: map['assignedMemberId'] as String?,
+      id: map['id'],
+      title: map['title'],
+      description: map['description'],
+      dueDate: map['dueDate'] != null
+          ? DateTime.parse(map['dueDate'] as String)
+          : null,
+      assignedMemberId: map['assignedMemberId'],
+      status: map['status'] ?? 'pending',
+      points: map['points'] ?? 0,
+      reminderDate: map['reminderDate'] != null
+          ? DateTime.parse(map['reminderDate'] as String)
+          : null,
     );
   }
 }
