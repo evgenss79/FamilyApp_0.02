@@ -5,7 +5,13 @@ import '../providers/family_data_v001.dart';
 import '../screens/add_task_screen.dart';
 import '../models/family_member_v001.dart';
 
-/// Screen displaying a list of tasks for version 0.01.
+/// Screen displaying a list of tasks for version 0.01.
+///
+/// Each task card shows the title, optional description, due date,
+/// assigned member, status, points and an optional reminder. Users can
+/// delete tasks via the trailing delete icon or add new tasks using
+/// the floating action button. The list automatically updates via
+/// the `FamilyDataV001` provider.
 class TasksScreenV001 extends StatelessWidget {
   const TasksScreenV001({super.key});
 
@@ -23,7 +29,7 @@ class TasksScreenV001 extends StatelessWidget {
                   itemCount: tasks.length,
                   itemBuilder: (context, index) {
                     final task = tasks[index];
-                    FamilyMemberV001? assignedMember;
+                    FamilyMember? assignedMember;
                     for (final member in members) {
                       if (member.id == task.assignedMemberId) {
                         assignedMember = member;
@@ -31,17 +37,21 @@ class TasksScreenV001 extends StatelessWidget {
                       }
                     }
                     return ListTile(
-                      leading: const Icon(Icons.task_alt),
                       title: Text(task.title),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (task.description != null && task.description!.isNotEmpty)
+                          if (task.description?.isNotEmpty ?? false)
                             Text(task.description!),
                           if (task.dueDate != null)
-                            Text('Due: ${task.dueDate!.toLocal().toString().split(' ')[0]}'),
+                            Text('Due: ${task.dueDate}'),
                           if (assignedMember != null)
-                            Text('Assigned to: ${assignedMember.name}'),
+                            Text('Assigned: ${assignedMember.name}'),
+                          // Show status and points for the task
+                          Text('Status: ${task.status}'),
+                          Text('Points: ${task.points}'),
+                          if (task.reminderDate != null)
+                            Text('Reminder: ${task.reminderDate}'),
                         ],
                       ),
                       trailing: IconButton(
@@ -56,7 +66,9 @@ class TasksScreenV001 extends StatelessWidget {
           floatingActionButton: FloatingActionButton(
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const AddTaskScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const AddTaskScreen(),
+                ),
               );
             },
             child: const Icon(Icons.add),
