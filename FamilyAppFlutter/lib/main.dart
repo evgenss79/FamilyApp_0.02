@@ -7,6 +7,7 @@ import 'screens/members_screen.dart';
 import 'screens/tasks_screen.dart';
 import 'screens/events_screen.dart';
 import 'screens/schedule_screen.dart';
+import 'screens/calendar_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +29,9 @@ class FamilyAppV001 extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Family App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
       home: const HomeTabsV001(),
     );
   }
@@ -43,13 +47,6 @@ class HomeTabsV001 extends StatefulWidget {
 class _HomeTabsV001State extends State<HomeTabsV001> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _screens = <Widget>[
-    MembersScreenV001(),
-    TasksScreenV001(),
-    EventsScreenV001(),
-    ScheduleScreenV001(),
-  ];
-
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -58,8 +55,15 @@ class _HomeTabsV001State extends State<HomeTabsV001> {
 
   @override
   Widget build(BuildContext context) {
+    const screens = [
+      MembersScreenV001(),
+      TasksScreenV001(),
+      EventsScreenV001(),
+      ScheduleScreenV001(),
+      CalendarScreenV001(),
+    ];
     return Scaffold(
-      body: _screens[_selectedIndex],
+      body: screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
@@ -69,7 +73,7 @@ class _HomeTabsV001State extends State<HomeTabsV001> {
             label: 'Members',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.check),
+            icon: Icon(Icons.checklist),
             label: 'Tasks',
           ),
           BottomNavigationBarItem(
@@ -79,6 +83,10 @@ class _HomeTabsV001State extends State<HomeTabsV001> {
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today),
             label: 'Schedule',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_month),
+            label: 'Calendar',
           ),
         ],
       ),
