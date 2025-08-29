@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/family_data_v001.dart';
+import '../providers/family_data.dart';
 import '../screens/add_task_screen.dart';
-import '../models/family_member_v001.dart';
+import '../models/family_member.dart';
 
-/// Screen displaying a list of tasks for version 0.01.
+/// Screen displaying a list of tasks for version 0.01.
 ///
 /// Each task card shows the title, optional description, due date,
 /// assigned member, status, points and an optional reminder. Users can
@@ -41,23 +41,21 @@ class TasksScreenV001 extends StatelessWidget {
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (task.description?.isNotEmpty ?? false)
+                          if (task.description != null && task.description!.isNotEmpty)
                             Text(task.description!),
                           if (task.dueDate != null)
-                            Text('Due: ${task.dueDate}'),
-                          if (assignedMember != null)
-                            Text('Assigned: ${assignedMember.name}'),
-                          // Show status and points for the task
+                            Text('Due: ${task.dueDate!.toLocal().toString().split(' ')[0]}'),
+                          if (assignedMember != null) Text('Assigned to: ${assignedMember.name}'),
                           Text('Status: ${task.status}'),
                           Text('Points: ${task.points}'),
                           if (task.reminderDate != null)
-                            Text('Reminder: ${task.reminderDate}'),
+                            Text('Reminder: ${task.reminderDate!.toLocal().toString().split(' ')[0]}'),
                         ],
                       ),
                       trailing: IconButton(
                         icon: const Icon(Icons.delete),
                         onPressed: () {
-                          data.removeTask(task);
+                          data.removeTask(task.id);
                         },
                       ),
                     );
@@ -66,9 +64,7 @@ class TasksScreenV001 extends StatelessWidget {
           floatingActionButton: FloatingActionButton(
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const AddTaskScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const AddTaskScreen()),
               );
             },
             child: const Icon(Icons.add),
