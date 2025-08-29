@@ -5,8 +5,8 @@ import '../models/task.dart';
 import '../models/event.dart';
 
 /// A service responsible for initializing Hive and loading/saving
-/// persistent data for version 0.01 of the FamilyApp. All lists are stored in boxes
-/// keyed by 'data' and serialized via the models' `toMap`/`fromMap` methods.
+/// persistent data for version 0.01 of the FamilyApp. All lists are stored
+/// in boxes keyed by 'data' and serialized via the models' `toMap`/`fromMap` methods.
 class StorageServiceV001 {
   /// Initialize Hive and open the boxes used by this version of the application.
   static Future<void> init() async {
@@ -20,8 +20,7 @@ class StorageServiceV001 {
     final box = Hive.box('familyMembersV001');
     final data = box.get('data', defaultValue: []) as List;
     return data
-        .map((e) =>
-            FamilyMember.fromMap(Map<String, dynamic>.from(e as Map)))
+        .map((e) => FamilyMember.fromMap(Map<String, dynamic>.from(e as Map)))
         .toList();
   }
 
