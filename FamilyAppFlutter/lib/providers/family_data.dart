@@ -44,6 +44,18 @@ class FamilyDataV001 extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Updates an existing family member.  The [updatedMember] must have the
+  /// same identifier as an existing member.  If found, the member is
+  /// replaced and the updated list is persisted.  Listeners are notified.
+  void updateMember(FamilyMember updatedMember) {
+    final index = _members.indexWhere((m) => m.id == updatedMember.id);
+    if (index != -1) {
+      _members[index] = updatedMember;
+      StorageServiceV001.saveMembers(_members);
+      notifyListeners();
+    }
+  }
+
   /// Removes [member] from the list.  Any tasks assigned to the member
   /// will have their [Task.assignedMemberId] cleared.  Updates are
   /// persisted and listeners are notified.
