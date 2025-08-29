@@ -33,14 +33,43 @@ class MembersScreenV001 extends StatelessWidget {
                   if (member.email != null && member.email!.isNotEmpty) {
                     details.add('Email: ${member.email}');
                   }
-                  if (member.socialMedia != null && member.socialMedia!.isNotEmpty) {
+                  // Include structured social network entries if available
+                  if (member.socialNetworks != null && member.socialNetworks!.isNotEmpty) {
+                    for (final entry in member.socialNetworks!) {
+                      final type = entry['type'] ?? '';
+                      final value = entry['value'] ?? '';
+                      if (value.isNotEmpty) {
+                        details.add('$type: $value');
+                      }
+                    }
+                  } else if (member.socialMedia != null && member.socialMedia!.isNotEmpty) {
+                    // Fallback to legacy socialMedia string
                     details.add('Social: ${member.socialMedia}');
                   }
                   if (member.hobbies != null && member.hobbies!.isNotEmpty) {
                     details.add('Hobbies: ${member.hobbies}');
                   }
-                  if (member.documents != null && member.documents!.isNotEmpty) {
+                  // Include structured documents if available
+                  if (member.documentsList != null && member.documentsList!.isNotEmpty) {
+                    for (final entry in member.documentsList!) {
+                      final type = entry['type'] ?? '';
+                      final value = entry['value'] ?? '';
+                      if (value.isNotEmpty) {
+                        details.add('$type: $value');
+                      }
+                    }
+                  } else if (member.documents != null && member.documents!.isNotEmpty) {
                     details.add('Documents: ${member.documents}');
+                  }
+                  // Include messenger contacts
+                  if (member.messengers != null && member.messengers!.isNotEmpty) {
+                    for (final entry in member.messengers!) {
+                      final type = entry['type'] ?? '';
+                      final value = entry['value'] ?? '';
+                      if (value.isNotEmpty) {
+                        details.add('$type: $value');
+                      }
+                    }
                   }
                   return ListTile(
                     leading: CircleAvatar(
@@ -48,21 +77,40 @@ class MembersScreenV001 extends StatelessWidget {
                     ),
                     title: Text(member.name),
                     subtitle: details.isNotEmpty ? Text(details.join('\n')) : null,
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () => data.removeMember(member),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => AddMemberScreenV001(member: member),
+                              ),
+                            );
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () => data.removeMember(member),
+                        ),
+                      ],
                     ),
                   );
                 },
               ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
+            // Push the add-member form.  Do NOT use a `const` constructor here
+            // because AddMemberScreenV001 contains mutable state (controllers),
+            // which would produce a "not a constant expression" build error.
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (context) => AddMemberScreenV001(),
               ),
             );
           },
+          // The add icon itself can remain constant.
           child: const Icon(Icons.add),
         ),
       );

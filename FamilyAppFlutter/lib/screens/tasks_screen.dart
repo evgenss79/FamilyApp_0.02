@@ -43,9 +43,13 @@ class TasksScreenV001 extends StatelessWidget {
                               Text(task.description!),
                             if (task.dueDate != null)
                               Text(
-                                  'Due: '
-                                  '${task.dueDate!.year}-${task.dueDate!.month.toString().padLeft(2, '0')}'
-                                  '-${task.dueDate!.day.toString().padLeft(2, '0')}'),
+                                'Due: '
+                                '${task.dueDate!.day.toString().padLeft(2, '0')}.'
+                                '${task.dueDate!.month.toString().padLeft(2, '0')}.'
+                                '${task.dueDate!.year} '
+                                '${task.dueDate!.hour.toString().padLeft(2, '0')}:'
+                                '${task.dueDate!.minute.toString().padLeft(2, '0')}',
+                              ),
                             Text('Status: ${task.status}'),
                             Text('Points: ${task.points}'),
                             if (task.reminderDate != null)

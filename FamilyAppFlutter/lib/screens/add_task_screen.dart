@@ -25,7 +25,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   final _pointsController = TextEditingController();
 
   bool _hasDueDate = false;
-  DateTime? _dueDate;
+  DateTime? _dueDateTime;
   DateTime? _reminderDate;
   String? _assignedMemberId;
   String _status = 'Pending';
@@ -44,19 +44,31 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   /// Opens a date picker to select a due date.  If the user
   /// cancels the dialog no changes are made.  Otherwise the
   /// chosen date is stored in [_dueDate].
-  Future<void> _pickDueDate() async {
+  /// Opens a date and time picker to select a full due date/time.  The
+  /// resulting value is stored in [_dueDateTime].
+  Future<void> _pickDueDateTime() async {
     final now = DateTime.now();
-    final picked = await showDatePicker(
+    final pickedDate = await showDatePicker(
       context: context,
-      initialDate: now,
+      initialDate: _dueDateTime ?? now,
       firstDate: now,
       lastDate: DateTime(now.year + 10),
     );
-    if (picked != null) {
-      setState(() {
-        _dueDate = picked;
-      });
-    }
+    if (pickedDate == null) return;
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_dueDateTime ?? now),
+    );
+    if (pickedTime == null) return;
+    setState(() {
+      _dueDateTime = DateTime(
+        pickedDate.year,
+        pickedDate.month,
+        pickedDate.day,
+        pickedTime.hour,
+        pickedTime.minute,
+      );
+    });
   }
 
   /// Opens a date picker to select a reminder date.  The
@@ -95,7 +107,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       description: _descriptionController.text.trim().isEmpty
           ? null
           : _descriptionController.text.trim(),
-      dueDate: _hasDueDate ? _dueDate : null,
+      dueDate: _hasDueDate ? _dueDateTime : null,
       assignedMemberId: _assignedMemberId,
       status: _status,
       points: points,
@@ -165,25 +177,32 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               const SizedBox(height: 8),
               // Due date toggle and picker
               SwitchListTile(
-                title: const Text('Has due date'),
+                title: const Text('Has due date/time'),
                 value: _hasDueDate,
                 onChanged: (value) {
                   setState(() {
                     _hasDueDate = value;
                     if (!value) {
-                      _dueDate = null;
+                      _dueDateTime = null;
                     }
                   });
                   if (value) {
-                    _pickDueDate();
+                    _pickDueDateTime();
                   }
                 },
               ),
-              if (_hasDueDate && _dueDate != null)
+              if (_hasDueDate && _dueDateTime != null)
                 ListTile(
-                  title: Text('Due: ${_dueDate!.toLocal().toString().split(' ')[0]}'),
+                  title: Text(
+                    'Due: '
+                    '${_dueDateTime!.day.toString().padLeft(2, '0')}.'
+                    '${_dueDateTime!.month.toString().padLeft(2, '0')}.'
+                    '${_dueDateTime!.year} '
+                    '${_dueDateTime!.hour.toString().padLeft(2, '0')}:'
+                    '${_dueDateTime!.minute.toString().padLeft(2, '0')}',
+                  ),
                   trailing: const Icon(Icons.calendar_today),
-                  onTap: _pickDueDate,
+                  onTap: _pickDueDateTime,
                 ),
               const SizedBox(height: 8),
               // Assigned member selector

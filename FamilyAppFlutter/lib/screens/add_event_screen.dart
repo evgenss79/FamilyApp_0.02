@@ -19,13 +19,68 @@ class _AddEventScreenState extends State<AddEventScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  DateTime? _eventDate;
+  DateTime? _startDateTime;
+  DateTime? _endDateTime;
+
+  Future<void> _pickStartDateTime() async {
+    final now = DateTime.now();
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _startDateTime ?? now,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (pickedDate == null) return;
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_startDateTime ?? now),
+    );
+    if (pickedTime == null) return;
+    setState(() {
+      _startDateTime = DateTime(
+        pickedDate.year,
+        pickedDate.month,
+        pickedDate.day,
+        pickedTime.hour,
+        pickedTime.minute,
+      );
+      // If end is null or before start, set end equal to start by default.
+      if (_endDateTime == null || _endDateTime!.isBefore(_startDateTime!)) {
+        _endDateTime = _startDateTime;
+      }
+    });
+  }
+
+  Future<void> _pickEndDateTime() async {
+    final now = DateTime.now();
+    final initial = _endDateTime ?? _startDateTime ?? now;
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: _startDateTime ?? DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (pickedDate == null) return;
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(initial),
+    );
+    if (pickedTime == null) return;
+    final end = DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      pickedTime.hour,
+      pickedTime.minute,
+    );
+    setState(() {
+      _endDateTime = end;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Use FamilyDataV001 provider since the project uses this version of the provider.
     final familyData = Provider.of<FamilyDataV001>(context, listen: false);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Event'),
@@ -50,54 +105,55 @@ class _AddEventScreenState extends State<AddEventScreen> {
                 controller: _descriptionController,
                 decoration: const InputDecoration(labelText: 'Description'),
               ),
+              const SizedBox(height: 8),
+              // Start date/time picker
               ListTile(
-                title: const Text('Event Date'),
-                subtitle: Text(_eventDate != null
-                    ? '${_eventDate!.toLocal()}'
-                    : 'Select date and time'),
-                onTap: () async {
-                  // Pick a date for the event.
-                  final selectedDate = await showDatePicker(
-                    context: context,
-                    initialDate: _eventDate ?? DateTime.now(),
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2100),
-                  );
-                  if (selectedDate != null) {
-                    // Then pick a time on that date.
-                    final selectedTime = await showTimePicker(
-                      context: context,
-                      initialTime: TimeOfDay.fromDateTime(_eventDate ?? DateTime.now()),
-                    );
-                    if (selectedTime != null) {
-                      setState(() {
-                        _eventDate = DateTime(
-                          selectedDate.year,
-                          selectedDate.month,
-                          selectedDate.day,
-                          selectedTime.hour,
-                          selectedTime.minute,
-                        );
-                      });
-                    }
-                  }
-                },
+                title: const Text('Start'),
+                subtitle: Text(_startDateTime != null
+                    ? '${_startDateTime!.day.toString().padLeft(2, '0')}.'
+                        '${_startDateTime!.month.toString().padLeft(2, '0')}.'
+                        '${_startDateTime!.year} '
+                        '${_startDateTime!.hour.toString().padLeft(2, '0')}:'
+                        '${_startDateTime!.minute.toString().padLeft(2, '0')}'
+                    : 'Select start date and time'),
+                onTap: _pickStartDateTime,
+              ),
+              // End date/time picker
+              ListTile(
+                title: const Text('End'),
+                subtitle: Text(_endDateTime != null
+                    ? '${_endDateTime!.day.toString().padLeft(2, '0')}.'
+                        '${_endDateTime!.month.toString().padLeft(2, '0')}.'
+                        '${_endDateTime!.year} '
+                        '${_endDateTime!.hour.toString().padLeft(2, '0')}:'
+                        '${_endDateTime!.minute.toString().padLeft(2, '0')}'
+                    : 'Select end date and time'),
+                onTap: _pickEndDateTime,
               ),
               const SizedBox(height: 16.0),
               ElevatedButton(
                 onPressed: () {
-                  // Only save if the form is valid and a date/time has been selected.
-                  if (_formKey.currentState!.validate() && _eventDate != null) {
-                    final uuid = Uuid();
-                    final newEvent = Event(
-                      id: uuid.v4(),
-                      title: _titleController.text,
-                      description: _descriptionController.text,
-                      date: _eventDate!,
+                  if (!_formKey.currentState!.validate()) return;
+                  if (_startDateTime == null || _endDateTime == null) return;
+                  if (_endDateTime!.isBefore(_startDateTime!)) {
+                    // Show error if end is before start.
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('End time must be after start time.')),
                     );
-                    familyData.addEvent(newEvent);
-                    Navigator.of(context).pop();
+                    return;
                   }
+                  final uuid = Uuid();
+                  final newEvent = Event(
+                    id: uuid.v4(),
+                    title: _titleController.text,
+                    description: _descriptionController.text.isNotEmpty
+                        ? _descriptionController.text
+                        : null,
+                    startDateTime: _startDateTime!,
+                    endDateTime: _endDateTime!,
+                  );
+                  familyData.addEvent(newEvent);
+                  Navigator.of(context).pop();
                 },
                 child: const Text('Save'),
               ),

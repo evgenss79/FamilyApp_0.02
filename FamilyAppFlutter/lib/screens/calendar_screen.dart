@@ -31,10 +31,8 @@ class _CalendarScreenV001State extends State<CalendarScreenV001> {
       }
     }
     for (final event in data.events) {
-      if (event.date != null) {
-        final date = DateTime(event.date!.year, event.date!.month, event.date!.day);
-        events[date] = (events[date] ?? [])..add(event);
-      }
+      final date = DateTime(event.startDateTime.year, event.startDateTime.month, event.startDateTime.day);
+      events[date] = (events[date] ?? [])..add(event);
     }
     return events;
   }
@@ -83,11 +81,30 @@ class _CalendarScreenV001State extends State<CalendarScreenV001> {
                     subtitle: Text(item.description ?? ''),
                   );
                 } else if (item is Event) {
-                  return ListTile(
-                    leading: const Icon(Icons.event),
-                    title: Text(item.title),
-                    subtitle: Text(item.description ?? ''),
-                  );
+                  // Compose a subtitle with optional description and the time range.
+                  final start = item.startDateTime;
+                    final end = item.endDateTime;
+                    final startString = '${start.day.toString().padLeft(2, '0')}.'
+                        '${start.month.toString().padLeft(2, '0')}.'
+                        '${start.year} '
+                        '${start.hour.toString().padLeft(2, '0')}:'
+                        '${start.minute.toString().padLeft(2, '0')}';
+                    final endString = '${end.day.toString().padLeft(2, '0')}.'
+                        '${end.month.toString().padLeft(2, '0')}.'
+                        '${end.year} '
+                        '${end.hour.toString().padLeft(2, '0')}:'
+                        '${end.minute.toString().padLeft(2, '0')}';
+                    final rangeString = start.isAtSameMomentAs(end) ? startString : '$startString - $endString';
+                    final parts = <String>[];
+                    if (item.description != null && item.description!.isNotEmpty) {
+                      parts.add(item.description!);
+                    }
+                    parts.add(rangeString);
+                    return ListTile(
+                      leading: const Icon(Icons.event),
+                      title: Text(item.title),
+                      subtitle: Text(parts.join('\n')),
+                    );
                 }
                 return const SizedBox.shrink();
               },

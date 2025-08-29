@@ -29,12 +29,29 @@ class ScheduleScreenV001 extends StatelessWidget {
             ));
           }
         }
-        // Add all events
+        // Add all events.  Use startDateTime as the primary date and
+        // include the time range in the description field.
         for (final event in data.events) {
+          final start = event.startDateTime;
+          final end = event.endDateTime;
+          final startString = '${start.day.toString().padLeft(2, '0')}.'
+              '${start.month.toString().padLeft(2, '0')}.'
+              '${start.year} '
+              '${start.hour.toString().padLeft(2, '0')}:'
+              '${start.minute.toString().padLeft(2, '0')}';
+          final endString = '${end.day.toString().padLeft(2, '0')}.'
+              '${end.month.toString().padLeft(2, '0')}.'
+              '${end.year} '
+              '${end.hour.toString().padLeft(2, '0')}:'
+              '${end.minute.toString().padLeft(2, '0')}';
+          final rangeString = start.isAtSameMomentAs(end) ? startString : '$startString - $endString';
+          final desc = event.description != null && event.description!.isNotEmpty
+              ? '${event.description!}\n$rangeString'
+              : rangeString;
           items.add(_ScheduleItem(
             title: event.title,
-            description: event.description ?? '',
-            date: event.date,
+            description: desc,
+            date: start,
             type: 'Event',
           ));
         }
@@ -50,15 +67,24 @@ class ScheduleScreenV001 extends StatelessWidget {
                 leading: Icon(
                     item.type == 'Task' ? Icons.checklist : Icons.event),
                 title: Text(item.title),
-                subtitle: item.description.isNotEmpty
-                    ? Text(
-                        '${item.description}\n${item.date.toLocal().toString().split(' ')[0]}',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      )
-                    : Text(
-                        item.date.toLocal().toString().split(' ')[0],
-                      ),
+                subtitle: () {
+                  if (item.type == 'Task') {
+                    final parts = <String>[];
+                    if (item.description.isNotEmpty) parts.add(item.description);
+                    // Format date and time for tasks
+                    final d = item.date;
+                    final dateTimeString = '${d.day.toString().padLeft(2, '0')}.'
+                        '${d.month.toString().padLeft(2, '0')}.'
+                        '${d.year} '
+                        '${d.hour.toString().padLeft(2, '0')}:'
+                        '${d.minute.toString().padLeft(2, '0')}';
+                    parts.add(dateTimeString);
+                    return Text(parts.join('\n'));
+                  } else {
+                    // For events the description already includes the time range
+                    return Text(item.description);
+                  }
+                }(),
               );
             },
           ),

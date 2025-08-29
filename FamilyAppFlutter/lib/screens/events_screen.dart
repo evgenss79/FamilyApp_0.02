@@ -21,11 +21,10 @@ class EventsScreenV001 extends StatelessWidget {
         // prevents using the `date` getter below.
         final events = List<Event>.from(data.events);
 
-        // Sort events chronologically by their scheduled date/time. Compare
-        // two event dates directly – since `Event.date` is non-nullable this
-        // comparison is safe and eliminates runtime "getter not defined"
-        // errors that would occur if the list contained `Object?` elements.
-        events.sort((a, b) => a.date.compareTo(b.date));
+        // Sort events chronologically by start date/time.  The `startDateTime`
+        // field is non-nullable so comparisons are safe.  This will order
+        // events by their starting moment.
+        events.sort((a, b) => a.startDateTime.compareTo(b.startDateTime));
         return Scaffold(
           appBar: AppBar(
             title: const Text('Events'),
@@ -36,23 +35,24 @@ class EventsScreenV001 extends StatelessWidget {
                   itemCount: events.length,
                   itemBuilder: (context, index) {
                     final event = events[index];
-                    final date = event.date;
-                    final dateString = date != null
-                        ? '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year} '
-                          '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}'
-                        : '';
-                    // Safely handle the nullable description by assigning an empty
-                    // string when it is null. This allows us to call `.isNotEmpty`
-                    // and string concatenation without null checks scattered
-                    // throughout the widget tree.  Using a local variable also
-                    // improves readability of the ListTile below.
+                    final start = event.startDateTime;
+                    final end = event.endDateTime;
+                    final startString = '${start.day.toString().padLeft(2, '0')}.${start.month.toString().padLeft(2, '0')}.${start.year} '
+                        '${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}';
+                    final endString = '${end.day.toString().padLeft(2, '0')}.${end.month.toString().padLeft(2, '0')}.${end.year} '
+                        '${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}';
+                    // Compose time range string.  If start and end are equal, show only one.
+                    final timeRange = start.isAtSameMomentAs(end)
+                        ? startString
+                        : '$startString - $endString';
                     final desc = event.description ?? '';
+                    final subtitleParts = <String>[];
+                    if (desc.isNotEmpty) subtitleParts.add(desc);
+                    subtitleParts.add(timeRange);
                     return ListTile(
                       title: Text(event.title),
-                      subtitle: Text(
-                        '${desc.isNotEmpty ? desc + '\n' : ''}$dateString',
-                      ),
-                      isThreeLine: desc.isNotEmpty,
+                      subtitle: Text(subtitleParts.join('\n')),
+                      isThreeLine: subtitleParts.length > 1,
                       trailing: IconButton(
                         icon: const Icon(Icons.delete),
                         onPressed: () {
