@@ -65,8 +65,18 @@ class _HomeTabsV001State extends State<HomeTabsV001> {
     return Scaffold(
       body: screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
+        // Use a fixed type so that all five items are always visible
+        type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
+        // Explicitly set colors to ensure the navigation bar is visible
+        // against the light app background. The selected item will be
+        // highlighted in the primary color while unselected items are
+        // rendered in grey. A white background helps distinguish the
+        // bar from the page body.
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
+        backgroundColor: Colors.white,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.people),
