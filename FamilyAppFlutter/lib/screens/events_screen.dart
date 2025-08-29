@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-iimport '../providers/family_data.dart';
+import '../providers/family_data.dart';
 import 'add_event_screen.dart';
 
 class EventsScreenV001 extends StatelessWidget {
