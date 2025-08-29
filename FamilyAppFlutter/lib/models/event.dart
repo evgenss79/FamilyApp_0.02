@@ -20,4 +20,22 @@ class Event {
     required this.date,
     this.description,
   }) : id = id ?? const Uuid().v4();
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'date': date.toIso8601String(),
+      'description': description,
+    };
+  }
+
+  static Event fromMap(Map<String, dynamic> map) {
+    return Event(
+      id: map['id'] as String?,
+      title: map['title'] ?? '',
+      date: DateTime.parse(map['date']),
+      description: map['description'] as String?,
+    );
+  }
 }
