@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import 'providers/family_data.dart';
 import 'screens/members_screen.dart';
 import 'screens/tasks_screen.dart';
 import 'screens/events_screen.dart';
+import 'services/storage_service.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await StorageService.init();
+  final familyData = FamilyData();
+  await familyData.loadFromStorage();
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => FamilyData(),
+    ChangeNotifierProvider.value(
+      value: familyData,
       child: const FamilyApp(),
     ),
   );
@@ -43,7 +47,8 @@ class HomeTabs extends StatefulWidget {
 class _HomeTabsState extends State<HomeTabs> {
   int _selectedIndex = 0;
 
-  static final List<Widget> _screens = <Widget>[
+  // List of widget options representing each tab.
+  static const List<Widget> _widgetOptions = <Widget>[
     MembersScreen(),
     TasksScreen(),
     EventsScreen(),
@@ -58,7 +63,9 @@ class _HomeTabsState extends State<HomeTabs> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_selectedIndex],
+      body: Center(
+        child: _widgetOptions.elementAt(_selectedIndex),
+      ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -66,7 +73,7 @@ class _HomeTabsState extends State<HomeTabs> {
             label: 'Members',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.checklist),
+            icon: Icon(Icons.check_box),
             label: 'Tasks',
           ),
           BottomNavigationBarItem(
@@ -75,6 +82,7 @@ class _HomeTabsState extends State<HomeTabs> {
           ),
         ],
         currentIndex: _selectedIndex,
+        selectedItemColor: Colors.blue,
         onTap: _onItemTapped,
       ),
     );
