@@ -25,12 +25,16 @@ class _CalendarScreenV001State extends State<CalendarScreenV001> {
   Map<DateTime, List<dynamic>> _buildEvents(FamilyDataV001 data) {
     final Map<DateTime, List<dynamic>> events = {};
     for (final task in data.tasks) {
-      final date = DateTime(task.dueDate.year, task.dueDate.month, task.dueDate.day);
-      events[date] = (events[date] ?? [])..add(task);
+      if (task.dueDate != null) {
+        final date = DateTime(task.dueDate!.year, task.dueDate!.month, task.dueDate!.day);
+        events[date] = (events[date] ?? [])..add(task);
+      }
     }
     for (final event in data.events) {
-      final date = DateTime(event.date.year, event.date.month, event.date.day);
-      events[date] = (events[date] ?? [])..add(event);
+      if (event.date != null) {
+        final date = DateTime(event.date!.year, event.date!.month, event.date!.day);
+        events[date] = (events[date] ?? [])..add(event);
+      }
     }
     return events;
   }
