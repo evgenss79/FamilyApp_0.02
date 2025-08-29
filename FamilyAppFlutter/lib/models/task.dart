@@ -15,7 +15,7 @@ class Task {
   final DateTime? dueDate;
 
   /// Identifier of the member assigned to the task, if any.
- String? assignedMemberId;
+  String? assignedMemberId;
 
   Task({
     String? id,
@@ -24,7 +24,8 @@ class Task {
     this.dueDate,
     this.assignedMemberId,
   }) : id = id ?? const Uuid().v4();
-}
+
+  /// Convert object to a map for persistence.
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -35,6 +36,7 @@ class Task {
     };
   }
 
+  /// Construct a Task from a map.
   static Task fromMap(Map<String, dynamic> map) {
     return Task(
       id: map['id'] as String?,
@@ -45,4 +47,3 @@ class Task {
     );
   }
 }
-
