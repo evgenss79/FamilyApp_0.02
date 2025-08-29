@@ -1,6 +1,6 @@
 import 'package:hive_flutter/hive_flutter.dart';
 
-import '../models/family_member_v001.dart';
+import '../models/family_member.dart';
 import '../models/task.dart';
 import '../models/event.dart';
 
