@@ -32,15 +32,28 @@ class TasksScreenV001 extends StatelessWidget {
                         break;
                       }
                     }
+                    // Determine if the task is overdue: the due date is in the past and the status is not completed.
+                    final bool isOverdue = task.dueDate != null &&
+                        task.dueDate!.isBefore(DateTime.now()) &&
+                        task.status.toLowerCase() != 'completed';
+                    // Apply a red text style to overdue tasks.
+                    final TextStyle? overdueStyle =
+                        isOverdue ? const TextStyle(color: Colors.red) : null;
                     return Card(
                       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                       child: ListTile(
-                        title: Text(task.title),
+                        title: Text(
+                          task.title,
+                          style: overdueStyle,
+                        ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (task.description != null && task.description!.isNotEmpty)
-                              Text(task.description!),
+                              Text(
+                                task.description!,
+                                style: overdueStyle,
+                              ),
                             if (task.dueDate != null)
                               Text(
                                 'Due: '
@@ -49,15 +62,22 @@ class TasksScreenV001 extends StatelessWidget {
                                 '${task.dueDate!.year} '
                                 '${task.dueDate!.hour.toString().padLeft(2, '0')}:'
                                 '${task.dueDate!.minute.toString().padLeft(2, '0')}',
+                                style: overdueStyle,
                               ),
-                            Text('Status: ${task.status}'),
-                            Text('Points: ${task.points}'),
-                            if (task.reminderDate != null)
+                            Text(
+                              'Status: ${task.status}',
+                              style: overdueStyle,
+                            ),
+                            Text(
+                              'Points: ${task.points}',
+                              style: overdueStyle,
+                            ),
+                            // Reminder display removed; notifications are scheduled automatically.
+                            if (member != null)
                               Text(
-                                  'Reminder: '
-                                  '${task.reminderDate!.year}-${task.reminderDate!.month.toString().padLeft(2, '0')}'
-                                  '-${task.reminderDate!.day.toString().padLeft(2, '0')}'),
-                            if (member != null) Text('Assigned to: ${member.name}'),
+                                'Assigned to: ${member.name}',
+                                style: overdueStyle,
+                              ),
                           ],
                         ),
                         trailing: Row(
@@ -73,7 +93,8 @@ class TasksScreenV001 extends StatelessWidget {
                                   assignedMemberId: task.assignedMemberId,
                                   status: value,
                                   points: task.points,
-                                  reminderDate: task.reminderDate,
+                                  // reminderDate is no longer used; set to null for backward compatibility.
+                                  reminderDate: null,
                                 );
                                 data.updateTask(updatedTask);
                               },

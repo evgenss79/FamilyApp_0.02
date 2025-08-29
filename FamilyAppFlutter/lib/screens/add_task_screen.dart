@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../models/task.dart';
 import '../models/family_member.dart';
 import '../providers/family_data.dart';
+import '../services/notification_service.dart';
 
 /// A screen for creating a new task with extended fields for
 /// status, points and an optional reminder date.  This form lets
@@ -26,7 +27,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
   bool _hasDueDate = false;
   DateTime? _dueDateTime;
-  DateTime? _reminderDate;
+  // Reminder date removed: automatic notifications will be scheduled instead.
   String? _assignedMemberId;
   String _status = 'Pending';
 
@@ -71,24 +72,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     });
   }
 
-  /// Opens a date picker to select a reminder date.  The
-  /// reminder can be any date in the future relative to the
-  /// current day.  If the user cancels the dialog the
-  /// reminder is not changed.
-  Future<void> _pickReminderDate() async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: now,
-      firstDate: now,
-      lastDate: DateTime(now.year + 10),
-    );
-    if (picked != null) {
-      setState(() {
-        _reminderDate = picked;
-      });
-    }
-  }
+  // Reminder picker removed: notifications will be scheduled automatically
+  // based on the due date.  The original method is left here for
+  // reference but commented out.
 
   /// Validates the form and, if valid, creates a new [Task]
   /// instance and adds it to the [FamilyDataV001] provider.  The
@@ -111,10 +97,15 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       assignedMemberId: _assignedMemberId,
       status: _status,
       points: points,
-      reminderDate: _reminderDate,
+      // Reminder date is no longer user controlled.
+      reminderDate: null,
     );
     final data = Provider.of<FamilyDataV001>(context, listen: false);
     data.addTask(newTask);
+    // Immediately notify recipients that a new task has been created and
+    // schedule due reminders if a due date exists.
+    NotificationService.sendTaskCreatedNotification(newTask, data);
+    NotificationService.scheduleDueNotifications(newTask, data);
     Navigator.of(context).pop();
   }
 
@@ -226,14 +217,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 },
               ),
               const SizedBox(height: 8),
-              // Reminder date picker
-              ListTile(
-                title: Text(_reminderDate == null
-                    ? 'Set reminder date'
-                    : 'Reminder: ${_reminderDate!.toLocal().toString().split(' ')[0]}'),
-                trailing: const Icon(Icons.alarm),
-                onTap: _pickReminderDate,
-              ),
+              // The manual reminder date picker has been removed.  Reminders
+              // are scheduled automatically relative to the due date.
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _save,

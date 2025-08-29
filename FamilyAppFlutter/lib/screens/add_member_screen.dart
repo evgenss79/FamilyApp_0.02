@@ -207,30 +207,44 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
 
   @override
   Widget build(BuildContext context) {
+    // Wrap the entire form in a SingleChildScrollView to ensure the page
+    // scrolls when the content exceeds the screen height. Without a scroll
+    // view the save button could fall below the visible area when
+    // multiple entries are added. The Column inside allows us to
+    // include the button as part of the scrollable content.
     return Scaffold(
-      appBar: AppBar(title: Text(widget.member != null ? 'Edit Member' : 'Add Member')),
-      body: Padding(
+      appBar: AppBar(
+        title: Text(widget.member != null ? 'Edit Member' : 'Add Member'),
+      ),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: ListView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Name and relationship
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Name'),
-                validator: (value) => (value == null || value.trim().isEmpty) ? 'Please enter a name' : null,
+                validator: (value) =>
+                    (value == null || value.trim().isEmpty) ? 'Please enter a name' : null,
               ),
               TextFormField(
                 controller: _relationshipController,
                 decoration: const InputDecoration(labelText: 'Relationship'),
-                validator: (value) => (value == null || value.trim().isEmpty) ? 'Please enter a relationship' : null,
+                validator: (value) =>
+                    (value == null || value.trim().isEmpty) ? 'Please enter a relationship' : null,
               ),
               // Birthday picker
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Birthday'),
-                subtitle: Text(_birthday != null ? _birthday!.toLocal().toString().split(' ')[0] : 'Select date'),
+                subtitle: Text(
+                  _birthday != null
+                      ? _birthday!.toLocal().toString().split(' ')[0]
+                      : 'Select date',
+                ),
                 onTap: _pickBirthday,
               ),
               const SizedBox(height: 8),
@@ -252,11 +266,13 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
               // Documents section
               Text(
                 'Documents',
-                // Use titleMedium instead of deprecated subtitle1 for section headings.
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
-              ...List.generate(_documentEntries.length, (i) => _buildEntryRow(_documentEntries, i, _documentTypes, setState)),
+              ...List.generate(
+                _documentEntries.length,
+                (i) => _buildEntryRow(_documentEntries, i, _documentTypes, setState),
+              ),
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton.icon(
@@ -273,11 +289,13 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
               // Social networks section
               Text(
                 'Social Networks',
-                // Use titleMedium instead of deprecated subtitle1 for section headings.
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
-              ...List.generate(_socialEntries.length, (i) => _buildEntryRow(_socialEntries, i, _socialTypes, setState)),
+              ...List.generate(
+                _socialEntries.length,
+                (i) => _buildEntryRow(_socialEntries, i, _socialTypes, setState),
+              ),
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton.icon(
@@ -294,11 +312,13 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
               // Messengers section
               Text(
                 'Messengers',
-                // Use titleMedium instead of deprecated subtitle1 for section headings.
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
-              ...List.generate(_messengerEntries.length, (i) => _buildEntryRow(_messengerEntries, i, _messengerTypes, setState)),
+              ...List.generate(
+                _messengerEntries.length,
+                (i) => _buildEntryRow(_messengerEntries, i, _messengerTypes, setState),
+              ),
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton.icon(
