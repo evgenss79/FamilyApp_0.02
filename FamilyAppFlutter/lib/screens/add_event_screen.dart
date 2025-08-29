@@ -5,6 +5,9 @@ import 'package:uuid/uuid.dart';
 import '../models/event.dart';
 import '../providers/family_data.dart';
 
+/// A stateful widget that presents a form for creating a new family event.
+/// The event is saved into the [FamilyDataV001] provider once the form is
+/// submitted and a date/time is selected.
 class AddEventScreen extends StatefulWidget {
   const AddEventScreen({Key? key}) : super(key: key);
 
@@ -20,7 +23,8 @@ class _AddEventScreenState extends State<AddEventScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final familyData = Provider.of<FamilyData>(context, listen: false);
+    // Use FamilyDataV001 provider since the project uses this version of the provider.
+    final familyData = Provider.of<FamilyDataV001>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(
@@ -52,6 +56,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
                     ? '${_eventDate!.toLocal()}'
                     : 'Select date and time'),
                 onTap: () async {
+                  // Pick a date for the event.
                   final selectedDate = await showDatePicker(
                     context: context,
                     initialDate: _eventDate ?? DateTime.now(),
@@ -59,10 +64,10 @@ class _AddEventScreenState extends State<AddEventScreen> {
                     lastDate: DateTime(2100),
                   );
                   if (selectedDate != null) {
+                    // Then pick a time on that date.
                     final selectedTime = await showTimePicker(
                       context: context,
-                      initialTime: TimeOfDay.fromDateTime(
-                          _eventDate ?? DateTime.now()),
+                      initialTime: TimeOfDay.fromDateTime(_eventDate ?? DateTime.now()),
                     );
                     if (selectedTime != null) {
                       setState(() {
@@ -81,6 +86,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
               const SizedBox(height: 16.0),
               ElevatedButton(
                 onPressed: () {
+                  // Only save if the form is valid and a date/time has been selected.
                   if (_formKey.currentState!.validate() && _eventDate != null) {
                     final uuid = Uuid();
                     final newEvent = Event(
