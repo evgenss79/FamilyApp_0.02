@@ -1,9 +1,9 @@
-.import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/family_data_v001.dart';
+import '../providers/family_data.dart';
 
-/// A unified schedule screen combining tasks and events for version 0.01.
+/// A unified schedule screen combining tasks and events for version 0.01.
 ///
 /// Tasks with a due date and all events are collated into a single list,
 /// sorted chronologically. Each item indicates whether it originates
@@ -18,6 +18,7 @@ class ScheduleScreenV001 extends StatelessWidget {
     return Consumer<FamilyDataV001>(
       builder: (context, data, child) {
         final List<_ScheduleItem> items = [];
+        // Add tasks with due dates
         for (final task in data.tasks) {
           if (task.dueDate != null) {
             items.add(_ScheduleItem(
@@ -28,6 +29,7 @@ class ScheduleScreenV001 extends StatelessWidget {
             ));
           }
         }
+        // Add all events
         for (final event in data.events) {
           items.add(_ScheduleItem(
             title: event.title,
@@ -36,6 +38,7 @@ class ScheduleScreenV001 extends StatelessWidget {
             type: 'Event',
           ));
         }
+        // Sort items by date
         items.sort((a, b) => a.date.compareTo(b.date));
         return Scaffold(
           appBar: AppBar(title: const Text('Schedule')),
@@ -48,8 +51,14 @@ class ScheduleScreenV001 extends StatelessWidget {
                     item.type == 'Task' ? Icons.checklist : Icons.event),
                 title: Text(item.title),
                 subtitle: item.description.isNotEmpty
-                    ? Text('${item.description}\n${item.date}')
-                    : Text('${item.date}'),
+                    ? Text(
+                        '${item.description}\n${item.date.toLocal().toString().split(' ')[0]}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      )
+                    : Text(
+                        item.date.toLocal().toString().split(' ')[0],
+                      ),
               );
             },
           ),
@@ -59,13 +68,12 @@ class ScheduleScreenV001 extends StatelessWidget {
   }
 }
 
-/// Internal data structure representing a schedule entry.
+/// Private class representing a unified schedule item.
 class _ScheduleItem {
   final String title;
   final String description;
   final DateTime date;
   final String type;
-
   _ScheduleItem({
     required this.title,
     required this.description,
