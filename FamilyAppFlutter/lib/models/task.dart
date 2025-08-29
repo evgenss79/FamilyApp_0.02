@@ -21,7 +21,8 @@ class Task {
   final DateTime? dueDate;
 
   /// Identifier of the member assigned to the task, if any.
-  final String? assignedMemberId;
+  /// This field is mutable so that tasks can be unassigned when a member is removed.
+  String? assignedMemberId;
 
   /// Status of the task ('pending' by default).
   String status;
@@ -63,15 +64,11 @@ class Task {
       id: map['id'],
       title: map['title'],
       description: map['description'],
-      dueDate: map['dueDate'] != null
-          ? DateTime.parse(map['dueDate'] as String)
-          : null,
+      dueDate: map['dueDate'] != null ? DateTime.parse(map['dueDate'] as String) : null,
       assignedMemberId: map['assignedMemberId'],
       status: map['status'] ?? 'pending',
       points: map['points'] ?? 0,
-      reminderDate: map['reminderDate'] != null
-          ? DateTime.parse(map['reminderDate'] as String)
-          : null,
+      reminderDate: map['reminderDate'] != null ? DateTime.parse(map['reminderDate'] as String) : null,
     );
   }
 }
