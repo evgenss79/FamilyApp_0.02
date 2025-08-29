@@ -15,9 +15,16 @@ class EventsScreenV001 extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<FamilyDataV001>(
       builder: (context, data, child) {
-        // Cast events to a typed list so that the date property is available.
+        // Cast the raw events list from the provider to a strongly-typed
+        // `List<Event>` so that Dart knows `date` exists on each item. Without
+        // this cast the events would be treated as `List<Object?>` which
+        // prevents using the `date` getter below.
         final events = List<Event>.from(data.events);
-        // Sort events by their scheduled date/time.
+
+        // Sort events chronologically by their scheduled date/time. Compare
+        // two event dates directly – since `Event.date` is non-nullable this
+        // comparison is safe and eliminates runtime "getter not defined"
+        // errors that would occur if the list contained `Object?` elements.
         events.sort((a, b) => a.date.compareTo(b.date));
         return Scaffold(
           appBar: AppBar(
@@ -34,12 +41,18 @@ class EventsScreenV001 extends StatelessWidget {
                         ? '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year} '
                           '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}'
                         : '';
+                    // Safely handle the nullable description by assigning an empty
+                    // string when it is null. This allows us to call `.isNotEmpty`
+                    // and string concatenation without null checks scattered
+                    // throughout the widget tree.  Using a local variable also
+                    // improves readability of the ListTile below.
+                    final desc = event.description ?? '';
                     return ListTile(
                       title: Text(event.title),
                       subtitle: Text(
-                        '${event.description.isNotEmpty ? event.description + '\n' : ''}$dateString',
+                        '${desc.isNotEmpty ? desc + '\n' : ''}$dateString',
                       ),
-                      isThreeLine: event.description.isNotEmpty,
+                      isThreeLine: desc.isNotEmpty,
                       trailing: IconButton(
                         icon: const Icon(Icons.delete),
                         onPressed: () {
