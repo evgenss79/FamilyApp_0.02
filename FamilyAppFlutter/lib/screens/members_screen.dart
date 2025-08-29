@@ -26,6 +26,7 @@ class MembersScreenV001 extends StatelessWidget {
                   if (member.relationship.isNotEmpty) {
                     details.add(member.relationship);
                   }
+                    // Include optional details if present and non-empty.
                   if (member.phone != null && member.phone!.isNotEmpty) {
                     details.add('Phone: ${member.phone}');
                   }
