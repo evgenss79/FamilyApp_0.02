@@ -250,7 +250,11 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
               ),
               const SizedBox(height: 16),
               // Documents section
-              Text('Documents', style: Theme.of(context).textTheme.subtitle1),
+              Text(
+                'Documents',
+                // Use titleMedium instead of deprecated subtitle1 for section headings.
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 8),
               ...List.generate(_documentEntries.length, (i) => _buildEntryRow(_documentEntries, i, _documentTypes, setState)),
               Align(
@@ -267,7 +271,11 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
               ),
               const SizedBox(height: 16),
               // Social networks section
-              Text('Social Networks', style: Theme.of(context).textTheme.subtitle1),
+              Text(
+                'Social Networks',
+                // Use titleMedium instead of deprecated subtitle1 for section headings.
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 8),
               ...List.generate(_socialEntries.length, (i) => _buildEntryRow(_socialEntries, i, _socialTypes, setState)),
               Align(
@@ -284,7 +292,11 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
               ),
               const SizedBox(height: 16),
               // Messengers section
-              Text('Messengers', style: Theme.of(context).textTheme.subtitle1),
+              Text(
+                'Messengers',
+                // Use titleMedium instead of deprecated subtitle1 for section headings.
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 8),
               ...List.generate(_messengerEntries.length, (i) => _buildEntryRow(_messengerEntries, i, _messengerTypes, setState)),
               Align(
