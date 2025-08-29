@@ -5,12 +5,14 @@ import '../providers/family_data.dart';
 import '../models/family_member.dart';
 import 'add_member_screen.dart';
 
+/// Displays a list of family members with extended details and allows
+/// adding and removing members.  Uses [FamilyDataV001] to manage state.
 class MembersScreenV001 extends StatelessWidget {
   const MembersScreenV001({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<FamilyData>(builder: (context, data, _) {
+    return Consumer<FamilyDataV001>(builder: (context, data, _) {
       final members = data.members;
       return Scaffold(
         appBar: AppBar(title: const Text('Members')),
@@ -44,11 +46,10 @@ class MembersScreenV001 extends StatelessWidget {
                       child: Text(member.name.isNotEmpty ? member.name[0] : '?'),
                     ),
                     title: Text(member.name),
-                    subtitle:
-                        details.isNotEmpty ? Text(details.join('\n')) : null,
+                    subtitle: details.isNotEmpty ? Text(details.join('\n')) : null,
                     trailing: IconButton(
                       icon: const Icon(Icons.delete),
-                      onPressed: () => data.removeMember(member.id),
+                      onPressed: () => data.removeMember(member),
                     ),
                   );
                 },
