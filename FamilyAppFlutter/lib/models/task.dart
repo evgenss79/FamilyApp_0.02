@@ -25,3 +25,24 @@ class Task {
     this.assignedMemberId,
   }) : id = id ?? const Uuid().v4();
 }
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'dueDate': dueDate?.toIso8601String(),
+      'assignedMemberId': assignedMemberId,
+    };
+  }
+
+  static Task fromMap(Map<String, dynamic> map) {
+    return Task(
+      id: map['id'] as String?,
+      title: map['title'] ?? '',
+      description: map['description'] as String?,
+      dueDate: map['dueDate'] != null ? DateTime.parse(map['dueDate']) : null,
+      assignedMemberId: map['assignedMemberId'] as String?,
+    );
+  }
+}
+
