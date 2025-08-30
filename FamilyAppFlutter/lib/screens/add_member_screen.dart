@@ -241,151 +241,147 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
     // vertically when its content exceeds the screen height. This ensures
     // the Save button remains reachable even when many fields or entries
     // are added.
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.member != null ? 'Edit Member' : 'Add Member'),
-        // Provide a save action in the app bar so the user can save the form
-        // without needing to scroll to the bottom.  This ensures the save
-        // functionality is always accessible, even when the form contents
-        // extend beyond the visible screen area.
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _save,
-            tooltip: 'Save',
-          ),
-        ],
-      ),
-      body: Form(
-        key: _formKey,
-        // Wrap the form fields in a SingleChildScrollView so the entire form
-        // can scroll vertically when its contents grow beyond the screen. A
-        // Column is used inside to lay out all the fields sequentially.
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-            // Name and relationship
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Name'),
-              validator: (value) =>
-                  (value == null || value.trim().isEmpty) ? 'Please enter a name' : null,
-            ),
-            TextFormField(
-              controller: _relationshipController,
-              decoration: const InputDecoration(labelText: 'Relationship'),
-              validator: (value) => (value == null || value.trim().isEmpty)
-                  ? 'Please enter a relationship'
-                  : null,
-            ),
-            // Birthday picker
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Birthday'),
-              subtitle: Text(
-                _birthday != null
-                    ? _birthday!.toLocal().toString().split(' ')[0]
-                    : 'Select date',
-              ),
-              onTap: _pickBirthday,
-            ),
-            const SizedBox(height: 8),
-            // Phone and email
-            TextFormField(
-              controller: _phoneController,
-              decoration: const InputDecoration(labelText: 'Phone'),
-            ),
-            TextFormField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-            ),
-            // Hobbies
-            TextFormField(
-              controller: _hobbiesController,
-              decoration: const InputDecoration(labelText: 'Hobbies'),
-            ),
-            const SizedBox(height: 16),
-            // Documents section
-            Text(
-              'Documents',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            ...List.generate(
-              _documentEntries.length,
-              (i) => _buildEntryRow(_documentEntries, i, _documentTypes, setState),
-            ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                icon: const Icon(Icons.add),
-                label: const Text('Add Document'),
-                onPressed: () {
-                  setState(() {
-                    _documentEntries.add({'type': _documentTypes.first, 'value': ''});
-                  });
-                },
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Social networks section
-            Text(
-              'Social Networks',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            ...List.generate(
-              _socialEntries.length,
-              (i) => _buildEntryRow(_socialEntries, i, _socialTypes, setState),
-            ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                icon: const Icon(Icons.add),
-                label: const Text('Add Social'),
-                onPressed: () {
-                  setState(() {
-                    _socialEntries.add({'type': _socialTypes.first, 'value': ''});
-                  });
-                },
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Messengers section
-            Text(
-              'Messengers',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            ...List.generate(
-              _messengerEntries.length,
-              (i) =>
-                  _buildEntryRow(_messengerEntries, i, _messengerTypes, setState),
-            ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                icon: const Icon(Icons.add),
-                label: const Text('Add Messenger'),
-                onPressed: () {
-                  setState(() {
-                    _messengerEntries.add({'type': _messengerTypes.first, 'value': ''});
-                  });
-                },
-              ),
-            ),
-              const SizedBox(height: 24),
-              // Save button at the end of the scrollable content
-              ElevatedButton(
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(widget.member != null ? 'Edit Member' : 'Add Member'),
+            // Provide a save action in the app bar so the user can save the form
+            // without needing to scroll to the bottom. This ensures the save
+            // functionality is always accessible, even when the form contents
+            // extend beyond the visible screen area.
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.save),
                 onPressed: _save,
-                child: const Text('Save'),
+                tooltip: 'Save',
               ),
             ],
           ),
-        ),
-      ),
-    );
+          body: SafeArea(
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(16.0),
+                children: [
+                  // Name and relationship
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(labelText: 'Name'),
+                    validator: (value) =>
+                        (value == null || value.trim().isEmpty) ? 'Please enter a name' : null,
+                  ),
+                  TextFormField(
+                    controller: _relationshipController,
+                    decoration: const InputDecoration(labelText: 'Relationship'),
+                    validator: (value) => (value == null || value.trim().isEmpty)
+                        ? 'Please enter a relationship'
+                        : null,
+                  ),
+                  // Birthday picker
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Birthday'),
+                    subtitle: Text(
+                      _birthday != null
+                          ? _birthday!.toLocal().toString().split(' ')[0]
+                          : 'Select date',
+                    ),
+                    onTap: _pickBirthday,
+                  ),
+                  const SizedBox(height: 8),
+                  // Phone and email
+                  TextFormField(
+                    controller: _phoneController,
+                    decoration: const InputDecoration(labelText: 'Phone'),
+                  ),
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(labelText: 'Email'),
+                  ),
+                  // Hobbies
+                  TextFormField(
+                    controller: _hobbiesController,
+                    decoration: const InputDecoration(labelText: 'Hobbies'),
+                  ),
+                  const SizedBox(height: 16),
+                  // Documents section
+                  Text(
+                    'Documents',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  ...List.generate(
+                    _documentEntries.length,
+                    (i) => _buildEntryRow(_documentEntries, i, _documentTypes, setState),
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Document'),
+                      onPressed: () {
+                        setState(() {
+                          _documentEntries.add({'type': _documentTypes.first, 'value': ''});
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Social networks section
+                  Text(
+                    'Social Networks',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  ...List.generate(
+                    _socialEntries.length,
+                    (i) => _buildEntryRow(_socialEntries, i, _socialTypes, setState),
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Social'),
+                      onPressed: () {
+                        setState(() {
+                          _socialEntries.add({'type': _socialTypes.first, 'value': ''});
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Messengers section
+                  Text(
+                    'Messengers',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  ...List.generate(
+                    _messengerEntries.length,
+                    (i) =>
+                        _buildEntryRow(_messengerEntries, i, _messengerTypes, setState),
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Messenger'),
+                      onPressed: () {
+                        setState(() {
+                          _messengerEntries.add({'type': _messengerTypes.first, 'value': ''});
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Save button at the end of the scrollable content
+                  ElevatedButton(
+                    onPressed: _save,
+                    child: const Text('Save'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
   }
 }
