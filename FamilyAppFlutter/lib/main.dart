@@ -6,17 +6,25 @@ import 'providers/family_data.dart';
 import 'screens/members_screen.dart';
 import 'screens/tasks_screen.dart';
 import 'screens/events_screen.dart';
+import  'services/chat_storage_service.dart';
+import 'providers/chat_data.dart';
 import 'screens/schedule_screen.dart';
 import 'screens/calendar_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await StorageServiceV001.init();
+  await ChatStorageServiceV001.init();
   final familyData = FamilyDataV001();
+  final chatData = ChatDataV001();
   await familyData.loadFromStorage();
+  await chatData.loadData();
   runApp(
-    ChangeNotifierProvider.value(
-      value: familyData,
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<FamilyDataV001>.value(value: familyData),
+        ChangeNotifierProvider<ChatDataV001>.value(value: chatData),
+      ],
       child: const FamilyAppV001(),
     ),
   );
