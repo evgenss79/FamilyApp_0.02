@@ -258,9 +258,14 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
       ),
       body: Form(
         key: _formKey,
-        child: ListView(
+        // Wrap the form fields in a SingleChildScrollView so the entire form
+        // can scroll vertically when its contents grow beyond the screen. A
+        // Column is used inside to lay out all the fields sequentially.
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
-          children: [
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // Name and relationship
             TextFormField(
               controller: _nameController,
@@ -371,13 +376,14 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
                 },
               ),
             ),
-            const SizedBox(height: 24),
-            // Save button is part of the scrollable list
-            ElevatedButton(
-              onPressed: _save,
-              child: const Text('Save'),
-            ),
-          ],
+              const SizedBox(height: 24),
+              // Save button at the end of the scrollable content
+              ElevatedButton(
+                onPressed: _save,
+                child: const Text('Save'),
+              ),
+            ],
+          ),
         ),
       ),
     );
