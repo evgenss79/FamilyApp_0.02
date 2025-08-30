@@ -155,21 +155,36 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
     Navigator.of(context).pop();
   }
 
-  Widget _buildEntryRow(List<Map<String, String>> entries, int index, List<String> types, void Function(void Function()) setStateCallback) {
+  Widget _buildEntryRow(
+    List<Map<String, String>> entries,
+    int index,
+    List<String> types,
+    void Function(void Function()) setStateCallback,
+  ) {
     final entry = entries[index];
+    // Each entry row contains a type dropdown, a value text field and a delete
+    // button. Avoid wrapping the delete button in an Expanded widget because
+    // that can cause horizontal overflow on narrow screens. The dropdown and
+    // text field expand to fill available space, while the delete button
+    // retains its natural size.
     return Row(
       children: [
-        // Type dropdown
+        // Type dropdown (takes up roughly 2/7 of the row width)
         Expanded(
           flex: 2,
           child: DropdownButtonFormField<String>(
             value: entry['type'],
-            decoration: const InputDecoration(isDense: true, labelText: 'Type'),
+            decoration: const InputDecoration(
+              isDense: true,
+              labelText: 'Type',
+            ),
             items: types
-                .map((t) => DropdownMenuItem(
-                      value: t,
-                      child: Text(t),
-                    ))
+                .map(
+                  (t) => DropdownMenuItem(
+                    value: t,
+                    child: Text(t),
+                  ),
+                )
                 .toList(),
             onChanged: (value) {
               if (value != null) {
@@ -181,28 +196,29 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
           ),
         ),
         const SizedBox(width: 8),
-        // Value input
+        // Value input (takes up roughly 4/7 of the row width)
         Expanded(
           flex: 4,
           child: TextFormField(
             initialValue: entry['value'],
-            decoration: const InputDecoration(isDense: true, labelText: 'Value'),
+            decoration: const InputDecoration(
+              isDense: true,
+              labelText: 'Value',
+            ),
             onChanged: (val) {
               entry['value'] = val;
             },
           ),
         ),
-        // Delete button
-        Expanded(
-          flex: 1,
-          child: IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () {
-              setState(() {
-                entries.removeAt(index);
-              });
-            },
-          ),
+        const SizedBox(width: 8),
+        // Delete button with fixed width
+        IconButton(
+          icon: const Icon(Icons.delete),
+          onPressed: () {
+            setState(() {
+              entries.removeAt(index);
+            });
+          },
         ),
       ],
     );
