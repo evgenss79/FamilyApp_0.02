@@ -22,8 +22,14 @@ class NotificationService {
         debugPrint('Notification to ${member.name}: New task "${task.title}" has been created');
       }
     } else {
-      final member =
-          data.members.firstWhere((m) => m.id == task.assignedMemberId, orElse: () => null);
+      // Find the assigned member safely without returning null from firstWhere.
+      FamilyMember? member;
+      for (final m in data.members) {
+        if (m.id == task.assignedMemberId) {
+          member = m;
+          break;
+        }
+      }
       if (member != null) {
         debugPrint(
             'Notification to ${member.name}: You have been assigned a new task "${task.title}"');
@@ -54,8 +60,14 @@ class NotificationService {
                 'Reminder for ${member.name}: Task "${task.title}" is due at ${due.toLocal()}');
           }
         } else {
-          final member = data.members
-              .firstWhere((m) => m.id == task.assignedMemberId, orElse: () => null);
+          // Find the assigned member safely without returning null from firstWhere.
+          FamilyMember? member;
+          for (final m in data.members) {
+            if (m.id == task.assignedMemberId) {
+              member = m;
+              break;
+            }
+          }
           if (member != null) {
             debugPrint(
                 'Reminder for ${member.name}: Task "${task.title}" is due at ${due.toLocal()}');
