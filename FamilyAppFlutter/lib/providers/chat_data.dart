@@ -18,6 +18,8 @@ class ChatDataV001 with ChangeNotifier {
 
   /// Loads conversations and messages from persistent storage.
   Future<void> loadData() async {
+        await ChatStorageServiceV001.init();
+    
     _conversations = ChatStorageServiceV001.loadConversations();
     _messages = ChatStorageServiceV001.loadMessages();
     notifyListeners();
