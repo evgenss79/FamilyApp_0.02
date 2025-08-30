@@ -168,21 +168,21 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
     // text field expand to fill available space, while the delete button
     // retains its natural size.
     return Row(
+      // Using flex factors and fixed width for the delete button prevents
+      // horizontal overflow on narrow screens. Each part of the row shares
+      // available space according to its flex value. The delete button is
+      // contained within a SizedBox to ensure it doesn't expand beyond its
+      // intrinsic size, and the dropdown expands to fill its allotted space.
       children: [
-        // Type dropdown (takes up roughly 2/7 of the row width)
+        // Dropdown takes roughly 3/7 of the row width and expands to fill
         Expanded(
-          flex: 2,
+          flex: 3,
           child: DropdownButtonFormField<String>(
             value: entry['type'],
             decoration: const InputDecoration(
               isDense: true,
               labelText: 'Type',
             ),
-            // Make the dropdown take up the available horizontal space to avoid
-            // overflow when the row is constrained by the layout. Without
-            // setting isExpanded, the button tries to size itself to the
-            // content width, which can cause a RenderFlex overflow in
-            // constrained environments (e.g. inside a Row with limited width).
             isExpanded: true,
             items: types
                 .map(
@@ -202,7 +202,7 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
           ),
         ),
         const SizedBox(width: 8),
-        // Value input (takes up roughly 4/7 of the row width)
+        // Text field takes roughly 4/7 of the row width
         Expanded(
           flex: 4,
           child: TextFormField(
@@ -217,14 +217,19 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
           ),
         ),
         const SizedBox(width: 8),
-        // Delete button with fixed width
-        IconButton(
-          icon: const Icon(Icons.delete),
-          onPressed: () {
-            setState(() {
-              entries.removeAt(index);
-            });
-          },
+        // Delete button wrapped in a SizedBox with a fixed width to avoid
+        // taking up more space than necessary. This ensures the row fits
+        // within the available width without overflow.
+        SizedBox(
+          width: 40,
+          child: IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () {
+              setState(() {
+                entries.removeAt(index);
+              });
+            },
+          ),
         ),
       ],
     );
