@@ -178,6 +178,12 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
               isDense: true,
               labelText: 'Type',
             ),
+            // Make the dropdown take up the available horizontal space to avoid
+            // overflow when the row is constrained by the layout. Without
+            // setting isExpanded, the button tries to size itself to the
+            // content width, which can cause a RenderFlex overflow in
+            // constrained environments (e.g. inside a Row with limited width).
+            isExpanded: true,
             items: types
                 .map(
                   (t) => DropdownMenuItem(
