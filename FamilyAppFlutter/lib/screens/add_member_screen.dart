@@ -216,12 +216,14 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
       appBar: AppBar(
         title: Text(widget.member != null ? 'Edit Member' : 'Add Member'),
       ),
-      body: SingleChildScrollView(
+      // Use a ListView to ensure the form is always scrollable.
+      // ListView automatically scrolls when its contents exceed the viewport height,
+      // preventing the Save button from being pushed off‑screen.
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: ListView(
             children: [
               // Name and relationship
               TextFormField(
