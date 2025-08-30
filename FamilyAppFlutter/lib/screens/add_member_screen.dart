@@ -210,139 +210,133 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
 
   @override
   Widget build(BuildContext context) {
-    // Wrap the entire form in a SingleChildScrollView to ensure the page
-    // scrolls when the content exceeds the screen height. Without a scroll
-    // view the save button could fall below the visible area when
-    // multiple entries are added. The Column inside allows us to
-    // include the button as part of the scrollable content.
+    // Use a ListView so the form can scroll when it grows beyond the screen height.
+    // The save button is included in the list of children so it stays accessible
+    // even if many entries are added.
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.member != null ? 'Edit Member' : 'Add Member'),
       ),
-      // Wrap the form in a ListView so that it always scrolls when there is
-      // more content than fits on screen. Placing the padding and form
-      // directly inside the ListView allows the list to expand and scroll
-      // vertically without extra nested scroll views.
       body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
-              // Name and relationship
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
-                validator: (value) =>
-                    (value == null || value.trim().isEmpty) ? 'Please enter a name' : null,
+            // Name and relationship
+            TextFormField(
+              controller: _nameController,
+              decoration: const InputDecoration(labelText: 'Name'),
+              validator: (value) =>
+                  (value == null || value.trim().isEmpty) ? 'Please enter a name' : null,
+            ),
+            TextFormField(
+              controller: _relationshipController,
+              decoration: const InputDecoration(labelText: 'Relationship'),
+              validator: (value) =>
+                  (value == null || value.trim().isEmpty) ? 'Please enter a relationship' : null,
+            ),
+            // Birthday picker
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Birthday'),
+              subtitle: Text(
+                _birthday != null
+                    ? _birthday!.toLocal().toString().split(' ')[0]
+                    : 'Select date',
               ),
-              TextFormField(
-                controller: _relationshipController,
-                decoration: const InputDecoration(labelText: 'Relationship'),
-                validator: (value) =>
-                    (value == null || value.trim().isEmpty) ? 'Please enter a relationship' : null,
+              onTap: _pickBirthday,
+            ),
+            const SizedBox(height: 8),
+            // Phone and email
+            TextFormField(
+              controller: _phoneController,
+              decoration: const InputDecoration(labelText: 'Phone'),
+            ),
+            TextFormField(
+              controller: _emailController,
+              decoration: const InputDecoration(labelText: 'Email'),
+            ),
+            // Hobbies
+            TextFormField(
+              controller: _hobbiesController,
+              decoration: const InputDecoration(labelText: 'Hobbies'),
+            ),
+            const SizedBox(height: 16),
+            // Documents section
+            Text(
+              'Documents',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            ...List.generate(
+              _documentEntries.length,
+              (i) => _buildEntryRow(_documentEntries, i, _documentTypes, setState),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text('Add Document'),
+                onPressed: () {
+                  setState(() {
+                    _documentEntries.add({'type': _documentTypes.first, 'value': ''});
+                  });
+                },
               ),
-              // Birthday picker
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Birthday'),
-                subtitle: Text(
-                  _birthday != null
-                      ? _birthday!.toLocal().toString().split(' ')[0]
-                      : 'Select date',
-                ),
-                onTap: _pickBirthday,
+            ),
+            const SizedBox(height: 16),
+            // Social networks section
+            Text(
+              'Social Networks',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            ...List.generate(
+              _socialEntries.length,
+              (i) => _buildEntryRow(_socialEntries, i, _socialTypes, setState),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text('Add Social'),
+                onPressed: () {
+                  setState(() {
+                    _socialEntries.add({'type': _socialTypes.first, 'value': ''});
+                  });
+                },
               ),
-              const SizedBox(height: 8),
-              // Phone and email
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(labelText: 'Phone'),
+            ),
+            const SizedBox(height: 16),
+            // Messengers section
+            Text(
+              'Messengers',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            ...List.generate(
+              _messengerEntries.length,
+              (i) => _buildEntryRow(_messengerEntries, i, _messengerTypes, setState),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text('Add Messenger'),
+                onPressed: () {
+                  setState(() {
+                    _messengerEntries.add({'type': _messengerTypes.first, 'value': ''});
+                  });
+                },
               ),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
-              ),
-              // Hobbies
-              TextFormField(
-                controller: _hobbiesController,
-                decoration: const InputDecoration(labelText: 'Hobbies'),
-              ),
-              const SizedBox(height: 16),
-              // Documents section
-              Text(
-                'Documents',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 8),
-              ...List.generate(
-                _documentEntries.length,
-                (i) => _buildEntryRow(_documentEntries, i, _documentTypes, setState),
-              ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Document'),
-                  onPressed: () {
-                    setState(() {
-                      _documentEntries.add({'type': _documentTypes.first, 'value': ''});
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Social networks section
-              Text(
-                'Social Networks',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 8),
-              ...List.generate(
-                _socialEntries.length,
-                (i) => _buildEntryRow(_socialEntries, i, _socialTypes, setState),
-              ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Social'),
-                  onPressed: () {
-                    setState(() {
-                      _socialEntries.add({'type': _socialTypes.first, 'value': ''});
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Messengers section
-              Text(
-                'Messengers',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 8),
-              ...List.generate(
-                _messengerEntries.length,
-                (i) => _buildEntryRow(_messengerEntries, i, _messengerTypes, setState),
-              ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Messenger'),
-                  onPressed: () {
-                    setState(() {
-                      _messengerEntries.add({'type': _messengerTypes.first, 'value': ''});
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _save,
-                child: const Text('Save'),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 24),
+            // Save button is part of the scrollable list
+            ElevatedButton(
+              onPressed: _save,
+              child: const Text('Save'),
+            ),
+          ],
         ),
       ),
     );
