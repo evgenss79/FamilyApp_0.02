@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/task.dart';
 import '../providers/family_data.dart';
+import '../models/family_member.dart';
 
 /// A very simple notification service used to simulate delivery of task
 /// notifications within the app.  In this basic implementation notifications
