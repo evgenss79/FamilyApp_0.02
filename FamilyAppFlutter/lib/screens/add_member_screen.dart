@@ -244,6 +244,17 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.member != null ? 'Edit Member' : 'Add Member'),
+        // Provide a save action in the app bar so the user can save the form
+        // without needing to scroll to the bottom.  This ensures the save
+        // functionality is always accessible, even when the form contents
+        // extend beyond the visible screen area.
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: _save,
+            tooltip: 'Save',
+          ),
+        ],
       ),
       body: Form(
         key: _formKey,
