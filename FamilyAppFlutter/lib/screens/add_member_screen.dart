@@ -193,13 +193,16 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
           ),
         ),
         // Delete button
-        IconButton(
-          icon: const Icon(Icons.delete),
-          onPressed: () {
-            setState(() {
-              entries.removeAt(index);
-            });
-          },
+        Expanded(
+          flex: 1,
+          child: IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () {
+              setState(() {
+                entries.removeAt(index);
+              });
+            },
+          ),
         ),
       ],
     );
@@ -216,15 +219,15 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
       appBar: AppBar(
         title: Text(widget.member != null ? 'Edit Member' : 'Add Member'),
       ),
-      // Use a ListView to ensure the form is always scrollable.
-      // ListView automatically scrolls when its contents exceed the viewport height,
-      // preventing the Save button from being pushed off‑screen.
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
+      // Wrap the form in a ListView so that it always scrolls when there is
+      // more content than fits on screen. Placing the padding and form
+      // directly inside the ListView allows the list to expand and scroll
+      // vertically without extra nested scroll views.
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(16.0),
+          children: [
               // Name and relationship
               TextFormField(
                 controller: _nameController,
