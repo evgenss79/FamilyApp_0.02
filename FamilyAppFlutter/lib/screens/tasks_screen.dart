@@ -33,8 +33,8 @@ class TasksScreenV001 extends StatelessWidget {
                       }
                     }
                     // Determine if the task is overdue: the due date is in the past and the status is not completed.
-                    final bool isOverdue = task.dueDate != null &&
-                        task.dueDate!.isBefore(DateTime.now()) &&
+                    final bool isOverdue = task.endDateTime != null &&
+                        task.endDateTime!.endDateTime(DateTime.now()) &&
                         task.status.toLowerCase() != 'completed';
                     // Apply a red text style to overdue tasks.
                     final TextStyle? overdueStyle =
@@ -54,14 +54,14 @@ class TasksScreenV001 extends StatelessWidget {
                                 task.description!,
                                 style: overdueStyle,
                               ),
-                            if (task.dueDate != null)
+                            if (task.endDateTime != null)
                               Text(
                                 'Due: '
-                                '${task.dueDate!.day.toString().padLeft(2, '0')}.'
-                                '${task.dueDate!.month.toString().padLeft(2, '0')}.'
-                                '${task.dueDate!.year} '
-                                '${task.dueDate!.hour.toString().padLeft(2, '0')}:'
-                                '${task.dueDate!.minute.toString().padLeft(2, '0')}',
+                                '${task.endDateTime!.day.toString().padLeft(2, '0')}.'
+                                '${task.endDateTime!.month.toString().padLeft(2, '0')}.'
+                                '${task.endDateTime!.year} '
+                                '${task.endDateTime!.hour.toString().padLeft(2, '0')}:'
+                                '${task.endDateTime!.minute.toString().padLeft(2, '0')}',
                                 style: overdueStyle,
                               ),
                             Text(
@@ -89,7 +89,7 @@ class TasksScreenV001 extends StatelessWidget {
                                   id: task.id,
                                   title: task.title,
                                   description: task.description,
-                                  dueDate: task.dueDate,
+                                  endDateTime: task.endDateTime,
                                   assignedMemberId: task.assignedMemberId,
                                   status: value,
                                   points: task.points,
