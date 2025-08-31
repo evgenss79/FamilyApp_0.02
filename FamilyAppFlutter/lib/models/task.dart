@@ -50,7 +50,9 @@ class Task {
 
     this.assignedMemberId,
     this.status = 'pending',
-   
+
+        this.points = 0,
+
     List<DateTime>? reminders,
   })  : id = id ?? const Uuid().v4(),
         reminders = reminders ?? [];
