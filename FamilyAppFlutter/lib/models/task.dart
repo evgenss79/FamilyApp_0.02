@@ -24,6 +24,9 @@ class Task {
   /// Optional end date and time when the task should be completed.
   final DateTime? endDateTime;
 
+    /// Optional alias for backward compatibility. Returns the due date (same as endDateTime).
+  DateTime? get dueDate => endDateTime;
+
   /// Identifier of the member assigned to the task, if any.
   /// This field is mutable so that tasks can be unassigned when a member is removed.
   String? assignedMemberId;
@@ -43,9 +46,11 @@ class Task {
     this.description,
     this.startDateTime,
     this.endDateTime,
+        DateTime? dueDate,
+
     this.assignedMemberId,
     this.status = 'pending',
-    this.points = 0,
+   
     List<DateTime>? reminders,
   })  : id = id ?? const Uuid().v4(),
         reminders = reminders ?? [];
