@@ -29,11 +29,11 @@ class _ScheduleScreenV001State extends State<ScheduleScreenV001> {
         final List<_ScheduleItem> items = [];
         // Add tasks with due dates
         for (final task in data.tasks) {
-          if (task.dueDate != null) {
+          if (task.endDateTime != null) {
             items.add(_ScheduleItem(
               title: task.title,
               description: task.description ?? '',
-              date: task.dueDate!,
+              date: task.endDateTime!,
               type: 'Task',
             ));
           }
