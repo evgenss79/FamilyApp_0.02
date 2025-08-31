@@ -34,8 +34,9 @@ class TasksScreenV001 extends StatelessWidget {
                     }
                     // Determine if the task is overdue: the due date is in the past and the status is not completed.
                     final bool isOverdue = task.endDateTime != null &&
-                        task.endDateTime!.endDateTime(DateTime.now()) &&
-                        task.status.toLowerCase() != 'completed';
+final bool isOverdue = task.endDateTime != null &&
+    task.endDateTime!.isBefore(DateTime.now()) &&
+    task.status.toLowerCase() != 'completed';
                     // Apply a red text style to overdue tasks.
                     final TextStyle? overdueStyle =
                         isOverdue ? const TextStyle(color: Colors.red) : null;
@@ -93,11 +94,11 @@ class TasksScreenV001 extends StatelessWidget {
                                   assignedMemberId: task.assignedMemberId,
                                   status: value,
                                   points: task.points,
+                                        reminders: task.reminders,
                                   // reminderDate is no longer used; set to null for backward compatibility.
-                                  reminderDate: null,
                                 );
                                 data.updateTask(updatedTask);
-                              },
+},
                               itemBuilder: (context) => const [
                                 PopupMenuItem(value: 'Pending', child: Text('Mark as Pending')),
                                 PopupMenuItem(value: 'In Progress', child: Text('Mark as In Progress')),
