@@ -54,15 +54,37 @@ class Event {
   /// compatibility with older versions of the app where a single `date` field
   /// was used.
   factory Event.fromMap(Map<String, dynamic> map) {
-    final startDateMillis = map['startDateTime'] as int?;
-    final endDateMillis = map['endDateTime'] as int?;
-    // When startDateTime is absent, `date` (a DateTime) is expected.
-    final startDateTime = startDateMillis != null
-        ? DateTime.fromMillisecondsSinceEpoch(startDateMillis)
-        : (map['date'] as DateTime);
-    final endDateTime = endDateMillis != null
-        ? DateTime.fromMillisecondsSinceEpoch(endDateMillis)
-        : startDateTime;
+    // Parse startDateTime from milliseconds, ISO string, or fallback to `date`.
+    final dynamic startRaw = map['startDateTime'];
+    DateTime startDateTime;
+    if (startRaw is int) {
+      startDateTime = DateTime.fromMillisecondsSinceEpoch(startRaw);
+    } else if (startRaw is String) {
+      startDateTime = DateTime.parse(startRaw);
+    } else {
+      final dynamic legacyDate = map['date'];
+      if (legacyDate is String) {
+        startDateTime = DateTime.parse(legacyDate);
+      } else if (legacyDate is int) {
+        startDateTime = DateTime.fromMillisecondsSinceEpoch(legacyDate);
+      } else {
+        startDateTime = legacyDate as DateTime;
+      }
+    }
+
+    // Parse endDateTime from milliseconds, ISO string, or default to startDateTime.
+    final dynamic endRaw = map['endDateTime'];
+    DateTime endDateTime;
+    if (endRaw is int) {
+      endDateTime = DateTime.fromMillisecondsSinceEpoch(endRaw);
+    } else if (endRaw is String) {
+      endDateTime = DateTime.parse(endRaw);
+    } else if (endRaw is DateTime) {
+      endDateTime = endRaw;
+    } else {
+      endDateTime = startDateTime;
+    }
+
     final participantsDynamic = map['participantIds'] as List<dynamic>?;
     final participantIds = participantsDynamic?.cast<String>() ?? <String>[];
     return Event(
