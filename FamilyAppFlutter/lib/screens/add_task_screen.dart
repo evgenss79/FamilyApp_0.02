@@ -93,12 +93,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       description: _descriptionController.text.trim().isEmpty
           ? null
           : _descriptionController.text.trim(),
-      dueDate: _hasDueDate ? _dueDateTime : null,
+      endDateTime: _hasDueDate ? _dueDateTime : null,
       assignedMemberId: _assignedMemberId,
       status: _status,
       points: points,
       // Reminder date is no longer user controlled.
-      reminderDate: null,
+
     );
     final data = Provider.of<FamilyDataV001>(context, listen: false);
     data.addTask(newTask);
