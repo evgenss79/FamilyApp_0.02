@@ -33,7 +33,7 @@ class TasksScreenV001 extends StatelessWidget {
                       }
                     }
                     // Determine if the task is overdue: the due date is in the past and the status is not completed.
-                    final bool isOverdue = task.endDateTime != null &&
+                
 final bool isOverdue = task.endDateTime != null &&
     task.endDateTime!.isBefore(DateTime.now()) &&
     task.status.toLowerCase() != 'completed';
