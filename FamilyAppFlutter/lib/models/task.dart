@@ -35,7 +35,7 @@ class Task {
   String status;
 
   /// Points awarded upon completion of the task.
-  int points;
+  late int points;
 
   /// Optional list of reminder times independent of the end date.
   final List<DateTime> reminders;
