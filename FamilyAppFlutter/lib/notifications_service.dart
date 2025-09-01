@@ -7,8 +7,9 @@ import 'models/family_member.dart';
 import 'providers/family_data.darlt';
 
 class NotificationService {
-  static GlobalKey<ScaffoldMessengerState>? _scaffoldMessengerKey
-      static BuildContext? _attachedContext;;
+   static GlobalKey<ScaffoldMessengerState>? _scaffoldMessengerKey;;
+  static BuildContext? _attachedContext;
+
 
 
   /// Initialize the notification service with an optional scaffoldMessengerKey.
