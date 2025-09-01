@@ -9,7 +9,8 @@ import 'services/chat_storage_service.dart';
 import 'providers/chat_data.dart';
 import 'screens/schedule_screen.dart';
 import 'screens/calendar_screen.dart';
-import 'screens/chat_list_screen.dart';
+import 'screens/chat_list_screen.dart
+  import 'screens/chat_list_screen_v2.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -67,7 +68,7 @@ class _HomeTabsV001State extends State<HomeTabsV001> {
       MembersScreenV001(),
       TasksScreenV001(),
       EventsScreenV001(),
-      ChatListScreen(),
+      ChatListScreenV2(),
       ScheduleScreenV001(),
       CalendarScreenV001(),
     ];
