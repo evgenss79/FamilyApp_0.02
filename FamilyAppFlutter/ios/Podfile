@@ -1,0 +1,23 @@
+# Podfile for Flutter iOS project
+
+platform :ios, '12.0'
+
+# CocoaPods analytics not send
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+# Define the project workspace and configuration
+project 'Runner', {
+  'Debug' => :debug,
+  'Profile' => :release,
+  'Release' => :release,
+}
+
+# This post_install hook removes the problematic '-gmodules' flag (displayed as -G in Xcode)
+post_install do |installer|
+  installer.pods_project.build_configurations.each do |config|
+    other_cflags = config.build_settings['OTHER_CFLAGS']
+    if other_cflags
+      config.build_settings['OTHER_CFLAGS'] = other_cflags.gsub('-gmodules', '')
+    end
+  end
+end
