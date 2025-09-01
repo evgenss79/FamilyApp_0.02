@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import 'services/storage_service.dart';
 import 'providers/family_data.dart';
 import 'screens/members_screen.dart';
 import 'screens/tasks_screen.dart';
 import 'screens/events_screen.dart';
-import  'services/chat_storage_service.dart';
+import 'services/chat_storage_service.dart';
 import 'providers/chat_data.dart';
 import 'screens/schedule_screen.dart';
 import 'screens/calendar_screen.dart';
+import 'screens/chat_list_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -67,21 +67,16 @@ class _HomeTabsV001State extends State<HomeTabsV001> {
       MembersScreenV001(),
       TasksScreenV001(),
       EventsScreenV001(),
+      ChatListScreen(),
       ScheduleScreenV001(),
       CalendarScreenV001(),
     ];
     return Scaffold(
       body: screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
-        // Use a fixed type so that all five items are always visible
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        // Explicitly set colors to ensure the navigation bar is visible
-        // against the light app background. The selected item will be
-        // highlighted in the primary color while unselected items are
-        // rendered in grey. A white background helps distinguish the
-        // bar from the page body.
         selectedItemColor: Colors.blue,
         unselectedItemColor: Colors.grey,
         backgroundColor: Colors.white,
@@ -97,6 +92,10 @@ class _HomeTabsV001State extends State<HomeTabsV001> {
           BottomNavigationBarItem(
             icon: Icon(Icons.event),
             label: 'Events',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat),
+            label: 'Chat',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today),
