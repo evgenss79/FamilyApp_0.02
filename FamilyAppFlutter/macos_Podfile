@@ -1,0 +1,41 @@
+# Podfile for macOS Flutter application
+
+platform :macos, '10.13'
+
+# Disable CocoaPods stats to improve build times
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+target 'Runner' do
+  # Integrate Flutter engine and plugins manually for macOS.
+  use_frameworks!
+  use_modular_headers!
+
+  # Flutter engine for macOS
+  pod 'FlutterMacOS', :path => '../Flutter/ephemeral'
+
+  # Flutter plugins used by this project
+  pod 'cloud_firestore', :path => '../.symlinks/plugins/cloud_firestore/macos'
+  pod 'firebase_auth', :path => '../.symlinks/plugins/firebase_auth/macos'
+  pod 'firebase_core', :path => '../.symlinks/plugins/firebase_core/macos'
+  pod 'flutter_webrtc', :path => '../.symlinks/plugins/flutter_webrtc/macos'
+  pod 'path_provider_foundation', :path => '../.symlinks/plugins/path_provider_foundation/darwin'
+  pod 'file_picker', :path => '../.symlinks/plugins/file_picker/macos'
+end
+
+# Post-install hook to fix build flags and deployment targets.
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      # Remove unsupported '-G' flag from other compiler flags
+      other_cflags = config.build_settings['OTHER_CFLAGS']
+      if other_cflags && other_cflags.include?('-G')
+        config.build_settings['OTHER_CFLAGS'] = other_cflags.gsub('-G', '')
+      end
+      # Ensure minimum macOS deployment target is 10.13 or higher
+      deployment_target = config.build_settings['MACOSX_DEPLOYMENT_TARGET']
+      if deployment_target && deployment_target.to_f < 10.13
+        config.build_settings['MACOSX_DEPLOYMENT_TARGET'] = '10.13'
+      end
+    end
+  end
+end
