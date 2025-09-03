@@ -1,4 +1,4 @@
-# Podfile for macOS Flutter application
+# Generated Podfile for macOS Flutter application with correct plugin paths
 
 platform :macos, '10.13'
 
@@ -11,15 +11,15 @@ target 'Runner' do
   use_modular_headers!
 
   # Flutter engine for macOS
-  pod 'FlutterMacOS', :path => '../Flutter/ephemeral'
+  pod 'FlutterMacOS', :path => 'Flutter/ephemeral'
 
   # Flutter plugins used by this project
-  pod 'cloud_firestore', :path => '../.symlinks/plugins/cloud_firestore/macos'
-  pod 'firebase_auth', :path => '../.symlinks/plugins/firebase_auth/macos'
-  pod 'firebase_core', :path => '../.symlinks/plugins/firebase_core/macos'
-  pod 'flutter_webrtc', :path => '../.symlinks/plugins/flutter_webrtc/macos'
-  pod 'path_provider_foundation', :path => '../.symlinks/plugins/path_provider_foundation/darwin'
-  pod 'file_picker', :path => '../.symlinks/plugins/file_picker/macos'
+  pod 'cloud_firestore', :path => 'Flutter/ephemeral/.symlinks/plugins/cloud_firestore/macos'
+  pod 'firebase_auth',   :path => 'Flutter/ephemeral/.symlinks/plugins/firebase_auth/macos'
+  pod 'firebase_core',   :path => 'Flutter/ephemeral/.symlinks/plugins/firebase_core/macos'
+  pod 'flutter_webrtc',  :path => 'Flutter/ephemeral/.symlinks/plugins/flutter_webrtc/macos'
+  pod 'path_provider_foundation', :path => 'Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin'
+  pod 'file_picker',     :path => 'Flutter/ephemeral/.symlinks/plugins/file_picker/macos'
 end
 
 # Post-install hook to fix build flags and deployment targets.
@@ -31,7 +31,7 @@ post_install do |installer|
       if other_cflags && other_cflags.include?('-G')
         config.build_settings['OTHER_CFLAGS'] = other_cflags.gsub('-G', '')
       end
-      # Ensure minimum macOS deployment target is 10.13 or higher
+      # Bump deployment target to 10.13 if lower
       deployment_target = config.build_settings['MACOSX_DEPLOYMENT_TARGET']
       if deployment_target && deployment_target.to_f < 10.13
         config.build_settings['MACOSX_DEPLOYMENT_TARGET'] = '10.13'
