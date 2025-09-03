@@ -1,23 +1,49 @@
-# Podfile for Flutter iOS project
-
 platform :ios, '12.0'
 
-# CocoaPods analytics not send
+# Disable CocoaPods analytics to speed up installation
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
-# Define the project workspace and configuration
+# Define workspace mapping for Xcode
 project 'Runner', {
   'Debug' => :debug,
   'Profile' => :release,
   'Release' => :release,
 }
 
-# This post_install hook removes the problematic '-gmodules' flag (displayed as -G in Xcode)
+# Use frameworks and modular headers for all pods
+use_frameworks!
+use_modular_headers!
+
+target 'Runner' do
+  # Flutter engine for iOS. The Flutter framework and engine are stored in the
+  # iOS Flutter directory. CocoaPods looks for a `Flutter.podspec` in this
+  # directory to define the engine pod. When building macOS this is
+  # 'FlutterMacOS', but for iOS it is just 'Flutter'.
+  pod 'Flutter', :path => 'Flutter'
+
+  # Flutter plugins used by this project. Each plugin has a macOS and iOS
+  # implementation stored in the Flutter `.symlinks` directory. These paths
+  # ensure CocoaPods finds the plugin podspecs correctly. If a plugin
+  # implementation does not support iOS it will not be included here.
+  pod 'cloud_firestore',    :path => 'Flutter/ephemeral/.symlinks/plugins/cloud_firestore/ios'
+  pod 'firebase_auth',      :path => 'Flutter/ephemeral/.symlinks/plugins/firebase_auth/ios'
+  pod 'firebase_core',      :path => 'Flutter/ephemeral/.symlinks/plugins/firebase_core/ios'
+  pod 'flutter_webrtc',     :path => 'Flutter/ephemeral/.symlinks/plugins/flutter_webrtc/ios'
+  pod 'path_provider_ios',  :path => 'Flutter/ephemeral/.symlinks/plugins/path_provider_ios/ios'
+  pod 'file_picker',        :path => 'Flutter/ephemeral/.symlinks/plugins/file_picker/ios'
+end
+
+# Post-installation hook to clean up compiler flags and ensure consistent
+# build settings across all pods. In particular this removes the `-gmodules`
+# flag from OTHER_CFLAGS which can manifest in Xcode as the unsupported
+# `-G` flag and causes build failures on newer versions of clang.
 post_install do |installer|
-  installer.pods_project.build_configurations.each do |config|
-    other_cflags = config.build_settings['OTHER_CFLAGS']
-    if other_cflags
-      config.build_settings['OTHER_CFLAGS'] = other_cflags.gsub('-gmodules', '')
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      other_cflags = config.build_settings['OTHER_CFLAGS']
+      if other_cflags && other_cflags.include?('-gmodules')
+        config.build_settings['OTHER_CFLAGS'] = other_cflags.gsub('-gmodules', '')
+      end
     end
   end
 end
