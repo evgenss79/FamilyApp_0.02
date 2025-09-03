@@ -55,7 +55,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 final msg = messages[index];
                 final sender = familyData.members.firstWhere(
                   (m) => m.id == msg.senderId,
-                  orElse: () => FamilyMember(id: '', name: 'Unknown'),
+                  orElse: () => FamilyMember(id: '', name: 'Unknown', relationship: 'Unknown'),
+             
                 );
                 final senderName = sender.name;
                 return ListTile(
