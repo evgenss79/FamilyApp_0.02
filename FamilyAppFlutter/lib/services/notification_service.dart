@@ -8,10 +8,10 @@ import '../providers/family_data.dart';
 import '../models/family_member.dart';
 
 class NotificationService {
-  static GlobalKey<ScaffoldMessengerState>? _scaffoldMessengerKey;
+  static GlobalKey ? _scaffoldMessengerKey;
   static BuildContext? _attachedContext;
 
-  static Future<void> init({GlobalKey<ScaffoldMessengerState>? scaffoldMessengerKey}) async {
+  static Future init({GlobalKey ? scaffoldMessengerKey}) async {
     _scaffoldMessengerKey = scaffoldMessengerKey;
   }
 
@@ -22,16 +22,14 @@ class NotificationService {
   static void sendTaskCreatedNotification(Task task, FamilyDataV001 data) {
     if (task.assignedMemberId == null) {
       for (final member in data.members) {
-        debugPrint('Notification to ${member.name}: New task \"${task.title}\" has been created');
+        debugPrint('Notification to ${member.name}: New task "${task.title}" has been created');
       }
     } else {
-      final member = data.members.firstWhere(
+      final FamilyMember member = data.members.firstWhere(
         (m) => m.id == task.assignedMemberId,
-        orElse: () => null,
+        orElse: () => FamilyMember(id: '', name: 'Unknown', relationship: 'Unknown'),
       );
-      if (member != null) {
-        debugPrint('Notification to ${member.name}: You have been assigned a new task \"${task.title}\"');
-      }
+      debugPrint('Notification to ${member.name}: You have been assigned a new task "${task.title}"');
     }
   }
 
@@ -49,26 +47,24 @@ class NotificationService {
       Timer(delay, () {
         if (task.assignedMemberId == null) {
           for (final member in data.members) {
-            debugPrint('Reminder for ${member.name}: Task \"${task.title}\" is due at ${due.toLocal()}');
+            debugPrint('Reminder for ${member.name}: Task "${task.title}" is due at ${due.toLocal()}');
           }
         } else {
-          final member = data.members.firstWhere(
+          final FamilyMember member = data.members.firstWhere(
             (m) => m.id == task.assignedMemberId,
-            orElse: () => null,
+            orElse: () => FamilyMember(id: '', name: 'Unknown', relationship: 'Unknown'),
           );
-          if (member != null) {
-            debugPrint('Reminder for ${member.name}: Task \"${task.title}\" is due at ${due.toLocal()}');
-          }
+          debugPrint('Reminder for ${member.name}: Task "${task.title}" is due at ${due.toLocal()}');
         }
       });
     }
   }
 
-  static Future<void> markRead(dynamic id) async {
+  static Future markRead(dynamic id) async {
     // TODO: implement markRead logic
   }
 
-  static Future<void> delete(dynamic id) async {
+  static Future delete(dynamic id) async {
     // TODO: implement delete logic
   }
 }
