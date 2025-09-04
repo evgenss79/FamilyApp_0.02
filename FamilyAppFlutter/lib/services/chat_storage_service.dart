@@ -17,14 +17,18 @@ class ChatStorageServiceV001 {
     // Open Hive boxes
     await Hive.openBox('conversationsV001');
     await Hive.openBox('messagesV001');
+
+    // migrate data from old boxes if they exist
+    await _migrateOldBoxes();
   }
 
   /// Loads all conversations from the Hive box.
   static List<Conversation> loadConversations() {
     final box = Hive.box('conversationsV001');
-    final data = box.get('data', defaultValue: []) as List<dynamic>;
+    final data = box.get('data', defaultValue: []) as List;
     return data
-        .map((map) => Conversation.fromMap(Map<String, dynamic>.from(map)))
+        .map((map) =>
+            Conversation.fromMap(Map<String, dynamic>.from(map as Map)))
         .toList();
   }
 
@@ -38,9 +42,9 @@ class ChatStorageServiceV001 {
   /// Loads all messages from the Hive box.
   static List<Message> loadMessages() {
     final box = Hive.box('messagesV001');
-    final data = box.get('data', defaultValue: []) as List<dynamic>;
+    final data = box.get('data', defaultValue: []) as List;
     return data
-        .map((map) => Message.fromMap(Map<String, dynamic>.from(map)))
+        .map((map) => Message.fromMap(Map<String, dynamic>.from(map as Map)))
         .toList();
   }
 
@@ -49,5 +53,36 @@ class ChatStorageServiceV001 {
     final box = Hive.box('messagesV001');
     final data = messages.map((message) => message.toMap()).toList();
     box.put('data', data);
+  }
+
+  /// Migrates data from old boxes (without V001 suffix) to new boxes.
+  static Future<void> _migrateOldBoxes() async {
+    // Migrate conversations
+    if (await Hive.boxExists('conversations')) {
+      final oldBox = await Hive.openBox('conversations');
+      final newBox = Hive.box('conversationsV001');
+      final oldData = oldBox.get('data', defaultValue: []) as List;
+      final conversations = oldData
+          .map((map) =>
+              Conversation.fromMap(Map<String, dynamic>.from(map as Map)))
+          .toList();
+      await newBox.put(
+          'data', conversations.map((c) => c.toMap()).toList());
+      await oldBox.deleteFromDisk();
+    }
+
+    // Migrate messages
+    if (await Hive.boxExists('messages')) {
+      final oldBox = await Hive.openBox('messages');
+      final newBox = Hive.box('messagesV001');
+      final oldData = oldBox.get('data', defaultValue: []) as List;
+      final messages = oldData
+          .map((map) =>
+              Message.fromMap(Map<String, dynamic>.from(map as Map)))
+          .toList();
+      await newBox.put(
+          'data', messages.map((m) => m.toMap()).toList());
+      await oldBox.deleteFromDisk();
+    }
   }
 }
