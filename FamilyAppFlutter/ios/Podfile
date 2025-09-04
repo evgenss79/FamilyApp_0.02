@@ -5,7 +5,7 @@ ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
 # Define workspace mapping for Xcode
 project 'Runner', {
-  'Debug' => :debug,
+  'Debug'   => :debug,
   'Profile' => :release,
   'Release' => :release,
 }
@@ -14,19 +14,14 @@ project 'Runner', {
 use_frameworks!
 use_modular_headers!
 
+# Install Flutter and plugin pods
 target 'Runner' do
-  pod 'Flutter', :path => 'Flutter'
-
-  # Flutter plugins used by this project.
-  pod 'cloud_firestore',    :path => 'Flutter/ephemeral/.symlinks/plugins/cloud_firestore/ios'
-  pod 'firebase_auth',      :path => 'Flutter/ephemeral/.symlinks/plugins/firebase_auth/ios'
-  pod 'firebase_core',      :path => 'Flutter/ephemeral/.symlinks/plugins/firebase_core/ios'
-  pod 'flutter_webrtc',     :path => 'Flutter/ephemeral/.symlinks/plugins/flutter_webrtc/ios'
-  pod 'path_provider_ios',  :path => 'Flutter/ephemeral/.symlinks/plugins/path_provider_ios/ios'
-  pod 'file_picker',        :path => 'Flutter/ephemeral/.symlinks/plugins/file_picker/ios'
+  # Этот метод прописан в .ios/Flutter/podhelper.rb и добавляет все необходимые pods,
+  # в том числе Flutter и плагины.
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 
-# Post-installation hook to remove unsupported compiler flags and set deployment target
+# Post‑install hook: убираем флаг gmodules и выставляем минимальный таргет 13.0
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
@@ -40,6 +35,7 @@ post_install do |installer|
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
       end
     end
+    # Настройки сборки Flutter
     flutter_additional_ios_build_settings(target)
   end
 end
