@@ -15,16 +15,9 @@ use_frameworks!
 use_modular_headers!
 
 target 'Runner' do
-  # Flutter engine for iOS. The Flutter framework and engine are stored in the
-  # iOS Flutter directory. CocoaPods looks for a `Flutter.podspec` in this
-  # directory to define the engine pod. When building macOS this is
-  # 'FlutterMacOS', but for iOS it is just 'Flutter'.
   pod 'Flutter', :path => 'Flutter'
 
-  # Flutter plugins used by this project. Each plugin has a macOS and iOS
-  # implementation stored in the Flutter `.symlinks` directory. These paths
-  # ensure CocoaPods finds the plugin podspecs correctly. If a plugin
-  # implementation does not support iOS it will not be included here.
+  # Flutter plugins used by this project.
   pod 'cloud_firestore',    :path => 'Flutter/ephemeral/.symlinks/plugins/cloud_firestore/ios'
   pod 'firebase_auth',      :path => 'Flutter/ephemeral/.symlinks/plugins/firebase_auth/ios'
   pod 'firebase_core',      :path => 'Flutter/ephemeral/.symlinks/plugins/firebase_core/ios'
@@ -33,21 +26,20 @@ target 'Runner' do
   pod 'file_picker',        :path => 'Flutter/ephemeral/.symlinks/plugins/file_picker/ios'
 end
 
-   # Post-installation hook to remove unsupported compiler flags and set deployment  target
-    post_install do |installer|
-      installer.pods_project.targets.each do |target|
-        target.build_configurations.each do |config|
-          # Remove unsupported '-gmodules' flag from OTHER_CFLAGS
-          other_cflags = config.build_settings['OTHER_CFLAGS']
-          if other_cflags && other_cflags.include?('gmodules')
-            config.build_settings['OTHER_CFLAGS'] = other_cflags.gsub('gmodules', '')
-          end
-          # Ensure each pod has a minimum deployment target of 13.0
-          if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 13.0
-            config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
-          end
-        end
-        flutter_additional_ios_build_settings(target)
+# Post-installation hook to remove unsupported compiler flags and set deployment target
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      # Remove unsupported '-gmodules' flag from OTHER_CFLAGS
+      other_cflags = config.build_settings['OTHER_CFLAGS']
+      if other_cflags && other_cflags.include?('gmodules')
+        config.build_settings['OTHER_CFLAGS'] = other_cflags.gsub('gmodules', '')
+      end
+      # Ensure each pod has a minimum deployment target of 13.0
+      if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 13.0
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
       end
     end
-
+    flutter_additional_ios_build_settings(target)
+  end
+end
