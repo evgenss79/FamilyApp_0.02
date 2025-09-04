@@ -14,10 +14,12 @@ project 'Runner', {
 use_frameworks!
 use_modular_headers!
 
+# Подгружаем вспомогательный скрипт Flutter для iOS, который определяет flutter_install_all_ios_pods
+flutter_ios_pod_helper_path = File.join(__dir__, 'Flutter', 'podhelper.rb')
+load flutter_ios_pod_helper_path if File.exist?(flutter_ios_pod_helper_path)
+
 # Install Flutter and plugin pods
 target 'Runner' do
-  # Этот метод прописан в .ios/Flutter/podhelper.rb и добавляет все необходимые pods,
-  # в том числе Flutter и плагины.
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 
