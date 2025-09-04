@@ -37,14 +37,17 @@ target 'Runner' do
   end
 end
 
-# Обновлённый post_install: удаляем флаг gmodules и поднимаем MACOSX_DEPLOYMENT_TARGET до 10.13
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
       other_cflags = config.build_settings['OTHER_CFLAGS']
-      if other_cflags && other_cflags.include?('gmodules')
-        config.build_settings['OTHER_CFLAGS'] = other_cflags.gsub('gmodules', '')
+      if other_cflags
+        # Удаляем поддерживаемые флаги '-gmodules' и '-G'
+        flags = other_cflags.split(' ')
+        flags = flags.reject { |f| f == '-gmodules' || f == '-G' }
+        config.build_settings['OTHER_CFLAGS'] = flags.join(' ')
       end
+      # Обновляем минимальную версию macOS, если меньше 10.13
       if config.build_settings['MACOSX_DEPLOYMENT_TARGET'].to_f < 10.13
         config.build_settings['MACOSX_DEPLOYMENT_TARGET'] = '10.13'
       end
