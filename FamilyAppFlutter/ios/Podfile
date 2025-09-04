@@ -1,4 +1,4 @@
-platform :ios, '12.0'
+platform :ios, '13.0'
 
 # Disable CocoaPods analytics to speed up installation
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -33,17 +33,21 @@ target 'Runner' do
   pod 'file_picker',        :path => 'Flutter/ephemeral/.symlinks/plugins/file_picker/ios'
 end
 
-# Post-installation hook to clean up compiler flags and ensure consistent
-# build settings across all pods. In particular this removes the `-gmodules`
-# flag from OTHER_CFLAGS which can manifest in Xcode as the unsupported
-# `-G` flag and causes build failures on newer versions of clang.
-post_install do |installer|
-  installer.pods_project.targets.each do |target|
-    target.build_configurations.each do |config|
-      other_cflags = config.build_settings['OTHER_CFLAGS']
-      if other_cflags && other_cflags.include?('-gmodules')
-        config.build_settings['OTHER_CFLAGS'] = other_cflags.gsub('-gmodules', '')
+   # Post-installation hook to remove unsupported compiler flags and set deployment  target
+    post_install do |installer|
+      installer.pods_project.targets.each do |target|
+        target.build_configurations.each do |config|
+          # Remove unsupported '-gmodules' flag from OTHER_CFLAGS
+          other_cflags = config.build_settings['OTHER_CFLAGS']
+          if other_cflags && other_cflags.include?('gmodules')
+            config.build_settings['OTHER_CFLAGS'] = other_cflags.gsub('gmodules', '')
+          end
+          # Ensure each pod has a minimum deployment target of 13.0
+          if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 13.0
+            config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+          end
+        end
+        flutter_additional_ios_build_settings(target)
       end
     end
-  end
-end
+
