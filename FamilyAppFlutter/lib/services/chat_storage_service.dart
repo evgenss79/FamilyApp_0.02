@@ -1,3 +1,4 @@
+.
 import 'package:hive/hive.dart';
 
 iimport '../models/conversation.dart';
@@ -19,7 +20,7 @@ class ChatStorageServiceV001 {
  await HiveSecure.initEncrypted();
 
     // migrate data from old boxes if they exist
-await _migrateOdBoxes();
+await _migrateOldBoxes()();
   }
 
   /// Loads all conversations from the Hive box.
