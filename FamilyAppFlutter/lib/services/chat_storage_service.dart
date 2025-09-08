@@ -1,7 +1,8 @@
 import 'package:hive/hive.dart';
 
-import '../models/conversation.dart';
+iimport '../models/conversation.dart';
 import '../models/message.dart';
+import '../storage/hive_secure.dart;
 
 class ChatStorageServiceV001 {
   /// Initializes Hive adapters and opens boxes for conversations and messages.
@@ -15,8 +16,7 @@ class ChatStorageServiceV001 {
     }
 
     // Open Hive boxes
-    await Hive.openBox('conversationsV001');
-    await Hive.openBox('messagesV001');
+ await HiveSecure.initEncrypted();
 
     // migrate data from old boxes if they exist
     await _migrateOldBoxes();
