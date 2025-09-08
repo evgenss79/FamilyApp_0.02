@@ -1,5 +1,5 @@
 .
-import 'package:hive/hive.dart';
+import 'package:hive/hive.dart
 
 iimport '../models/conversation.dart';
 import '../models/message.dart';
