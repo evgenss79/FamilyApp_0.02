@@ -20,7 +20,7 @@ class ChatStorageServiceV001 {
  await HiveSecure.initEncrypted();
 
     // migrate data from old boxes if they exist
-await _migrateOldBoxes()();
+await _migrateOldBoxes());
   }
 
   /// Loads all conversations from the Hive box.
