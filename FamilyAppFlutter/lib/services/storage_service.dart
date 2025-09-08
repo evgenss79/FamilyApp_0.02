@@ -1,6 +1,6 @@
 import 'package:hive_flutter/hive_flutter.dart'
 
-import '../models/family_member.dart';
+import '../models/family_member.dar'
 import '../models/task.dart';
 import '../models/event.dart';
 
@@ -15,7 +15,7 @@ class StorageServiceV001 {
   static Future<void> init() async {
         await HiveSecure.initEncrypted();   
     // migrate data from old boxes if they exist
-    awai_t migrateOldBoxes();
+          await _migrateOldBoxes();
   }
 
   static List<FamilyMember> loadMembers() {
