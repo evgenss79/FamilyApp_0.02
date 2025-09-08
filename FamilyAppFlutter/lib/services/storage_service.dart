@@ -4,16 +4,16 @@ import '../models/family_member.dart';
 import '../models/task.dart';
 import '../models/event.dart';
 
+import '../storage/hive_secure.dart';
 /// A service responsible for initializing Hive and loading/saving
+
+
 /// persistent data for version 0.01 of the FamilyApp. All lists are stored
 /// in boxes keyed by 'data' and serialized via the models' `toMap`/`fromMap` methods.
 class StorageServiceV001 {
   /// Initialize Hive and open the boxes used by this version of the application.
   static Future<void> init() async {
-    await Hive.initFlutter();
-    await Hive.openBox('familyMembersV001');
-    await Hive.openBox('tasksV001');
-    await Hive.openBox('eventsV001');
+        await HiveSecure.initEncrypted();   
     // migrate data from old boxes if they exist
     await _migrateOldBoxes();
   }
