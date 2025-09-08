@@ -3,20 +3,25 @@ import 'package:flutter/foundation.dart';
 import '../models/conversation.dart';
 import '../models/message.dart';
 import '../services/chat_storage_service.dart';
+import '../services/firestore_service.dart';
 
 class ChatDataV001 with ChangeNotifier {
+  // ---- Состояние ------------------------------------------------------------
   List<Conversation> _conversations = [];
   List<Message> _messages = [];
 
-  // Returns an unmodifiable view of the conversations.
+  // ---- Сервисы --------------------------------------------------------------
+  final FirestoreService _firestoreService = FirestoreService();
+  String? familyId;
+
+  // ---- Геттеры --------------------------------------------------------------
   List<Conversation> get conversations => List.unmodifiable(_conversations);
 
-  // Returns the list of messages for a given conversation.
   List<Message> messagesForConversation(String conversationId) {
     return _messages.where((m) => m.conversationId == conversationId).toList();
   }
 
-  // Loads conversations and messages from persistent storage.
+  // ---- Локальная загрузка (Hive) -------------------------------------------
   Future<void> loadData() async {
     await ChatStorageServiceV001.init();
     _conversations = ChatStorageServiceV001.loadConversations();
@@ -24,20 +29,21 @@ class ChatDataV001 with ChangeNotifier {
     notifyListeners();
   }
 
-  // Adds a new conversation and persists the updated list.
+  // ---- Добавление разговора -------------------------------------------------
   void addConversation(Conversation conversation) {
     _conversations.add(conversation);
     ChatStorageServiceV001.saveConversations(_conversations);
     notifyListeners();
   }
 
-  // Adds a new message and updates the corresponding conversation's lastMessageTime.
+  // ---- Добавление сообщения -------------------------------------------------
   void addMessage(Message message) {
     _messages.add(message);
     ChatStorageServiceV001.saveMessages(_messages);
 
-    // Update lastMessageTime for the associated conversation.
-    final index = _conversations.indexWhere((c) => c.id == message.conversationId);
+    // Обновляем lastMessageTime у соответствующего Conversation
+    final index =
+        _conversations.indexWhere((c) => c.id == message.conversationId);
     if (index != -1) {
       final conv = _conversations[index];
       _conversations[index] = Conversation(
@@ -52,7 +58,7 @@ class ChatDataV001 with ChangeNotifier {
     notifyListeners();
   }
 
-  // Removes a conversation and all its messages.
+  // ---- Удаление разговора (и его сообщений) --------------------------------
   void removeConversation(String conversationId) {
     _conversations.removeWhere((c) => c.id == conversationId);
     _messages.removeWhere((m) => m.conversationId == conversationId);
@@ -61,10 +67,54 @@ class ChatDataV001 with ChangeNotifier {
     notifyListeners();
   }
 
-  // Removes a single message by its ID.
+  // ---- Удаление сообщения ---------------------------------------------------
   void removeMessage(String messageId) {
     _messages.removeWhere((m) => m.id == messageId);
     ChatStorageServiceV001.saveMessages(_messages);
     notifyListeners();
+  }
+
+  // ---- Загрузка из Firestore -----------------------------------------------
+  /// Загружает разговоры и сообщения из Firestore для текущей семьи.
+  Future<void> loadFromFirestore() async {
+    if (familyId == null) return;
+
+    // 1) разговоры семьи
+    _conversations = await _firestoreService.fetchConversations(familyId!);
+
+    // 2) сообщения по каждому разговору
+    _messages = [];
+    for (final conversation in _conversations) {
+      final msgs =
+          await _firestoreService.fetchMessages(familyId!, conversation.id);
+      _messages.addAll(msgs);
+    }
+
+    notifyListeners();
+  }
+
+  // ---- Сохранение в Firestore ----------------------------------------------
+  /// Сохраняет все разговоры и их сообщения в Firestore.
+  Future<void> saveToFirestore() async {
+    if (familyId == null) return;
+
+    // 1) разговоры
+    await _firestoreService.saveConversations(familyId!, _conversations);
+
+    // 2) группируем сообщения по conversationId для батч-записи
+    final Map<String, List<Message>> messagesByConversation = {};
+    for (final msg in _messages) {
+      messagesByConversation.putIfAbsent(msg.conversationId, () => []);
+      messagesByConversation[msg.conversationId]!.add(msg);
+    }
+
+    // 3) сохраняем сообщения для каждого разговора
+    for (final entry in messagesByConversation.entries) {
+      await _firestoreService.saveMessages(
+        familyId!,
+        entry.key,    // conversationId
+        entry.value,  // список сообщений
+      );
+    }
   }
 }
