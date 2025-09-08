@@ -1,4 +1,4 @@
-chat_boot.dartimport 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/conversation.dart';
 import '../models/message.dart';
@@ -8,31 +8,30 @@ class ChatDataV001 with ChangeNotifier {
   List<Conversation> _conversations = [];
   List<Message> _messages = [];
 
-  /// Returns an unmodifiable view of the conversations.
+  // Returns an unmodifiable view of the conversations.
   List<Conversation> get conversations => List.unmodifiable(_conversations);
 
-  /// Returns the list of messages for a given conversation.
+  // Returns the list of messages for a given conversation.
   List<Message> messagesForConversation(String conversationId) {
     return _messages.where((m) => m.conversationId == conversationId).toList();
   }
 
-  /// Loads conversations and messages from persistent storage.
+  // Loads conversations and messages from persistent storage.
   Future<void> loadData() async {
-        await ChatStorageServiceV001.init();
-    
+    await ChatStorageServiceV001.init();
     _conversations = ChatStorageServiceV001.loadConversations();
     _messages = ChatStorageServiceV001.loadMessages();
     notifyListeners();
   }
 
-  /// Adds a new conversation and persists the updated list.
+  // Adds a new conversation and persists the updated list.
   void addConversation(Conversation conversation) {
     _conversations.add(conversation);
     ChatStorageServiceV001.saveConversations(_conversations);
     notifyListeners();
   }
 
-  /// Adds a new message and updates the corresponding conversation's lastMessageTime.
+  // Adds a new message and updates the corresponding conversation's lastMessageTime.
   void addMessage(Message message) {
     _messages.add(message);
     ChatStorageServiceV001.saveMessages(_messages);
@@ -53,7 +52,7 @@ class ChatDataV001 with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Removes a conversation and all its messages.
+  // Removes a conversation and all its messages.
   void removeConversation(String conversationId) {
     _conversations.removeWhere((c) => c.id == conversationId);
     _messages.removeWhere((m) => m.conversationId == conversationId);
@@ -62,7 +61,7 @@ class ChatDataV001 with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Removes a single message by its ID.
+  // Removes a single message by its ID.
   void removeMessage(String messageId) {
     _messages.removeWhere((m) => m.id == messageId);
     ChatStorageServiceV001.saveMessages(_messages);
