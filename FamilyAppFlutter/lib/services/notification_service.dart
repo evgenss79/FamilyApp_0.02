@@ -14,10 +14,7 @@ class NotificationService {
     // Здесь можно инициализировать локальные/пуш-уведомления.
   }
 
-  /// Совместимость со старым кодом (no-op).
-  static void attachContext(BuildContext context) {
-    // Используйте NotificationService.scaffoldMessengerKey в MaterialApp.scaffoldMessengerKey
-  }
+  /
 
   static ScaffoldMessengerState? get _messenger => _effectiveKey.currentState;
 
