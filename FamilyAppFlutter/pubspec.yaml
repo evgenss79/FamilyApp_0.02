@@ -1,5 +1,5 @@
 name: family_app_flutter
-description: FamilyApp — единое семейное пространство: чаты, задачи, события, синхронизация с Firestore и шифрование PII.
+description: "FamilyApp — единое семейное пространство: чаты, задачи, события, синхронизация с Firestore и шифрование PII."
 publish_to: "none"
 
 environment:
