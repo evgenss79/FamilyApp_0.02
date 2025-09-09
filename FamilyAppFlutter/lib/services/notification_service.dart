@@ -14,7 +14,7 @@ class NotificationService {
     // Здесь можно инициализировать локальные/пуш-уведомления.
   }
 
-  /
+  
 
   static ScaffoldMessengerState? get _messenger => _effectiveKey.currentState;
 
