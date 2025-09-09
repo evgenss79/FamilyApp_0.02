@@ -1,158 +1,76 @@
-EncryptedFirestoreService
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:meta/meta.dart';
+
 import 'secure_key_store.dart';
 import 'encryption_utils.dart';
 
+/// Сервис для чтения и записи защифрованных документов в Firestore.
 class EncryptedFirestoreService {
-  final FirebaseFirestore _fs;
-  final SecureKeyStore _keys;
-  final EncryptionUtils _enc;
-
   EncryptedFirestoreService({
     FirebaseFirestore? firestore,
     SecureKeyStore? keyStore,
-    EncryptionUtils? encryption,
-  })  : _fs = firestore ?? FirebaseFirestore.instance,
-        _keys = keyStore ?? SecureKeyStore(),
-        _enc = encryption ?? EncryptionUtils();
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _keyStore = keyStore ?? SecureKeyStore();
 
-  static const _memberPiiFields = <String>{
-    'name',
-    'email',
-    'phone',
-    'messengers',
-    'documentNumber',
-    'address',
-  };
+  final FirebaseFirestore _firestore;
+  final SecureKeyStore _keyStore;
 
-  Future<void> upsertFamilyMember({
-    required String familyId,
-    required String memberId,
-    required Map<String, dynamic> memberData,
-    Set<String> piiFields = _memberPiiFields,
+  @visibleForTesting
+  Future<String> encrypt(String plain) async {
+    final key = await _keyStore.getDek();
+    return EncryptionUtils.encryptToBase64(plain, key);
+  }
+
+  @visibleForTesting
+  Future<String> decrypt(String cipher) async {
+    final key = await _keyStore.getDek();
+    return EncryptionUtils.decryptFromBase64(cipher, key);
+  }
+
+  /// Записывает [data] в документ [ref], шифруя строковые поля.
+  Future<void> setEncrypted({
+    required DocumentReference<Map<String, dynamic>> ref,
+    required Map<String, dynamic> data,
+    SetOptions? options,
   }) async {
-    await _keys.ensureDek();
-    final dek = await _keys.getDek();
-
-    final publicMap = <String, dynamic>{};
-    final piiSource = <String, dynamic>{};
-
-    memberData.forEach((k, v) {
-      if (piiFields.contains(k)) {
-        piiSource[k] = v ?? '';
+    final Map<String, dynamic> enc = {};
+    for (final e in data.entries) {
+      final v = e.value;
+      if (v is String) {
+        enc[e.key] = await encrypt(v);
+      } else if (v is num || v is bool) {
+        enc[e.key] = v;
       } else {
-        publicMap[k] = v;
+        enc[e.key] = jsonEncode(v);
       }
-    });
-
-    final encryptedPii = <String, dynamic>{};
-    for (final entry in piiSource.entries) {
-      final e = await _enc.encryptString(
-        plaintext: entry.value?.toString() ?? '',
-        dek: dek,
-        aad: {
-          'familyId': familyId,
-          'memberId': memberId,
-          'field': entry.key,
-        },
-      );
-      encryptedPii[entry.key] = e;
     }
-
-    publicMap['pii'] = encryptedPii;
-    publicMap['pii_version'] = 1;
-
-    await _fs
-        .collection('families')
-        .doc(familyId)
-        .collection('members')
-        .doc(memberId)
-        .set(publicMap, SetOptions(merge: true));
+    await ref.set(enc, options);
   }
 
-  Future<Map<String, dynamic>?> getFamilyMember({
-    required String familyId,
-    required String memberId,
-    Set<String> piiFields = _memberPiiFields,
+  /// Читает документ [ref], расшифровывает строковые поля и возвращает map.
+  Future<Map<String, dynamic>?> getDecrypted({
+    required DocumentReference<Map<String, dynamic>> ref,
   }) async {
-    await _keys.ensureDek();
-    final dek = await _keys.getDek();
-
-    final snap = await _fs
-        .collection('families')
-        .doc(familyId)
-        .collection('members')
-        .doc(memberId)
-        .get();
-
+    final snap = await ref.get();
     if (!snap.exists) return null;
-    final data = Map<String, dynamic>.from(snap.data() ?? {});
 
-    final pii = Map<String, dynamic>.from(data['pii'] ?? {});
-    for (final field in piiFields) {
-      if (pii[field] is Map) {
-        final m = Map<String, dynamic>.from(pii[field] as Map);
-        final val = await _enc.decryptString(
-          nonceB64: m['nonce'],
-          cipherB64: m['cipher'],
-          tagB64: m['tag'],
-          dek: dek,
-          aad: {
-            'familyId': familyId,
-            'memberId': memberId,
-            'field': field,
-          },
-        );
-        data[field] = val;
+    final src = snap.data()!;
+    final Map<String, dynamic> out = {};
+    for (final e in src.entries) {
+      final v = e.value;
+      if (v is String) {
+        try {
+          out[e.key] = await decrypt(v);
+        } catch (_) {
+          out[e.key] = v;
+        }
+      } else {
+        out[e.key] = v;
       }
     }
-    data.remove('pii');
-    return data;
+    return out;
   }
 
-  Future<void> rotateDekForMembers(String familyId) async {
-    final oldDek = await _keys.rotateDek();
-    final newDek = await _keys.getDek();
-
-    final q = await _fs
-        .collection('families')
-        .doc(familyId)
-        .collection('members')
-        .get();
-
-    for (final doc in q.docs) {
-      final data = doc.data();
-      final pii = Map<String, dynamic>.from(data['pii'] ?? {});
-      final reEncrypted = <String, dynamic>{};
-
-      for (final entry in pii.entries) {
-        final m = Map<String, dynamic>.from(entry.value as Map);
-        final clear = await EncryptionUtils().decryptString(
-          nonceB64: m['nonce'],
-          cipherB64: m['cipher'],
-          tagB64: m['tag'],
-          dek: oldDek,
-          aad: {
-            'familyId': familyId,
-            'memberId': doc.id,
-            'field': entry.key,
-          },
-        );
-        final encNew = await EncryptionUtils().encryptString(
-          plaintext: clear,
-          dek: newDek,
-          aad: {
-            'familyId': familyId,
-            'memberId': doc.id,
-            'field': entry.key,
-          },
-        );
-        reEncrypted[entry.key] = encNew;
-      }
-
-      await doc.reference.update({'pii': reEncrypted});
-    }
-  }
+  FirebaseFirestore get firestore => _firestore;
 }
