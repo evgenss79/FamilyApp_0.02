@@ -33,7 +33,7 @@ dependencies:
   file_picker: ^8.3.7
 
   # WebRTC (если реально используется в коде)
- ^flutter_webrtc: ^1.1.0
+^flutter_webrtc: ^1.1.0
 
   # Для совместимости некоторых API (если встречаются js-interop)
   js: ^0.7.2
