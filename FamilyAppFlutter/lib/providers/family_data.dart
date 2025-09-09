@@ -7,31 +7,29 @@ import '../services/storage_service.dart';
 import '../services/firestore_service.dart';
 import '../security/encrypted_firestore_service.dart';
 
-/// Provider that manages lists of family members, tasks, and events.
-/// This class wraps access to the underlying [StorageServiceV001] to
-/// persist changes whenever members, tasks or events are added, removed or
-/// updated. It exposes methods to load the initial state from storage and
-/// to update individual tasks. Classes that listen to this provider will be
-/// notified whenever the underlying lists change.
 class FamilyDataV001 extends ChangeNotifier {
   final List<FamilyMember> _members = [];
   final List<Task> _tasks = [];
   final List<Event> _events = [];
 
-  // Firestore synchronization services
   final FirestoreService _firestoreService = FirestoreService();
-  final EncryptedFirestoreService _encryptedFirestoreService = EncryptedFirestoreService();
+  final EncryptedFirestoreService _encryptedFirestoreService =
+      EncryptedFirestoreService();
 
-  // Family ID for Firestore documents
   String? familyId;
 
   List<FamilyMember> get members => _members;
   List<Task> get tasks => _tasks;
   List<Event> get events => _events;
 
-  /// Loads members, tasks and events from persistent storage. This
-  /// overwrites any existing in-memory lists. After loading, listeners
-  /// are notified.
+  /// Инициализация: выбирает familyId, затем загружает данные из локального хранилища и Firestore.
+  Future<void> initialize(String fid) async {
+    if (familyId == fid) return;
+    familyId = fid;
+    await loadFromStorage();
+    await loadFromFirestore();
+  }
+
   Future<void> loadFromStorage() async {
     _members
       ..clear()
@@ -45,11 +43,11 @@ class FamilyDataV001 extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Loads members, tasks and events from Firestore for the configured familyId.
   Future<void> loadFromFirestore() async {
     if (familyId == null) return;
 
-    final membersFromCloud = await _firestoreService.fetchFamilyMembers(familyId!);
+    final membersFromCloud =
+        await _firestoreService.fetchFamilyMembers(familyId!);
     _members
       ..clear()
       ..addAll(membersFromCloud);
@@ -67,11 +65,9 @@ class FamilyDataV001 extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Saves the current members, tasks and events to Firestore.
+  /// Сохранение всех списков в Firestore.
   Future<void> saveToFirestore() async {
     if (familyId == null) return;
-
-    // Save encrypted family members
     for (final member in _members) {
       await _encryptedFirestoreService.upsertFamilyMember(
         familyId: familyId!,
@@ -79,22 +75,17 @@ class FamilyDataV001 extends ChangeNotifier {
         memberData: member.toMap(),
       );
     }
-
-    // Save tasks and events
     await _firestoreService.updateTasks(familyId!, _tasks);
     await _firestoreService.updateEvents(familyId!, _events);
   }
 
-  /// Adds a new [member] to the list and persists the change.
+  // Методы для участников
   void addMember(FamilyMember member) {
     _members.add(member);
     StorageServiceV001.saveMembers(_members);
     notifyListeners();
   }
 
-  /// Updates an existing family member. The [updatedMember] must have the
-  /// same identifier as an existing member. If found, the member is
-  /// replaced and the updated list is persisted. Listeners are notified.
   void updateMember(FamilyMember updatedMember) {
     final index = _members.indexWhere((m) => m.id == updatedMember.id);
     if (index != -1) {
@@ -104,9 +95,6 @@ class FamilyDataV001 extends ChangeNotifier {
     }
   }
 
-  /// Removes [member] from the list. Any tasks assigned to the member
-  /// will have their [Task.assignedMemberId] cleared. Updates are
-  /// persisted and listeners are notified.
   void removeMember(FamilyMember member) {
     _members.remove(member);
     for (final task in _tasks) {
@@ -119,43 +107,44 @@ class FamilyDataV001 extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Adds a new [task] to the list and persists the change.
+  // Методы для задач
   void addTask(Task task) {
     _tasks.add(task);
     StorageServiceV001.saveTasks(_tasks);
+    // синхронизация с Firestore в фоновом режиме
+    saveToFirestore();
     notifyListeners();
   }
 
-  /// Updates an existing task. The [updatedTask] must have the same
-  /// identifier as an existing task in the list. If found, the task is
-  /// replaced and the updated list is persisted. Listeners are notified of the change.
   void updateTask(Task updatedTask) {
-    final index = _tasks.indexWhere((task) => task.id == updatedTask.id);
+    final index = _tasks.indexWhere((t) => t.id == updatedTask.id);
     if (index != -1) {
       _tasks[index] = updatedTask;
       StorageServiceV001.saveTasks(_tasks);
+      saveToFirestore();
       notifyListeners();
     }
   }
 
-  /// Removes [task] from the list and persists the change.
   void removeTask(Task task) {
     _tasks.remove(task);
     StorageServiceV001.saveTasks(_tasks);
+    saveToFirestore();
     notifyListeners();
   }
 
-  /// Adds a new [event] to the list and persists the change.
+  // Методы для событий
   void addEvent(Event event) {
     _events.add(event);
     StorageServiceV001.saveEvents(_events);
+    saveToFirestore();
     notifyListeners();
   }
 
-  /// Removes [event] from the list and persists the change.
   void removeEvent(Event event) {
     _events.remove(event);
     StorageServiceV001.saveEvents(_events);
+    saveToFirestore();
     notifyListeners();
   }
 }
