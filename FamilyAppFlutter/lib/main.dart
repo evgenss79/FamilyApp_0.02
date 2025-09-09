@@ -6,6 +6,7 @@ import 'firebase_options.dart';
 import 'services/storage_service.dart';
 import 'providers/family_data.dart';
 import 'screens/members_screen.dart';
+import 'services/notification_service.dart';
 import 'screens/tasks_screen.dart';
 import 'screens/events_screen.dart';
 import 'services/chat_storage_service.dart';
@@ -28,6 +29,7 @@ Future<void> main() async {
   await familyData.loadFromStorage();
   await chatData.loadData();
 
+    await NotificationService.init();
   runApp(
     MultiProvider(
       providers: [
@@ -48,6 +50,8 @@ class FamilyAppV001 extends StatelessWidget {
       title: 'Family App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+
+            scaffoldMessengerKey: NotificationService.scaffoldMessengerKey,
       ),
       home: const HomeTabsV001(),
     );
