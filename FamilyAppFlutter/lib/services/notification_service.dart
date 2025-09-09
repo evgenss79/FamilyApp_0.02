@@ -1,70 +1,48 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-
-import '../models/task.dart';
-import '../providers/family_data.dart';
-import '../models/family_member.dart';
 
 class NotificationService {
-  static GlobalKey ? _scaffoldMessengerKey;
-  static BuildContext? _attachedContext;
+  NotificationService._();
 
-  static Future init({GlobalKey ? scaffoldMessengerKey}) async {
-    _scaffoldMessengerKey = scaffoldMessengerKey;
+  static final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+      GlobalKey<ScaffoldMessengerState>();
+
+  static GlobalKey<ScaffoldMessengerState> _effectiveKey = scaffoldMessengerKey;
+
+  /// Инициализация. Параметр сделан необязательным для обратной совместимости.
+  static Future<void> init({GlobalKey<ScaffoldMessengerState>? scaffoldMessengerKey}) async {
+    _effectiveKey = scaffoldMessengerKey ?? NotificationService.scaffoldMessengerKey;
+    // Здесь можно инициализировать локальные/пуш-уведомления.
   }
 
+  /// Совместимость со старым кодом (no-op).
   static void attachContext(BuildContext context) {
-    _attachedContext = context;
+    // Используйте NotificationService.scaffoldMessengerKey в MaterialApp.scaffoldMessengerKey
   }
 
-  static void sendTaskCreatedNotification(Task task, FamilyDataV001 data) {
-    if (task.assignedMemberId == null) {
-      for (final member in data.members) {
-        debugPrint('Notification to ${member.name}: New task "${task.title}" has been created');
-      }
-    } else {
-      final FamilyMember member = data.members.firstWhere(
-        (m) => m.id == task.assignedMemberId,
-        orElse: () => FamilyMember(id: '', name: 'Unknown', relationship: 'Unknown'),
-      );
-      debugPrint('Notification to ${member.name}: You have been assigned a new task "${task.title}"');
-    }
+  static ScaffoldMessengerState? get _messenger => _effectiveKey.currentState;
+
+  static void showSnack(String message, {SnackBarAction? action, Duration? duration}) {
+    final bar = SnackBar(
+      content: Text(message),
+      action: action,
+      duration: duration ?? const Duration(seconds: 3),
+    );
+    _messenger?..clearSnackBars()..showSnackBar(bar);
   }
 
-  static void scheduleDueNotifications(Task task, FamilyDataV001 data) {
-    final due = task.dueDate;
-    if (due == null) return;
-    final now = DateTime.now();
-    final targets = [
-      due.subtract(const Duration(hours: 1)),
-      due.subtract(const Duration(minutes: 15)),
-    ];
-    for (final target in targets) {
-      final delay = target.difference(now);
-      if (delay.isNegative) continue;
-      Timer(delay, () {
-        if (task.assignedMemberId == null) {
-          for (final member in data.members) {
-            debugPrint('Reminder for ${member.name}: Task "${task.title}" is due at ${due.toLocal()}');
-          }
-        } else {
-          final FamilyMember member = data.members.firstWhere(
-            (m) => m.id == task.assignedMemberId,
-            orElse: () => FamilyMember(id: '', name: 'Unknown', relationship: 'Unknown'),
-          );
-          debugPrint('Reminder for ${member.name}: Task "${task.title}" is due at ${due.toLocal()}');
-        }
-      });
-    }
+  static MaterialBanner buildBanner(String text, {List<Widget>? actions}) {
+    return MaterialBanner(
+      content: Text(text),
+      actions: actions ?? [
+        TextButton(
+          onPressed: () => _messenger?.clearMaterialBanners(),
+          child: const Text('OK'),
+        )
+      ],
+    );
   }
 
-  static Future markRead(dynamic id) async {
-    // TODO: implement markRead logic
-  }
-
-  static Future delete(dynamic id) async {
-    // TODO: implement delete logic
+  static void showBanner(MaterialBanner banner) {
+    _messenger?..clearMaterialBanners()..showMaterialBanner(banner);
   }
 }
