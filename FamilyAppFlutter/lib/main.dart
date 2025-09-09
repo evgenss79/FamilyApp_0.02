@@ -1,11 +1,8 @@
-
-import 'firebase_options.dart';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
 
+import 'firebase_options.dart';
 import 'services/storage_service.dart';
 import 'providers/family_data.dart';
 import 'screens/members_screen.dart';
@@ -20,14 +17,17 @@ import 'screens/chat_list_screen_v2.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   await StorageServiceV001.init();
   await ChatStorageServiceV001.init();
+
   final familyData = FamilyDataV001();
   final chatData = ChatDataV001();
+
   await familyData.loadFromStorage();
   await chatData.loadData();
+
   runApp(
     MultiProvider(
       providers: [
@@ -90,30 +90,12 @@ class _HomeTabsV001State extends State<HomeTabsV001> {
         unselectedItemColor: Colors.grey,
         backgroundColor: Colors.white,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Members',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.checklist),
-            label: 'Tasks',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.event),
-            label: 'Events',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: 'Chat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: 'Schedule',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month),
-            label: 'Calendar',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Members'),
+          BottomNavigationBarItem(icon: Icon(Icons.checklist), label: 'Tasks'),
+          BottomNavigationBarItem(icon: Icon(Icons.event), label: 'Events'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
+          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Schedule'),
+          BottomNavigationBarItem(icon: Icon(Icons.calendar_month), label: 'Calendar'),
         ],
       ),
     );
