@@ -14,13 +14,24 @@ class ChatDataV001 with ChangeNotifier {
   final FirestoreService _firestoreService = FirestoreService();
   String? familyId;
 
-  // Геттеры для чтения списков
+  // Геттеры
   List<Conversation> get conversations => List.unmodifiable(_conversations);
   List<Message> messagesForConversation(String conversationId) {
     return _messages.where((m) => m.conversationId == conversationId).toList();
   }
 
-  // Загрузка локальных данных (Hive)
+  /// Первичная инициализация: familyId + локальная загрузка + безопасная подтяжка из Firestore
+  Future<void> initialize(String id) async {
+    familyId = id;
+    await loadData();
+    try {
+      await loadFromFirestore();
+    } catch (_) {
+      // Не роняем UI при сетевой ошибке — останемся на локальных данных
+    }
+  }
+
+  // Локальная загрузка (Hive)
   Future<void> loadData() async {
     await ChatStorageServiceV001.init();
     _conversations = ChatStorageServiceV001.loadConversations();
@@ -28,15 +39,20 @@ class ChatDataV001 with ChangeNotifier {
     notifyListeners();
   }
 
-  // Добавление нового разговора
-  void addConversation(Conversation conversation) {
+  // Добавление разговора ( локально + условная синхронизация )
+  Future<void> addConversation(Conversation conversation) async {
     _conversations.add(conversation);
     ChatStorageServiceV001.saveConversations(_conversations);
     notifyListeners();
+    if (familyId != null) {
+      try {
+        await saveToFirestore();
+      } catch (_) {}
+    }
   }
 
-  // Добавление сообщения с обновлением времени последнего сообщения
-  void addMessage(Message message) {
+  // Добавление сообщения ( локально + обновление lastMessageTime + условная синхронизация )
+  Future<void> addMessage(Message message) async {
     _messages.add(message);
     ChatStorageServiceV001.saveMessages(_messages);
 
@@ -54,25 +70,41 @@ class ChatDataV001 with ChangeNotifier {
       ChatStorageServiceV001.saveConversations(_conversations);
     }
     notifyListeners();
+
+    if (familyId != null) {
+      try {
+        await saveToFirestore();
+      } catch (_) {}
+    }
   }
 
-  // Удаление разговора и связанных с ним сообщений
-  void removeConversation(String conversationId) {
+  // Удаление разговора и связанных с ним сообщений ( локально + условная синхронизация )
+  Future<void> removeConversation(String conversationId) async {
     _conversations.removeWhere((c) => c.id == conversationId);
     _messages.removeWhere((m) => m.conversationId == conversationId);
     ChatStorageServiceV001.saveConversations(_conversations);
     ChatStorageServiceV001.saveMessages(_messages);
     notifyListeners();
+    if (familyId != null) {
+      try {
+        await saveToFirestore();
+      } catch (_) {}
+    }
   }
 
-  // Удаление одного сообщения
-  void removeMessage(String messageId) {
+  // Удаление одного сообщения ( локально + условная синхронизация )
+  Future<void> removeMessage(String messageId) async {
     _messages.removeWhere((m) => m.id == messageId);
     ChatStorageServiceV001.saveMessages(_messages);
     notifyListeners();
+    if (familyId != null) {
+      try {
+        await saveToFirestore();
+      } catch (_) {}
+    }
   }
 
-  // Загрузка данных из Firestore (если familyId установлен)
+  // Загрузка данных из Firestore ( если familyId установлен )
   Future<void> loadFromFirestore() async {
     if (familyId == null) return;
 
@@ -92,12 +124,13 @@ class ChatDataV001 with ChangeNotifier {
 
     await _firestoreService.saveConversations(familyId!, _conversations);
 
-    // Группируем сообщения по conversationId
+    // Группируем сообщения по разговору
     final Map<String, List<Message>> messagesByConversation = {};
     for (final msg in _messages) {
       messagesByConversation.putIfAbsent(msg.conversationId, () => []);
       messagesByConversation[msg.conversationId]!.add(msg);
     }
+
     for (final entry in messagesByConversation.entries) {
       await _firestoreService.saveMessages(
         familyId!,
