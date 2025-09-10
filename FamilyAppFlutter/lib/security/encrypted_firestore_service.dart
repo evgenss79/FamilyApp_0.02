@@ -72,5 +72,20 @@ class EncryptedFirestoreService {
     return out;
   }
 
-  FirebaseFirestore get firestore => _firestore;
+  
+
+    FirebaseFirestore get firestore => _firestore;
+  
+  Future<void> upsertFamilyMember(String familyId, Map<String, dynamic> member) async {
+    final id = (member['id'] ?? '').toString();
+    if (id.isEmpty) return;
+    await _firestore
+        .collection('families')
+        .doc(familyId)
+        .collection('members')
+        .doc(id)
+        .set(member, SetOptions(merge: true));
+  }
 }
+
+
