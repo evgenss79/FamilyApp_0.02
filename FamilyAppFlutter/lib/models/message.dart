@@ -44,7 +44,7 @@ class Message {
   }
 }
 
-class MessageAdapter extends TypeAdapter<Message> {
+class MessageAdapterManual extends TypeAdapter<Message> {
   @override
   final int typeId = 5;
 
