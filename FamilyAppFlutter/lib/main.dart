@@ -48,10 +48,11 @@ class FamilyAppV001 extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Family App',
+        scaffoldMessengerKey: NotificationService.scaffoldMessengerKey,
       theme: ThemeData(
         primarySwatch: Colors.blue,
 
-            scaffoldMessengerKey: NotificationService.scaffoldMessengerKey,
+            
       ),
       home: const HomeTabsV001(),
     );
