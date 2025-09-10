@@ -39,7 +39,18 @@ class NotificationService {
     );
   }
 
-  static void showBanner(MaterialBanner banner) {
+     static void showBanner(MaterialBanner banner) {
     _messenger?..clearMaterialBanners()..showMaterialBanner(banner);
   }
+  
+  static Future<void> sendTaskCreatedNotification(Map<String, dynamic> task) async {
+    // TODO: implement notification for task creation (no-op for now)
+  }
+
+  static Future<void> scheduleDueNotifications(List<Map<String, dynamic>> tasks) async {
+    // TODO: implement due notifications scheduling (no-op for now)
+  }
+
+
+
 }
