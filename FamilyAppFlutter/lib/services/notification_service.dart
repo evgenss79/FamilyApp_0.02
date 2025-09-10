@@ -47,7 +47,7 @@ class NotificationService {
     // TODO: implement notification for task creation (no-op for now)
   }
 
-  static Future<void> scheduleDueNotifications(List<Map<String, dynamic>> tasks) async {
+  static Future<void> scheduleDueNotifications(List<Map<eString, dynamic>> tasks) async {
     // TODO: implement due notifications scheduling (no-op for now)
   }
 
