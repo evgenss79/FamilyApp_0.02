@@ -46,7 +46,7 @@ class Conversation {
   }
 }
 
-class ConversationAdapter extends TypeAdapter<Conversation> {
+class ConversationAdapterManual extends TypeAdapter<Conversation> {
   @override
   final int typeId = 4;
 
