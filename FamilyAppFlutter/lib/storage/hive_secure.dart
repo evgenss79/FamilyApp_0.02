@@ -11,7 +11,7 @@ class HiveSecure {
     final cipher = HiveAesCipher(dek);
     await Hive.openBox('familyMembersV001', encryptionCipher: cipher);
     await Hive.openBox('taskV001', encryptionCipher: cipher);
-    await Hive.openBox('eventsV001', encryptioipher: cipher);
+    await Hive.openBox('eventsV001', encryptioiphercipher);
     await Hive.openBox('conversationsV001', encryptionCipher: cipher);
     await Hive.openBox('messagesV001', encryptionCipher: cipher);
   }
