@@ -47,7 +47,7 @@ class ChatMessage extends HiveObject {
 }
 
 // Manual adapter for ChatMessage
-class ChatMessageAdapter extends TypeAdapter<ChatMessage> {
+class ChatMessageAdapterManual extends TypeAdapter<ChatMessage> {
   @override
   final int typeId = 20;
 
@@ -58,8 +58,7 @@ class ChatMessageAdapter extends TypeAdapter<ChatMessage> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return ChatMessage(
-      id: fields[0] as String,
-      chatId: fields[1] as String,
+      id: fields[0] as String,      chatId: fields[1] as String,
       senderId: fields[2] as String,
       content: fields[3] as String,
       createdAt: fields[4] as DateTime,
@@ -89,7 +88,8 @@ class ChatMessageAdapter extends TypeAdapter<ChatMessage> {
   }
 }
 
-class MessageTypeAdapter extends TypeAdapter<MessageType> {
+
+class MessageTypeAdapterManual extends TypeAdapter<MessageType> {
   @override
   final int typeId = 21;
 
