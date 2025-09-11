@@ -1,56 +1,15 @@
-import 'package:flutter/material.dart';
+import '../models/task.dart';
 
 class NotificationService {
-  NotificationService._();
-
-  static final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
-      GlobalKey<ScaffoldMessengerState>();
-
-  static GlobalKey<ScaffoldMessengerState> _effectiveKey = scaffoldMessengerKey;
-
-  /// Инициализация. Параметр сделан необязательным для обратной совместимости.
-  static Future<void> init({GlobalKey<ScaffoldMessengerState>? scaffoldMessengerKey}) async {
-    _effectiveKey = scaffoldMessengerKey ?? NotificationService.scaffoldMessengerKey;
-    // Здесь можно инициализировать локальные/пуш-уведомления.
+  static Future<void> init() async {
+    // платформа-специфичная инициализация
   }
 
-  
-
-  static ScaffoldMessengerState? get _messenger => _effectiveKey.currentState;
-
-  static void showSnack(String message, {SnackBarAction? action, Duration? duration}) {
-    final bar = SnackBar(
-      content: Text(message),
-      action: action,
-      duration: duration ?? const Duration(seconds: 3),
-    );
-    _messenger?..clearSnackBars()..showSnackBar(bar);
+  static Future<void> sendTaskCreatedNotification(Task task) async {
+    // TODO: в будущем — отправка уведомления о создании задачи
   }
 
-  static MaterialBanner buildBanner(String text, {List<Widget>? actions}) {
-    return MaterialBanner(
-      content: Text(text),
-      actions: actions ?? [
-        TextButton(
-          onPressed: () => _messenger?.clearMaterialBanners(),
-          child: const Text('OK'),
-        )
-      ],
-    );
+  static Future<void> scheduleDueNotifications(Task task) async {
+    // TODO: в будущем — планирование уведомлений по сроку задачи
   }
-
-     static void showBanner(MaterialBanner banner) {
-    _messenger?..clearMaterialBanners()..showMaterialBanner(banner);
-  }
-  
-  static Future<void> sendTaskCreatedNotification(Map<String, dynamic> task) async {
-    // TODO: implement notification for task creation (no-op for now)
-  }
-
-  static Future<void> scheduleDueNotifications(List<Map<eString, dynamic>> tasks) async {
-    // TODO: implement due notifications scheduling (no-op for now)
-  }
-
-
-
 }
