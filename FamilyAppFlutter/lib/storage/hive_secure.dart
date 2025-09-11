@@ -10,8 +10,8 @@ class HiveSecure {
     final dek = await store.getDek();
     final cipher = HiveAesCipher(dek);
     await Hive.openBox('familyMembersV001', encryptionCipher: cipher);
-    await Hive.openBox('taskV001', encryptionCipher: cipher);
-    await Hive.openBox('eventsV001', encryptioiphercipher);
+    await Hive.openBox('tasksV001', encryptionCipher: cipher);
+    await Hive.openBox('eventsV001', encryptionCipher: cipher);
     await Hive.openBox('conversationsV001', encryptionCipher: cipher);
     await Hive.openBox('messagesV001', encryptionCipher: cipher);
   }
