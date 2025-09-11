@@ -4,20 +4,11 @@ part 'chat.g.dart';
 
 @HiveType(typeId: 11)
 class Chat extends HiveObject {
-  @HiveField(0)
-  String id;
-
-  @HiveField(1)
-  String title;
-
-  @HiveField(2)
-  List<String> memberIds;
-
-  @HiveField(3)
-  DateTime updatedAt;
-
-  @HiveField(4)
-  String? lastMessagePreview;
+  @HiveField(0) String id;
+  @HiveField(1) String title;
+  @HiveField(2) List<String> memberIds;
+  @HiveField(3) DateTime updatedAt;
+  @HiveField(4) String? lastMessagePreview;
 
   Chat({
     required this.id,
