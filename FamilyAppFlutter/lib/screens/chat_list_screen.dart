@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+iConversation(
+  mport 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/conversation.dart';
 import '../providers/chat_data.dart';

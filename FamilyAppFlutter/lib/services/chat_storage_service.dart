@@ -13,8 +13,6 @@ class ChatStorageServiceV001 {
     if (!Hive.isAdapterRegistered(ConversationAdapter().typeId)) {
       Hive.registerAdapter(ConversationAdapter());
     }
-    if (!Hive.isAdapterRegistered(MessageAdapter().typeId)) {
-      Hive.registerAdapter(MessageAdapter());
     }
 
     // Open boxes if you use typed boxes; if not, rely on HiveSecure inside Storage layer
