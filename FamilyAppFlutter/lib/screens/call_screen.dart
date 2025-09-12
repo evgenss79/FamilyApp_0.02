@@ -29,8 +29,7 @@ class CallScreen extends StatelessWidget {
     final participants = conversation.memberIds
         .map((id) => familyData.members.firstWhere(
               (member) => member.id == id,
-              orElse: () => FamilyMember(id: '', name: 'Unknown, relationship: ''),
-            ))
+              orElse: () => FamilyMember(id: '', name: 'Unknown', relationship: ''),            ))
         .toList();
 
     // Capitalize call type for display.
