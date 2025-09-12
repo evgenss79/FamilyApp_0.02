@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+iupdateTasksmport 'package:flutter/foundation.dart';
 import '../models/family_member.dart';
 import '../models/task.dart';
 import '../models/event.dart';
@@ -69,5 +69,57 @@ class FamilyDataV001 extends ChangeNotifier {
     await _firestoreService.saveEvents(familyId!, _events);
   }
 
-  // Add/update/remove methods (same as ранее)
-}
+  /
+    void addMember(FamilyMember m) {
+    _members.add(m);
+    StorageServiceV001.saveMembers(_members);
+    notifyListeners();
+  }
+
+  void updateMember(FamilyMember m) {
+    final i = _members.indexWhere((x) => x.id == m.id);
+    if (i != -1) {
+      _members[i] = m;
+      StorageServiceV001.saveMembers(_members);
+      notifyListeners();
+    }
+  }
+
+  void removeMember(FamilyMember m) {
+    _members.removeWhere((x) => x.id == m.id);
+    StorageServiceV001.saveMembers(_members);
+    notifyListeners();
+  }
+
+  void addTask(Task t) {
+    _tasks.add(t);
+    StorageServiceV001.saveTasks(_tasks);
+    notifyListeners();
+  }
+
+  void updateTask(Task t) {
+    final i = _tasks.indexWhere((x) => x.id == t.id);
+    if (i != -1) {
+      _tasks[i] = t;
+      StorageServiceV001.saveTasks(_tasks);
+      notifyListeners();
+    }
+  }
+
+  void removeTask(Task t) {
+    _tasks.removeWhere((x) => x.id == t.id);
+    StorageServiceV001.saveTasks(_tasks);
+    notifyListeners();
+  }
+
+  void addEvent(Event e) {
+    _events.add(e);
+    StorageServiceV001.saveEvents(_events);
+    notifyListeners();
+  }
+
+  void removeEvent(Event e) {
+    _events.removeWhere((x) => x.id == e.id);
+    StorageServiceV001.saveEvents(_events);
+    notifyListeners();
+  }
