@@ -1,7 +1,4 @@
-isendTaskCreatedNotification
-NotificationService.sendTaskCreatedNotification
-mNotificationService
-port 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
@@ -10,11 +7,6 @@ import '../models/family_member.dart';
 import '../providers/family_data.dart';
 import '../services/notification_service.dart';
 
-/// A screen for creating a new task with extended fields for
-/// status, points and an optional reminder date.  This form lets
-/// the user enter a title and description, choose a due date,
-/// assign a member, select a status, set the number of points
-/// rewarded for completing the task and pick a reminder date.
 class AddTaskScreen extends StatefulWidget {
   const AddTaskScreen({super.key});
 
@@ -30,11 +22,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
   bool _hasDueDate = false;
   DateTime? _dueDateTime;
-  // Reminder date removed: automatic notifications will be scheduled instead.
   String? _assignedMemberId;
   String _status = 'Pending';
 
-  // A list of possible task statuses.  You can extend this list as needed.
   final List<String> _statuses = ['Pending', 'In Progress', 'Completed'];
 
   @override
@@ -45,11 +35,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     super.dispose();
   }
 
-  /// Opens a date picker to select a due date.  If the user
-  /// cancels the dialog no changes are made.  Otherwise the
-  /// chosen date is stored in [_dueDate].
-  /// Opens a date and time picker to select a full due date/time.  The
-  /// resulting value is stored in [_dueDateTime].
   Future<void> _pickDueDateTime() async {
     final now = DateTime.now();
     final pickedDate = await showDatePicker(
@@ -75,15 +60,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     });
   }
 
-  // Reminder picker removed: notifications will be scheduled automatically
-  // based on the due date.  The original method is left here for
-  // reference but commented out.
-
-  /// Validates the form and, if valid, creates a new [Task]
-  /// instance and adds it to the [FamilyDataV001] provider.  The
-  /// title is required; description, due date, assigned member,
-  /// status, points and reminder date are optional.  Points
-  /// entered that cannot be parsed to an integer default to zero.
   void _save() {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -93,47 +69,42 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     final newTask = Task(
       id: uuid.v4(),
       title: _titleController.text.trim(),
-      description: _descriptionController.text.trim().isEmpty
-          ? null
-          : _descriptionController.text.trim(),
+      description:
+          _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
       endDateTime: _hasDueDate ? _dueDateTime : null,
       assignedMemberId: _assignedMemberId,
       status: _status,
       points: points,
-      // Reminder date is no longer user controlled.
-
     );
+
     final data = Provider.of<FamilyDataV001>(context, listen: false);
     data.addTask(newTask);
-    // Immediately notify recipients that a new task has been created and
-    // schedule due reminders if a due date exists.
-NotificationService.sendTaskCreatedNotification(newTask);
-NotificationService.scheduleDueNotifications(newTask);
+
+    // уведомления: только Task (без второго аргумента)
+    NotificationService.sendTaskCreatedNotification(newTask);
+    NotificationService.scheduleDueNotifications(newTask);
+
+    Navigator.of(context).pop(); // закрыть экран после создания
   }
 
   @override
   Widget build(BuildContext context) {
     final data = Provider.of<FamilyDataV001>(context);
     final members = data.members;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Task'),
-      ),
+      appBar: AppBar(title: const Text('Add Task')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child:
+        child: Form(
           key: _formKey,
           child: ListView(
             children: [
               TextFormField(
                 controller: _titleController,
                 decoration: const InputDecoration(labelText: 'Title'),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a title';
-                  }
-                  return null;
-                },
+                validator: (value) =>
+                    (value == null || value.trim().isEmpty) ? 'Please enter a title' : null,
               ),
               const SizedBox(height: 8),
               TextFormField(
@@ -142,46 +113,30 @@ NotificationService.scheduleDueNotifications(newTask);
                 maxLines: null,
               ),
               const SizedBox(height: 8),
-              // Status selector
               DropdownButtonFormField<String>(
                 value: _status,
                 decoration: const InputDecoration(labelText: 'Status'),
                 items: _statuses
-                    .map((s) => DropdownMenuItem(
-                          value: s,
-                          child: Text(s),
-                        ))
+                    .map((s) => DropdownMenuItem(value: s, child: Text(s)))
                     .toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _status = value;
-                    });
-                  }
-                },
+                onChanged: (value) => setState(() => _status = value ?? _status),
               ),
               const SizedBox(height: 8),
-              // Points field
               TextFormField(
                 controller: _pointsController,
                 decoration: const InputDecoration(labelText: 'Points'),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 8),
-              // Due date toggle and picker
               SwitchListTile(
                 title: const Text('Has due date/time'),
                 value: _hasDueDate,
                 onChanged: (value) {
                   setState(() {
                     _hasDueDate = value;
-                    if (!value) {
-                      _dueDateTime = null;
-                    }
+                    if (!value) _dueDateTime = null;
                   });
-                  if (value) {
-                    _pickDueDateTime();
-                  }
+                  if (value) _pickDueDateTime();
                 },
               ),
               if (_hasDueDate && _dueDateTime != null)
@@ -198,29 +153,23 @@ NotificationService.scheduleDueNotifications(newTask);
                   onTap: _pickDueDateTime,
                 ),
               const SizedBox(height: 8),
-              // Assigned member selector
-              DropdownButtonFormField<String>(
+              DropdownButtonFormField<String?>(
                 value: _assignedMemberId,
                 decoration: const InputDecoration(labelText: 'Assign to'),
-                items: [
-                  const DropdownMenuItem<String>(
-                    value: null,
-                    child: Text('Unassigned'),
-                  ),
-                  ...members.map((member) => DropdownMenuItem(
-                        value: member.id,
-                        child: Text(member.name),
-                      )),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    _assignedMemberId = value;
-                  });
-                },
+                items: <DropdownMenuItem<String?>>[
+                      const DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text('Unassigned'),
+                      ),
+                    ] +
+                    members
+                        .map((m) => DropdownMenuItem<String?>(
+                              value: m.id,
+                              child: Text(m.name),
+                            ))
+                        .toList(),
+                onChanged: (value) => setState(() => _assignedMemberId = value),
               ),
-              const SizedBox(height: 8),
-              // The manual reminder date picker has been removed.  Reminders
-              // are scheduled automatically relative to the due date.
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _save,
