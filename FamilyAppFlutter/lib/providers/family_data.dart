@@ -7,7 +7,6 @@ import '../models/event.dart';
 import '../services/storage_service.dart';
 import '../services/firestore_service.dart';
 import '../security/encrypted_firestore_service.dart';
- iupdate
   final List<Task> _tasks = [];
   final List<Event> _events = [];
 
@@ -69,7 +68,7 @@ import '../security/encrypted_firestore_service.dart';
     await _firestoreService.saveEvents(familyId!, _events);
   }
 
-  /
+ /
     void addMember(FamilyMember m) {
     _members.add(m);
     StorageServiceV001.saveMembers(_members);

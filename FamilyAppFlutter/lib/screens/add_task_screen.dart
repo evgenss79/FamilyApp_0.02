@@ -107,9 +107,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     data.addTask(newTask);
     // Immediately notify recipients that a new task has been created and
     // schedule due reminders if a due date exists.
-    NotificationService.sendTaskCreatedNotification(newTask, data);
-    NotificationService.scheduleDueNotifications(newTask, data);
-    Navigator.of(context).pop();
+NotificationService.sendTaskCreatedNotification(newTask);
+NotificationService.scheduleDueNotifications(newTask);
   }
 
   @override
@@ -122,7 +121,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Form(
+        child:
           key: _formKey,
           child: ListView(
             children: [
