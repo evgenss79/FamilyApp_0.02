@@ -1,5 +1,5 @@
 name: family_app_flutter
-    description: "FamilyApp — единое семейное пространство."
+description: 'FamilyApp - единое семейное пространство.'
     publish_to: "none"
 
     environment:
