@@ -11,6 +11,7 @@ import 'screens/tasks_screen.dart';
 import 'screens/events_screen.dart';
 import 'services/chat_storage_service.dart';
 import 'providers/chat_data.dart';
+import 'providers/schedule_data.dart';
 import 'screens/schedule_screen.dart';
 import 'screens/calendar_screen.dart';
 import 'screens/chat_list_screen.dart';
@@ -25,8 +26,10 @@ Future<void> main() async {
 
   final familyData = FamilyDataV001();
   final chatData = ChatDataV001();
+    final scheduleData = ScheduleDataV001();
 
   await familyData.loadFromStorage();
+    await scheduleData.loadFromStorage();
   await chatData.loadData();
 
     await NotificationService.init();
@@ -35,9 +38,11 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider<FamilyDataV001>.value(value: familyData),
         ChangeNotifierProvider<ChatDataV001>.value(value: chatData),
+   ChangeNotifierProvider<ScheduleDataV001>.value(value: scheduleData),
       ],
       child: const FamilyAppV001(),
     ),
+          
   );
 }
 
