@@ -1,23 +1,32 @@
+import 'dart:math';
+import 'dart:typed_data';
 
-import 'dart:convert';
-
+/// A secure key store that lazily generates and caches a 32‑byte
+/// data encryption key. In a production application you should
+/// persist this key in a secure store (e.g. Keychain/Keystore)
+/// so that encrypted Hive boxes can be reopened across sessions.
 class SecureKeyStore {
-  static const _len = 32;
+  static const int _len = 32;
+  Uint8List? _dek;
 
+  /// Ensures the data encryption key is generated. If a key has
+  /// already been generated it is reused. In a real application
+  /// this method would retrieve the key from secure storage or
+  /// generate and store it if it doesn't exist.
   Future<void> ensureDek() async {
-    // В реальном приложении сохраните ключ в надёжном хранилище.
-    // Здесь демонстрационный вариант без сохранения.
+    if (_dek != null) return;
+    final rand = Random.secure();
+    final bytes = Uint8List(_len);
+    for (var i = 0; i < _len; i++) {
+      bytes[i] = rand.nextInt(256);
+    }
+    _dek = bytes;
   }
 
-  /// Возвращает 32-байтный ключ для HiveAesCipher.
+  /// Returns the data encryption key as a list of bytes. The key is
+  /// lazily generated on first access by [ensureDek].
   Future<List<int>> getDek() async {
-    // Детерминированный "dev key": кодируем строку и дополняем до 32 байт
-    final base = utf8.encode('familyapp-insecure-development-key-32bytes');
-    if (base.length >= _len) {
-      return base.sublist(0, _len);
-    }
-    final out = List<int>.filled(_len, 0);
-    out.setAll(0, base);
-    return out;
+    await ensureDek();
+    return _dek!;
   }
 }
