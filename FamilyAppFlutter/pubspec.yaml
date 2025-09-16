@@ -18,7 +18,7 @@ dependencies:
   path_provider: ^2.1.4
   file_picker: ^8.3.7
   flutter_webrtc: ^1.1.0
-  js: ^0.7.2
+  js: ^0.6.7
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   encrypt: ^5.0.3
