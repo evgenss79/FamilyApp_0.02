@@ -3,19 +3,13 @@ import 'package:flutter/foundation.dart';
 import '../models/schedule_item.dart';
 import '../services/storage_service.dart';
 
-/// Provider for managing a list of [ScheduleItem]s.
-///
-/// This class encapsulates loading schedule data from persistent storage,
-/// notifying listeners when the list changes, and saving changes back to
-/// storage. It follows the same pattern as [FamilyDataV001] for
-/// consistency.
+/// Provider that manages schedule items for the family.
 class ScheduleDataV001 extends ChangeNotifier {
   final List<ScheduleItem> _items = [];
 
-  /// Returns the current list of schedule items.
   List<ScheduleItem> get items => _items;
 
-  /// Loads schedule items from storage. Clears any existing items first.
+  /// Loads schedule items from local encrypted storage.
   Future<void> loadFromStorage() async {
     _items
       ..clear()
@@ -23,16 +17,16 @@ class ScheduleDataV001 extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Adds a new schedule item and persists the updated list.
+  /// Adds a new schedule item and persists changes.
   void addItem(ScheduleItem item) {
     _items.add(item);
     StorageServiceV001.saveScheduleItems(_items);
     notifyListeners();
   }
 
-  /// Updates an existing schedule item. Does nothing if the item is not found.
+  /// Updates an existing schedule item.
   void updateItem(ScheduleItem item) {
-    final index = _items.indexWhere((i) => i.id == item.id);
+    final index = _items.indexWhere((x) => x.id == item.id);
     if (index != -1) {
       _items[index] = item;
       StorageServiceV001.saveScheduleItems(_items);
@@ -40,9 +34,18 @@ class ScheduleDataV001 extends ChangeNotifier {
     }
   }
 
-  /// Removes a schedule item from the list and persists the change.
+  /// Removes a schedule item.
   void removeItem(ScheduleItem item) {
-    _items.removeWhere((i) => i.id == item.id);
+    _items.removeWhere((x) => x.id == item.id);
+    StorageServiceV001.saveScheduleItems(_items);
+    notifyListeners();
+  }
+
+  /// Replaces the entire list of schedule items.
+  void setItems(List<ScheduleItem> items) {
+    _items
+      ..clear()
+      ..addAll(items);
     StorageServiceV001.saveScheduleItems(_items);
     notifyListeners();
   }
