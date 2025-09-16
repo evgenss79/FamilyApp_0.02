@@ -1,10 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../models/family_member.dart';
 import '../models/task.dart';
 import '../models/event.dart';
 import '../models/conversation.dart';
 import '../models/message.dart';
+import '../models/schedule_item.dart';
 
+/// Service wrapping common Firestore operations for the app.
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -139,6 +142,32 @@ class FirestoreService {
     for (final message in messages) {
       final docRef = collectionRef.doc(message.id);
       batch.set(docRef, message.toMap());
+    }
+    await batch.commit();
+  }
+
+  /// Fetch schedule items for a family.
+  Future<List<ScheduleItem>> fetchScheduleItems(String familyId) async {
+    final snapshot = await _firestore
+        .collection('families')
+        .doc(familyId)
+        .collection('scheduleItems')
+        .get();
+    return snapshot.docs
+        .map((doc) => ScheduleItem.fromMap(Map<String, dynamic>.from(doc.data())))
+        .toList();
+  }
+
+  /// Save schedule items to Firestore.
+  Future<void> saveScheduleItems(String familyId, List<ScheduleItem> items) async {
+    final collectionRef = _firestore
+        .collection('families')
+        .doc(familyId)
+        .collection('scheduleItems');
+    final batch = _firestore.batch();
+    for (final item in items) {
+      final docRef = collectionRef.doc(item.id);
+      batch.set(docRef, item.toMap());
     }
     await batch.commit();
   }
