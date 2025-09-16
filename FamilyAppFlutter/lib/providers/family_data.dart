@@ -7,6 +7,11 @@ import '../services/storage_service.dart';
 import '../services/firestore_service.dart';
 import '../security/encrypted_firestore_service.dart';
 
+/// Provider that holds all data about family members, tasks and events.
+///
+/// It exposes methods to load and save data from local storage and Firestore,
+/// as well as CRUD operations. Additional `set*` methods allow replacing the
+/// entire lists when downloading from the cloud.
 class FamilyDataV001 extends ChangeNotifier {
   final List<FamilyMember> _members = [];
   final List<Task> _tasks = [];
@@ -127,6 +132,37 @@ class FamilyDataV001 extends ChangeNotifier {
 
   void removeEvent(Event e) {
     _events.removeWhere((x) => x.id == e.id);
+    StorageServiceV001.saveEvents(_events);
+    notifyListeners();
+  }
+
+  // ---------- Batch set operations ----------
+  /// Replace the entire list of family members with [members].
+  /// This saves to local storage and notifies listeners.
+  void setMembers(List<FamilyMember> members) {
+    _members
+      ..clear()
+      ..addAll(members);
+    StorageServiceV001.saveMembers(_members);
+    notifyListeners();
+  }
+
+  /// Replace the entire list of tasks with [tasks].
+  /// This saves to local storage and notifies listeners.
+  void setTasks(List<Task> tasks) {
+    _tasks
+      ..clear()
+      ..addAll(tasks);
+    StorageServiceV001.saveTasks(_tasks);
+    notifyListeners();
+  }
+
+  /// Replace the entire list of events with [events].
+  /// This saves to local storage and notifies listeners.
+  void setEvents(List<Event> events) {
+    _events
+      ..clear()
+      ..addAll(events);
     StorageServiceV001.saveEvents(_events);
     notifyListeners();
   }
