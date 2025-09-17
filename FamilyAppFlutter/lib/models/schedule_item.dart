@@ -1,11 +1,12 @@
 import 'package:uuid/uuid.dart';
 
+/// Model representing a repeating or one-off schedule entry.
 class ScheduleItem {
   final String id;
   final String title;
   final String? description;
   final DateTime startDateTime;
-  final DateTime? endDateTime;
+  final Da?teTi?me? endDateTime;
   final List<String>? memberIds;
   final String? type;
   final DateTime updatedAt;
