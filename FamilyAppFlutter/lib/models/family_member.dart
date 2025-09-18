@@ -19,6 +19,9 @@ class FamilyMember {
 
   /// Optional email address.
   final String? email;
+    /// Optional URL of the member's avatar image.
+  final String? avatarUrl;
+
 
   /// Optional social media handles or links.
   final String? socialMedia;
@@ -53,9 +56,16 @@ class FamilyMember {
     this.birthday,
     this.phone,
     this.email,
-    this.socialMedia,
+    
+      this.avatarUrl,
+  this.socialMedia,
+
     this.hobbies,
+    
+    
     this.documents,
+      
+
     this.documentsList,
     this.socialNetworks,
     this.messengers,
@@ -69,6 +79,7 @@ class FamilyMember {
         'birthday': birthday?.toIso8601String(),
         'phone': phone,
         'email': email,
+      'avatarUrl': avatarUrl,
         // Persist both the legacy socialMedia string and the structured list.
         'socialMedia': socialMedia,
         'socialNetworks': socialNetworks,
@@ -89,6 +100,9 @@ class FamilyMember {
             : null,
         phone: map['phone'] as String?,
         email: map['email'] as String?,
+             avatarUrl: map['avatarUrl'] as String?,
+
+
         socialMedia: map['socialMedia'] as String?,
         hobbies: map['hobbies'] as String?,
         documents: map['documents'] as String?,
