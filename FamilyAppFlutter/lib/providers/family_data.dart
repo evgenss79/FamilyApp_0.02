@@ -165,5 +165,60 @@ class FamilyDataV001 extends ChangeNotifier {
       ..addAll(events);
     StorageServiceV001.saveEvents(_events);
     notifyListeners();
+  
+  
+  // Update avatar URL for a member by id
+  void updateAvatar(String memberId, String? avatarUrl) {
+    final index = _members.indexWhere((m) => m.id == memberId);
+    if (index != -1) {
+      final member = _members[index];
+      member.avatarUrl = avatarUrl;
+      StorageServiceV001.saveMembers(_members);
+      notifyListeners();
+   }
+  }
+
+  // Update birthday for a member by id
+  void updateBirthday(String memberId, DateTime? birthday) {
+    final index = _members.indexWhere((m) => m.id == memberId);
+    if (index != -1) {
+      final member = _members[index];
+      member.birthday = birthday;
+      StorageServiceV001.saveMembers(_members);
+      notifyListeners();
+    }
+  }
+
+  // Update documents for a member by id
+  void updateDocuments(String memberId, List<String> docs) {
+    final index = _members.indexWhere((m) => m.id == memberId);
+    if (index != -1) {
+      final member = _members[index];
+      // Store documents as a comma-separated string for backward compatibility
+      member.documents = docs.join(', ');
+      // Also store as a list of maps for structured docs if needed
+      member.documentsList = docs
+          .map((doc) => { 'document': doc })
+          .toList();
+      StorageServiceV001.saveMembers(_members);
+      notifyListeners();
+    }
+  }
+
+  // Update hobbies for a member by id
+  void updateHobbies(String memberId, List<String> hobbies) {
+    final index = _members.indexWhere((m) => m.id == memberId);
+    if (index != -1) {
+      final member = _members[index];
+      // Store hobbies as a comma-separated string for backward compatibility
+      member.hobbies = hobbies;
+      // Some older code might expect a single string version
+      // You can optionally set member.hobbies to a single string if needed
+      StorageServiceV001.saveMembers(_members);
+      notifyListeners();
+    }
+  }
+
+
   }
 }
