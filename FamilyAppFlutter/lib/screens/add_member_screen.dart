@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+
 
 import '../models/family_member.dart';
 import '../providers/family_data.dart';
@@ -23,8 +27,12 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
   final _nameController = TextEditingController();
   final _relationshipController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _avatarUrlController = TextEditingController();
   final _emailController = TextEditingController();
   final _hobbiesController = TextEditingController();
+    final ImagePicker _imagePicker = ImagePicker();
+  File? _avatarFile;
+
 
   // Structured lists for documents, social networks and messengers.
   List<Map<String, String>> _documentEntries = [];
@@ -70,6 +78,8 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
       _nameController.text = member.name;
       _relationshipController.text = member.relationship;
       _phoneController.text = member.phone ?? '';
+          _avatarUrlController.text = member.avatarUrl ?? '';
+
       _emailController.text = member.email ?? '';
       _hobbiesController.text = member.hobbies ?? '';
       _birthday = member.birthday;
@@ -106,6 +116,7 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
     _nameController.dispose();
     _relationshipController.dispose();
     _phoneController.dispose();
+      _avatarUrlController.dispose();
     _emailController.dispose();
     _hobbiesController.dispose();
     super.dispose();
