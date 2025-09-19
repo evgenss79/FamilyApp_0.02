@@ -1,14 +1,19 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
-import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-
 
 import '../models/family_member.dart';
 import '../providers/family_data.dart';
 
+/// A screen for adding or editing a family member. It handles
+/// collecting basic details like name, relationship, birthday,
+/// phone, email, hobbies, documents, social networks, and messengers.
+/// It also allows picking and uploading an avatar image to Firebase
+/// Storage and storing its URL.
 class AddMemberScreenV001 extends StatefulWidget {
   /// Optionally pass an existing [FamilyMember] to edit.  If null, the
   /// form will create a new member when saved.
@@ -30,9 +35,10 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
   final _avatarUrlController = TextEditingController();
   final _emailController = TextEditingController();
   final _hobbiesController = TextEditingController();
-    final ImagePicker _imagePicker = ImagePicker();
-  File? _avatarFile;
 
+  // Image picker and file for avatar
+  final ImagePicker _imagePicker = ImagePicker();
+  File? _avatarFile;
 
   // Structured lists for documents, social networks and messengers.
   List<Map<String, String>> _documentEntries = [];
@@ -78,15 +84,17 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
       _nameController.text = member.name;
       _relationshipController.text = member.relationship;
       _phoneController.text = member.phone ?? '';
-          _avatarUrlController.text = member.avatarUrl ?? '';
-
+      _avatarUrlController.text = member.avatarUrl ?? '';
       _emailController.text = member.email ?? '';
       _hobbiesController.text = member.hobbies ?? '';
       _birthday = member.birthday;
       // Convert structured fields.
       if (member.documentsList != null) {
         _documentEntries = member.documentsList!
-            .map<Map<String, String>>((e) => {'type': e['type'] ?? 'Other', 'value': e['value'] ?? ''})
+            .map<Map<String, String>>((e) => {
+                  'type': e['type'] ?? 'Other',
+                  'value': e['value'] ?? '',
+                })
             .toList();
       } else if (member.documents != null && member.documents!.isNotEmpty) {
         // Legacy single string becomes one entry of type Other.
@@ -96,7 +104,10 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
       }
       if (member.socialNetworks != null) {
         _socialEntries = member.socialNetworks!
-            .map<Map<String, String>>((e) => {'type': e['type'] ?? 'Other', 'value': e['value'] ?? ''})
+            .map<Map<String, String>>((e) => {
+                  'type': e['type'] ?? 'Other',
+                  'value': e['value'] ?? '',
+                })
             .toList();
       } else if (member.socialMedia != null && member.socialMedia!.isNotEmpty) {
         _socialEntries = [
@@ -105,7 +116,10 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
       }
       if (member.messengers != null) {
         _messengerEntries = member.messengers!
-            .map<Map<String, String>>((e) => {'type': e['type'] ?? 'Other', 'value': e['value'] ?? ''})
+            .map<Map<String, String>>((e) => {
+                  'type': e['type'] ?? 'Other',
+                  'value': e['value'] ?? '',
+                })
             .toList();
       }
     }
@@ -116,12 +130,13 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
     _nameController.dispose();
     _relationshipController.dispose();
     _phoneController.dispose();
-      _avatarUrlController.dispose();
+    _avatarUrlController.dispose();
     _emailController.dispose();
     _hobbiesController.dispose();
     super.dispose();
   }
 
+  /// Pick a birthday using a date picker dialog.
   Future<void> _pickBirthday() async {
     final now = DateTime.now();
     final picked = await showDatePicker(
@@ -137,6 +152,32 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
     }
   }
 
+  /// Pick an avatar from gallery and upload it to Firebase Storage.
+  Future<void> _pickAvatar() async {
+    final picked = await _imagePicker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      final file = File(picked.path);
+      setState(() {
+        _avatarFile = file;
+      });
+      try {
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('avatars')
+            .child('${const Uuid().v4()}.jpg');
+        await storageRef.putFile(file);
+        final url = await storageRef.getDownloadURL();
+        setState(() {
+          _avatarUrlController.text = url;
+        });
+      } catch (e) {
+        // In a real app, you'd show an error to the user.
+        debugPrint('Error uploading avatar: $e');
+      }
+    }
+  }
+
+  /// Save the member details, either updating an existing member or adding a new one.
   void _save() {
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
@@ -147,15 +188,30 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
       name: _nameController.text.trim(),
       relationship: _relationshipController.text.trim(),
       birthday: _birthday,
-      phone: _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
-      email: _emailController.text.trim().isNotEmpty ? _emailController.text.trim() : null,
-      hobbies: _hobbiesController.text.trim().isNotEmpty ? _hobbiesController.text.trim() : null,
+      phone: _phoneController.text.trim().isNotEmpty
+          ? _phoneController.text.trim()
+          : null,
+      email: _emailController.text.trim().isNotEmpty
+          ? _emailController.text.trim()
+          : null,
+      hobbies: _hobbiesController.text.trim().isNotEmpty
+          ? _hobbiesController.text.trim()
+          : null,
+      avatarUrl: _avatarUrlController.text.trim().isNotEmpty
+          ? _avatarUrlController.text.trim()
+          : null,
       // Legacy fields left null for newly structured entries.
       socialMedia: null,
       documents: null,
-      documentsList: _documentEntries.isNotEmpty ? List<Map<String, String>>.from(_documentEntries) : null,
-      socialNetworks: _socialEntries.isNotEmpty ? List<Map<String, String>>.from(_socialEntries) : null,
-      messengers: _messengerEntries.isNotEmpty ? List<Map<String, String>>.from(_messengerEntries) : null,
+      documentsList: _documentEntries.isNotEmpty
+          ? List<Map<String, String>>.from(_documentEntries)
+          : null,
+      socialNetworks: _socialEntries.isNotEmpty
+          ? List<Map<String, String>>.from(_socialEntries)
+          : null,
+      messengers: _messengerEntries.isNotEmpty
+          ? List<Map<String, String>>.from(_messengerEntries)
+          : null,
     );
     final data = Provider.of<FamilyDataV001>(context, listen: false);
     if (widget.member != null) {
@@ -166,6 +222,7 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
     Navigator.of(context).pop();
   }
 
+  /// Build a row for editing a document/social/messenger entry with dropdown and text field.
   Widget _buildEntryRow(
     List<Map<String, String>> entries,
     int index,
@@ -173,19 +230,8 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
     void Function(void Function()) setStateCallback,
   ) {
     final entry = entries[index];
-    // Each entry row contains a type dropdown, a value text field and a delete
-    // button. Avoid wrapping the delete button in an Expanded widget because
-    // that can cause horizontal overflow on narrow screens. The dropdown and
-    // text field expand to fill available space, while the delete button
-    // retains its natural size.
     return Row(
-      // Using flex factors and fixed width for the delete button prevents
-      // horizontal overflow on narrow screens. Each part of the row shares
-      // available space according to its flex value. The delete button is
-      // contained within a SizedBox to ensure it doesn't expand beyond its
-      // intrinsic size, and the dropdown expands to fill its allotted space.
       children: [
-        // Dropdown takes roughly 3/7 of the row width and expands to fill
         Expanded(
           flex: 3,
           child: DropdownButtonFormField<String>(
@@ -196,12 +242,10 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
             ),
             isExpanded: true,
             items: types
-                .map(
-                  (t) => DropdownMenuItem(
-                    value: t,
-                    child: Text(t),
-                  ),
-                )
+                .map((t) => DropdownMenuItem(
+                      value: t,
+                      child: Text(t),
+                    ))
                 .toList(),
             onChanged: (value) {
               if (value != null) {
@@ -213,7 +257,6 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
           ),
         ),
         const SizedBox(width: 8),
-        // Text field takes roughly 4/7 of the row width
         Expanded(
           flex: 4,
           child: TextFormField(
@@ -228,9 +271,6 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
           ),
         ),
         const SizedBox(width: 8),
-        // Delete button wrapped in a SizedBox with a fixed width to avoid
-        // taking up more space than necessary. This ensures the row fits
-        // within the available width without overflow.
         SizedBox(
           width: 40,
           child: IconButton(
@@ -248,151 +288,211 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
 
   @override
   Widget build(BuildContext context) {
-    // Use a ListView inside the Form so that the entire form scrolls
-    // vertically when its content exceeds the screen height. This ensures
-    // the Save button remains reachable even when many fields or entries
-    // are added.
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(widget.member != null ? 'Edit Member' : 'Add Member'),
-            // Provide a save action in the app bar so the user can save the form
-            // without needing to scroll to the bottom. This ensures the save
-            // functionality is always accessible, even when the form contents
-            // extend beyond the visible screen area.
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.save),
-                onPressed: _save,
-                tooltip: 'Save',
-              ),
-            ],
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.member != null ? 'Edit Member' : 'Add Member'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: _save,
+            tooltip: 'Save',
           ),
-          body: SafeArea(
-            child: Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.all(16.0),
+        ],
+      ),
+      body: SafeArea(
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(16.0),
+            children: [
+              // Name and relationship
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Name'),
+                validator: (value) =>
+                    (value == null || value.trim().isEmpty) ? 'Please enter a name' : null,
+              ),
+              TextFormField(
+                controller: _relationshipController,
+                decoration: const InputDecoration(labelText: 'Relationship'),
+                validator: (value) =>
+                    (value == null || value.trim().isEmpty) ? 'Please enter a relationship' : null,
+              ),
+              // Birthday picker
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Birthday'),
+                subtitle: Text(
+                  _birthday != null
+                      ? _birthday!.toLocal().toString().split(' ')[0]
+                      : 'Select date',
+                ),
+                onTap: _pickBirthday,
+              ),
+              const SizedBox(height: 8),
+              // Avatar selection and URL
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Name and relationship
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Name'),
-                    validator: (value) =>
-                        (value == null || value.trim().isEmpty) ? 'Please enter a name' : null,
-                  ),
-                  TextFormField(
-                    controller: _relationshipController,
-                    decoration: const InputDecoration(labelText: 'Relationship'),
-                    validator: (value) => (value == null || value.trim().isEmpty)
-                        ? 'Please enter a relationship'
-                        : null,
-                  ),
-                  // Birthday picker
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Birthday'),
-                    subtitle: Text(
-                      _birthday != null
-                          ? _birthday!.toLocal().toString().split(' ')[0]
-                          : 'Select date',
+                  GestureDetector(
+                    onTap: _pickAvatar,
+                    child: CircleAvatar(
+                      radius: 30,
+                      backgroundImage: _avatarFile != null
+                          ? FileImage(_avatarFile!) as ImageProvider
+                          : (_avatarUrlController.text.trim().isNotEmpty
+                              ? NetworkImage(_avatarUrlController.text.trim()) as ImageProvider
+                              : null),
+                      child: (_avatarFile == null &&
+                              _avatarUrlController.text.trim().isEmpty)
+                          ? const Icon(Icons.person, size: 30)
+                          : null,
                     ),
-                    onTap: _pickBirthday,
                   ),
-                  const SizedBox(height: 8),
-                  // Phone and email
-                  TextFormField(
-                    controller: _phoneController,
-                    decoration: const InputDecoration(labelText: 'Phone'),
-                  ),
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                  ),
-                  // Hobbies
-                  TextFormField(
-                    controller: _hobbiesController,
-                    decoration: const InputDecoration(labelText: 'Hobbies'),
-                  ),
-                  const SizedBox(height: 16),
-                  // Documents section
-                  Text(
-                    'Documents',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  ...List.generate(
-                    _documentEntries.length,
-                    (i) => _buildEntryRow(_documentEntries, i, _documentTypes, setState),
-                  ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add Document'),
-                      onPressed: () {
-                        setState(() {
-                          _documentEntries.add({'type': _documentTypes.first, 'value': ''});
-                        });
+                    const SizedBox(width: 16),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _avatarUrlController,
+                      decoration: const InputDecoration(labelText: 'Avatar URL'),
+                      validator: (value) {
+                        final v = value?.trim() ?? '';
+                        if (v.isNotEmpty) {
+                          // Simple URL validation: must start with http or https.
+                          if (!v.startsWith('http')) {
+                            return 'Please enter a valid URL';
+                          }
+                        }
+                        return null;
                       },
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  // Social networks section
-                  Text(
-                    'Social Networks',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  ...List.generate(
-                    _socialEntries.length,
-                    (i) => _buildEntryRow(_socialEntries, i, _socialTypes, setState),
-                  ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add Social'),
-                      onPressed: () {
-                        setState(() {
-                          _socialEntries.add({'type': _socialTypes.first, 'value': ''});
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Messengers section
-                  Text(
-                    'Messengers',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  ...List.generate(
-                    _messengerEntries.length,
-                    (i) =>
-                        _buildEntryRow(_messengerEntries, i, _messengerTypes, setState),
-                  ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add Messenger'),
-                      onPressed: () {
-                        setState(() {
-                          _messengerEntries.add({'type': _messengerTypes.first, 'value': ''});
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  // Save button at the end of the scrollable content
-                  ElevatedButton(
-                    onPressed: _save,
-                    child: const Text('Save'),
+                  IconButton(
+                    icon: const Icon(Icons.photo),
+                    onPressed: _pickAvatar,
+                    tooltip: 'Pick from gallery',
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 16),
+              // Phone and email with validators
+              TextFormField(
+                controller: _phoneController,
+                decoration: const InputDecoration(labelText: 'Phone'),
+                keyboardType: TextInputType.phone,
+                validator: (value) {
+                  final v = value?.trim() ?? '';
+                  if (v.isNotEmpty) {
+                    final pattern = RegExp(r'^\+?[0-9]{7,15}$');
+                    if (!pattern.hasMatch(v)) {
+                      return 'Enter a valid phone number';
+                    }
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _emailController,
+                decoration: const InputDecoration(labelText: 'Email'),
+                keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  final v = value?.trim() ?? '';
+                  if (v.isNotEmpty) {
+                    final pattern = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+                    if (!pattern.hasMatch(v)) {
+                      return 'Enter a valid email';
+                    }
+                  }
+                  return null;
+                },
+              ),
+              // Hobbies
+              TextFormField(
+                controller: _hobbiesController,
+                decoration: const InputDecoration(labelText: 'Hobbies'),
+              ),
+              const SizedBox(height: 16),
+              // Documents section
+              Text(
+                'Documents',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              ...List.generate(
+                _documentEntries.length,
+                (i) => _buildEntryRow(_documentEntries, i, _documentTypes, setState),
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add Document'),
+                  onPressed: () {
+                    setState(() {
+                      _documentEntries.add({'type': _documentTypes.first, 'value': ''});
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Social networks section
+              Text(
+                'Social Networks',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              ...List.generate(
+                _socialEntries.length,
+                (i) => _buildEntryRow(_socialEntries, i, _socialTypes, setState),
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add Social'),
+                  onPressed: () {
+                    setState(() {
+                      _socialEntries.add({'type': _socialTypes.first, 'value': ''});
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Messengers section
+              Text(
+                'Messengers',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              ...List.generate(
+                _messengerEntries.length,
+                (i) =>
+                    _buildEntryRow(_messengerEntries, i, _messengerTypes, setState),
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add Messenger'),
+                  onPressed: () {
+                    setState(() {
+                      _messengerEntries.add({
+                        'type': _messengerTypes.first,
+                        'value': '',
+                      });
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Save button at the end of the scrollable content
+              ElevatedButton(
+                onPressed: _save,
+                child: const Text('Save'),
+              ),
+            ],
           ),
-        );
+        ),
+      ),
+    );
   }
 }
