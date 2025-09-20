@@ -157,16 +157,29 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
     final picked = await _imagePicker.pickImage(source: ImageSource.gallery);
     if (picked != null) {
       final file = File(picked.path);
+      // Cache the previous avatar URL so we can delete it after a successful upload.
+      final oldUrl = _avatarUrlController.text.trim();
       setState(() {
         _avatarFile = file;
       });
       try {
+        // Generate a new storage reference for the uploaded image.
         final storageRef = FirebaseStorage.instance
             .ref()
             .child('avatars')
             .child('${const Uuid().v4()}.jpg');
+        // Upload the new avatar file.
         await storageRef.putFile(file);
         final url = await storageRef.getDownloadURL();
+        // If there was a previous avatar URL and it differs from the new one,
+        // attempt to remove the old file from Firebase Storage to avoid orphaned files.
+        if (oldUrl.isNotEmpty && oldUrl != url) {
+          try {
+            await FirebaseStorage.instance.refFromURL(oldUrl).delete();
+          } catch (e) {
+            debugPrint('Error deleting old avatar: $e');
+          }
+        }
         setState(() {
           _avatarUrlController.text = url;
         });
@@ -374,14 +387,24 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
                 ],
               ),
               const SizedBox(height: 16),
-              // Phone and email with validators
+              // Contact information section
+              Text(
+                'Contact Information',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              // Phone field with helper text and validation.
               TextFormField(
                 controller: _phoneController,
-                decoration: const InputDecoration(labelText: 'Phone'),
+                decoration: const InputDecoration(
+                  labelText: 'Phone',
+                  helperText: 'Include country code, e.g. +41 79 123 45 67',
+                ),
                 keyboardType: TextInputType.phone,
                 validator: (value) {
                   final v = value?.trim() ?? '';
                   if (v.isNotEmpty) {
+                    // Phone numbers must consist only of digits and may start with a plus sign.
                     final pattern = RegExp(r'^\+?[0-9]{7,15}$');
                     if (!pattern.hasMatch(v)) {
                       return 'Enter a valid phone number';
@@ -390,13 +413,18 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
                   return null;
                 },
               ),
+              // Email field with helper text and validation.
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  helperText: 'Format: name@example.com',
+                ),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   final v = value?.trim() ?? '';
                   if (v.isNotEmpty) {
+                    // Simple email validation requiring a single @ and a domain.
                     final pattern = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
                     if (!pattern.hasMatch(v)) {
                       return 'Enter a valid email';
@@ -405,10 +433,13 @@ class _AddMemberScreenV001State extends State<AddMemberScreenV001> {
                   return null;
                 },
               ),
-              // Hobbies
+              // Hobbies field with helper text indicating comma‑separated entries.
               TextFormField(
                 controller: _hobbiesController,
-                decoration: const InputDecoration(labelText: 'Hobbies'),
+                decoration: const InputDecoration(
+                  labelText: 'Hobbies',
+                  helperText: 'Separate multiple hobbies with commas',
+                ),
               ),
               const SizedBox(height: 16),
               // Documents section
