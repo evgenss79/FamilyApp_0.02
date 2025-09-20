@@ -7,6 +7,7 @@ import 'add_member_screen.dart';
 import 'member_documents_screen.dart';
 import 'member_hobbies_screen.dart';
 
+
 /// Displays a list of family members with extended details and allows
 /// adding and removing members. Uses [FamilyDataV001] to manage state.
 class MembersScreenV001 extends StatelessWidget {
@@ -131,6 +132,7 @@ class MembersScreenV001 extends StatelessWidget {
                               (member.documents != null &&
                                   member.documents!.isNotEmpty))
                             IconButton(
+             
                               icon: const Icon(Icons.description),
                               onPressed: () {
                                 List<String> docs;
@@ -166,6 +168,7 @@ class MembersScreenV001 extends StatelessWidget {
                             IconButton(
                               icon: const Icon(Icons.star),
                               onPressed: () {
+             
                                 List<String> hobbiesList;
                                 if (member.hobbies is List<String>) {
                                   hobbiesList =
