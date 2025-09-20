@@ -6,6 +6,8 @@ import '../models/family_member.dart';
 import 'add_member_screen.dart';
 import 'member_documents_screen.dart';
 import 'member_hobbies_screen.dart';
+import 'edit_documents_screen.dart';
+import 'edit_hobbies_screen.dart';
 
 /// Displays a list of family members with extended details and allows
 /// adding and removing members. Uses [FamilyDataV001] to manage state.
@@ -132,6 +134,35 @@ class MembersScreenV001 extends StatelessWidget {
                                   member.documents!.isNotEmpty))
                             IconButton(
                               icon: const Icon(Icons.description),
+                              onLongPress: () async {
+                                // Build list of documents (same logic as onPressed)
+                                List<String> docs;
+                                if (member.documentsList != null &&
+                                    member.documentsList!.isNotEmpty) {
+                                  docs = member.documentsList!.map<String>((entry) {
+                                    final type = entry['type'] ?? '';
+                                    final value = entry['value'] ?? '';
+                                    return type.toString().isNotEmpty
+                                        ? '$type: $value'
+                                        : value.toString();
+                                  }).toList();
+                                } else {
+                                  docs = member.documents!
+                                      .split(',')
+                                      .map((e) => e.trim())
+                                      .where((e) => e.isNotEmpty)
+                                      .toList();
+                                }
+                                // Open edit screen and await updated docs
+                                final updatedDocs = await Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => EditDocumentsScreen(initialDocs: docs),
+                                  ),
+                                );
+                                if (updatedDocs != null) {
+                                  data.updateDocuments(member.id, List<String>.from(updatedDocs));
+                                }
+                              },
                               onPressed: () {
                                 List<String> docs;
                                 if (member.documentsList != null &&
@@ -165,6 +196,30 @@ class MembersScreenV001 extends StatelessWidget {
                               member.hobbies!.isNotEmpty)
                             IconButton(
                               icon: const Icon(Icons.star),
+                              onLongPress: () async {
+                                // Build list of hobbies (same logic as onPressed)
+                                List<String> hobbiesList;
+                                if (member.hobbies is List<String>) {
+                                  hobbiesList =
+                                      List<String>.from(member.hobbies as List);
+                                } else {
+                                  hobbiesList = member.hobbies
+                                      .toString()
+                                      .split(',')
+                                      .map((e) => e.trim())
+                                      .where((e) => e.isNotEmpty)
+                                      .toList();
+                                }
+                                // Open edit screen and await updated hobbies
+                                final updatedHobbies = await Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => EditHobbiesScreen(initialHobbies: hobbiesList),
+                                  ),
+                                );
+                                if (updatedHobbies != null) {
+                                  data.updateHobbies(member.id, List<String>.from(updatedHobbies));
+                                }
+                              },
                               onPressed: () {
                                 List<String> hobbiesList;
                                 if (member.hobbies is List<String>) {
