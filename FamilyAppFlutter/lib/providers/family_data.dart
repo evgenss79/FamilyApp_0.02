@@ -165,60 +165,127 @@ class FamilyDataV001 extends ChangeNotifier {
       ..addAll(events);
     StorageServiceV001.saveEvents(_events);
     notifyListeners();
-  
-  
-  // Update avatar URL for a member by id
+  }
+
+  // ---------------------------------------------------------------------------
+  // Update helpers
+  //
+  // The FamilyMember model uses immutable (final) fields for most properties. To
+  // update a single property (e.g. avatar URL or birthday) we create a new
+  // FamilyMember instance copying all existing data and replacing only the
+  // updated field. The updated member then replaces the old one in the
+  // underlying list and the change is persisted to storage.
+
+  /// Update the avatar URL for the member with the given [memberId]. If
+  /// [avatarUrl] is null the avatar field will be cleared.
   void updateAvatar(String memberId, String? avatarUrl) {
     final index = _members.indexWhere((m) => m.id == memberId);
-    if (index != -1) {
-      final member = _members[index];
-      member.avatarUrl = avatarUrl;
-      StorageServiceV001.saveMembers(_members);
-      notifyListeners();
-   }
+    if (index == -1) return;
+    final m = _members[index];
+    final updated = FamilyMember(
+      id: m.id,
+      name: m.name,
+      relationship: m.relationship,
+      birthday: m.birthday,
+      phone: m.phone,
+      email: m.email,
+      avatarUrl: avatarUrl,
+      socialMedia: m.socialMedia,
+      hobbies: m.hobbies,
+      documents: m.documents,
+      documentsList: m.documentsList,
+      socialNetworks: m.socialNetworks,
+      messengers: m.messengers,
+    );
+    _members[index] = updated;
+    StorageServiceV001.saveMembers(_members);
+    notifyListeners();
   }
 
-  // Update birthday for a member by id
+  /// Update the birthday for the member with the given [memberId]. If
+  /// [birthday] is null the birthday will be removed.
   void updateBirthday(String memberId, DateTime? birthday) {
     final index = _members.indexWhere((m) => m.id == memberId);
-    if (index != -1) {
-      final member = _members[index];
-      member.birthday = birthday;
-      StorageServiceV001.saveMembers(_members);
-      notifyListeners();
-    }
+    if (index == -1) return;
+    final m = _members[index];
+    final updated = FamilyMember(
+      id: m.id,
+      name: m.name,
+      relationship: m.relationship,
+      birthday: birthday,
+      phone: m.phone,
+      email: m.email,
+      avatarUrl: m.avatarUrl,
+      socialMedia: m.socialMedia,
+      hobbies: m.hobbies,
+      documents: m.documents,
+      documentsList: m.documentsList,
+      socialNetworks: m.socialNetworks,
+      messengers: m.messengers,
+    );
+    _members[index] = updated;
+    StorageServiceV001.saveMembers(_members);
+    notifyListeners();
   }
 
-  // Update documents for a member by id
+  /// Update the documents list for the member with the given [memberId]. The
+  /// provided [docs] list should contain the textual representation of each
+  /// document. The legacy `documents` string will be set to a comma‑separated
+  /// version of [docs]. The structured `documentsList` will be created with
+  /// each entry mapped as `{ 'value': doc }` to preserve the order.
   void updateDocuments(String memberId, List<String> docs) {
     final index = _members.indexWhere((m) => m.id == memberId);
-    if (index != -1) {
-      final member = _members[index];
-      // Store documents as a comma-separated string for backward compatibility
-      member.documents = docs.join(', ');
-      // Also store as a list of maps for structured docs if needed
-      member.documentsList = docs
-          .map((doc) => { 'document': doc })
-          .toList();
-      StorageServiceV001.saveMembers(_members);
-      notifyListeners();
-    }
+    if (index == -1) return;
+    final m = _members[index];
+    final updated = FamilyMember(
+      id: m.id,
+      name: m.name,
+      relationship: m.relationship,
+      birthday: m.birthday,
+      phone: m.phone,
+      email: m.email,
+      avatarUrl: m.avatarUrl,
+      socialMedia: m.socialMedia,
+      hobbies: m.hobbies,
+      documents: docs.isNotEmpty ? docs.join(', ') : null,
+      documentsList: docs
+          .map((doc) => <String, String>{'value': doc})
+          .toList(),
+      socialNetworks: m.socialNetworks,
+      messengers: m.messengers,
+    );
+    _members[index] = updated;
+    StorageServiceV001.saveMembers(_members);
+    notifyListeners();
   }
 
-  // Update hobbies for a member by id
+  /// Update the hobbies list for the member with the given [memberId]. The
+  /// provided [hobbies] list will be persisted as a comma‑separated string in
+  /// the legacy `hobbies` field. The structured list is not yet supported in
+  /// the model, so consumers are expected to split the string back into a list
+  /// when required.
   void updateHobbies(String memberId, List<String> hobbies) {
     final index = _members.indexWhere((m) => m.id == memberId);
-    if (index != -1) {
-      final member = _members[index];
-      // Store hobbies as a comma-separated string for backward compatibility
-      member.hobbies = hobbies;
-      // Some older code might expect a single string version
-      // You can optionally set member.hobbies to a single string if needed
-      StorageServiceV001.saveMembers(_members);
-      notifyListeners();
-    }
+    if (index == -1) return;
+    final m = _members[index];
+    final updated = FamilyMember(
+      id: m.id,
+      name: m.name,
+      relationship: m.relationship,
+      birthday: m.birthday,
+      phone: m.phone,
+      email: m.email,
+      avatarUrl: m.avatarUrl,
+      socialMedia: m.socialMedia,
+      hobbies: hobbies.isNotEmpty ? hobbies.join(', ') : null,
+      documents: m.documents,
+      documentsList: m.documentsList,
+      socialNetworks: m.socialNetworks,
+      messengers: m.messengers,
+    );
+    _members[index] = updated;
+    StorageServiceV001.saveMembers(_members);
+    notifyListeners();
   }
 
-
-  }
 }
