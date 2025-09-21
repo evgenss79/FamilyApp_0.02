@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
-
-import '../models/event.dart';
 import '../providers/family_data.dart';
 
 /// A stateful widget that presents a form for creating a new family event.
