@@ -6,7 +6,8 @@ class ScheduleItem {
   final String title;
   final String? description;
   final DateTime startDateTime;
-  final Da?teTi?me? endDateTime;
+  // Optional end date/time for a schedule entry.
+  final DateTime? endDateTime;
   final List<String>? memberIds;
   final String? type;
   final DateTime updatedAt;
@@ -37,7 +38,8 @@ class ScheduleItem {
   }
 
   static ScheduleItem fromMap(Map<String, dynamic> map) {
-    DateTime _parse(dynamic v) {
+    // Helper to parse various timestamp formats into a DateTime.
+    DateTime parse(dynamic v) {
       if (v == null) return DateTime.now();
       if (v is String) return DateTime.parse(v);
       if (v is int) return DateTime.fromMillisecondsSinceEpoch(v);
@@ -48,13 +50,13 @@ class ScheduleItem {
       id: map['id'] as String?,
       title: map['title'] as String,
       description: map['description'] as String?,
-      startDateTime: DateTime.parse(map['startDateTime'] as String),
-      endDateTime: map['endDateTime'] != null
-          ? DateTime.parse(map['endDateTime'] as String)
-          : null,
-      memberIds: (map['memberIds'] as List?)?.map((e) => e as String).toList(),
+      startDateTime: parse(map['startDateTime']),
+      endDateTime:
+          map['endDateTime'] != null ? parse(map['endDateTime']) : null,
+      memberIds:
+          (map['memberIds'] as List?)?.map((e) => e.toString()).toList(),
       type: map['type'] as String?,
-      updatedAt: _parse(map['updatedAt']),
+      updatedAt: parse(map['updatedAt']),
     );
   }
 }
