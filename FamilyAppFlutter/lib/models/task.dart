@@ -38,6 +38,15 @@ class Task {
   /// Points awarded upon completion of the task.
   late int points;
 
+  /// Optional latitude coordinate for location-based reminders.
+  final double? latitude;
+
+  /// Optional longitude coordinate for location-based reminders.
+  final double? longitude;
+
+  /// Optional human-readable location name for display.
+  final String? locationName;
+
   /// Optional list of reminder times independent of the end date.
   final List<DateTime> reminders;
 
@@ -56,6 +65,9 @@ class Task {
     int? points,
     List<DateTime>? reminders,
     DateTime? updatedAt,
+    this.latitude,
+    this.longitude,
+    this.locationName,
   })  : id = id ?? const Uuid().v4(),
         points = points ?? 0,
         reminders = reminders ?? const [],
@@ -73,6 +85,9 @@ class Task {
       'points': points,
       'reminders': reminders.map((e) => e.toIso8601String()).toList(),
       'updatedAt': updatedAt.toIso8601String(),
+      'latitude': latitude,
+      'longitude': longitude,
+      'locationName': locationName,
     };
   }
 
@@ -104,6 +119,9 @@ class Task {
       points: (map['points'] as int?) ?? 0,
       reminders: remindersList,
       updatedAt: parsedUpdated,
+      latitude: (map['latitude'] as num?)?.toDouble(),
+      longitude: (map['longitude'] as num?)?.toDouble(),
+      locationName: map['locationName'] as String?,
     );
   }
 }
