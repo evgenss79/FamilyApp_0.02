@@ -3,8 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../providers/family_data.dart';
 import '../providers/schedule_data.dart';
-import '../models/task.dart';
-import '../models/event.dart';
 import '../models/schedule_item.dart';
 
 /// A unified feed screen combining tasks, events and schedule items.
