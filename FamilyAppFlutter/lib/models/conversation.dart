@@ -2,13 +2,30 @@ import 'package:hive/hive.dart';
 
 part 'conversation.g.dart';
 
+/// Represents a high-level conversation between family members.  A
+/// conversation holds participant information and time metadata, but
+/// individual messages are stored separately.
 @HiveType(typeId: 12)
 class Conversation extends HiveObject {
-  @HiveField(0) String id;
-  @HiveField(1) String title;
-  @HiveField(2) List<String> memberIds;
-  @HiveField(3) DateTime? createdAt;
-  @HiveField(4) DateTime? lastMessageTime;
+  /// Unique identifier for the conversation.
+  @HiveField(0)
+  String id;
+
+  /// Title or subject of the conversation.
+  @HiveField(1)
+  String title;
+
+  /// List of member identifiers participating in the conversation.
+  @HiveField(2)
+  List<dynamic> memberIds;
+
+  /// When the conversation was created.
+  @HiveField(3)
+  DateTime? createdAt;
+
+  /// Time of the most recent message in the conversation.
+  @HiveField(4)
+  DateTime? lastMessageTime;
 
   Conversation({
     required this.id,
@@ -17,24 +34,4 @@ class Conversation extends HiveObject {
     this.createdAt,
     this.lastMessageTime,
   });
-
-  factory Conversation.fromMap(Map<String, dynamic> m) => Conversation(
-        id: m['id'] as String,
-        title: m['title'] as String,
-        memberIds: (m['memberIds'] as List).cast<String>(),
-        createdAt: (m['createdAt'] as String?) != null
-            ? DateTime.parse(m['createdAt'] as String)
-            : null,
-        lastMessageTime: (m['lastMessageTime'] as String?) != null
-            ? DateTime.parse(m['lastMessageTime'] as String)
-            : null,
-      );
-
-  Map<String, dynamic> toMap() => {
-        'id': id,
-        'title': title,
-        'memberIds': memberIds,
-        'createdAt': createdAt?.toIso8601String(),
-        'lastMessageTime': lastMessageTime?.toIso8601String(),
-      };
 }

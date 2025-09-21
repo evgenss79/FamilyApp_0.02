@@ -1,72 +1,46 @@
-import 'package:uuid/uuid.dart';
+import 'package:hive/hive.dart';
 
-class Event {
-  final String id;
-  final String title;
-  final DateTime startDateTime;
-  final DateTime endDateTime;
-  final String? description;
-  final List<String> participantIds;
-  final DateTime updatedAt;
+/// Represents a calendar event.  Events can be associated with a
+/// particular family member, have a start and end time, and optionally
+/// include a description or location.  All fields are optional except
+/// the identifier, allowing for flexible creation of events.
+@HiveType(typeId: 33)
+class Event extends HiveObject {
+  /// Unique identifier for this event.
+  @HiveField(0)
+  String? id;
+
+  /// Title or summary for the event.
+  @HiveField(1)
+  String? title;
+
+  /// Detailed description of the event.
+  @HiveField(2)
+  String? description;
+
+  /// Start date and time of the event.
+  @HiveField(3)
+  DateTime? startDateTime;
+
+  /// End date and time of the event.
+  @HiveField(4)
+  DateTime? endDateTime;
+
+  /// Physical or virtual location of the event.
+  @HiveField(5)
+  String? location;
+
+  /// Identifier of the family member associated with this event, if any.
+  @HiveField(6)
+  String? assignedMemberId;
 
   Event({
-    String? id,
-    required this.title,
-    required this.startDateTime,
-    required this.endDateTime,
+    this.id,
+    this.title,
     this.description,
-    List<String>? participantIds,
-    DateTime? updatedAt,
-  })  : id = id ?? Uuid().v4(),
-        participantIds = participantIds ?? <String>[],
-        updatedAt = updatedAt ?? DateTime.now();
-
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'title': title,
-      'startDateTime': startDateTime.millisecondsSinceEpoch,
-      'endDateTime': endDateTime.millisecondsSinceEpoch,
-      'description': description,
-      'participantIds': participantIds,
-      'updatedAt': updatedAt.toIso8601String(),
-    };
-  }
-
-  factory Event.fromMap(Map<String, dynamic> map) {
-    DateTime parseStart(dynamic v) {
-      if (v is int) return DateTime.fromMillisecondsSinceEpoch(v);
-      if (v is String) return DateTime.parse(v);
-      return DateTime.now();
-    }
-
-    DateTime parseEnd(dynamic v, DateTime fallback) {
-      if (v is int) return DateTime.fromMillisecondsSinceEpoch(v);
-      if (v is String) return DateTime.parse(v);
-      if (v is DateTime) return v;
-      return fallback;
-    }
-
-    DateTime parseUpdated(dynamic v) {
-      if (v is String) return DateTime.parse(v);
-      if (v is int) return DateTime.fromMillisecondsSinceEpoch(v);
-      return DateTime.now();
-    }
-
-    final start = parseStart(map['startDateTime']);
-    final end = parseEnd(map['endDateTime'], start);
-
-    final participantsDynamic = map['participantIds'] as List<dynamic>?;
-    final participants = participantsDynamic?.cast<String>() ?? <String>[];
-
-    return Event(
-      id: map['id'] as String?,
-      title: map['title'] as String,
-      startDateTime: start,
-      endDateTime: end,
-      description: map['description'] as String?,
-      participantIds: participants,
-      updatedAt: parseUpdated(map['updatedAt']),
-    );
-  }
+    this.startDateTime,
+    this.endDateTime,
+    this.location,
+    this.assignedMemberId,
+  });
 }

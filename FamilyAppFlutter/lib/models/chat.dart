@@ -2,13 +2,31 @@ import 'package:hive/hive.dart';
 
 part 'chat.g.dart';
 
+/// A conversation between two or more family members.  Chats hold
+/// metadata such as the title, participating member identifiers, last
+/// updated timestamp and a preview of the most recent message.  The
+/// contents of the messages themselves are stored separately.
 @HiveType(typeId: 11)
 class Chat extends HiveObject {
-  @HiveField(0) String id;
-  @HiveField(1) String title;
-  @HiveField(2) List<String> memberIds;
-  @HiveField(3) DateTime updatedAt;
-  @HiveField(4) String? lastMessagePreview;
+  /// Unique identifier for this chat.
+  @HiveField(0)
+  String id;
+
+  /// User-provided title of the chat (e.g. "Family group").
+  @HiveField(1)
+  String title;
+
+  /// List of member identifiers participating in this chat.
+  @HiveField(2)
+  List<dynamic> memberIds;
+
+  /// Timestamp of the last activity in this chat.
+  @HiveField(3)
+  DateTime updatedAt;
+
+  /// Optional preview of the most recent message sent in this chat.
+  @HiveField(4)
+  String? lastMessagePreview;
 
   Chat({
     required this.id,
@@ -17,20 +35,4 @@ class Chat extends HiveObject {
     required this.updatedAt,
     this.lastMessagePreview,
   });
-
-  factory Chat.fromMap(Map<String, dynamic> m) => Chat(
-        id: m['id'] as String,
-        title: m['title'] as String,
-        memberIds: (m['memberIds'] as List).cast<String>(),
-        updatedAt: DateTime.parse(m['updatedAt'] as String),
-        lastMessagePreview: m['lastMessagePreview'] as String?,
-      );
-
-  Map<String, dynamic> toMap() => {
-        'id': id,
-        'title': title,
-        'memberIds': memberIds,
-        'updatedAt': updatedAt.toIso8601String(),
-        'lastMessagePreview': lastMessagePreview,
-      };
 }

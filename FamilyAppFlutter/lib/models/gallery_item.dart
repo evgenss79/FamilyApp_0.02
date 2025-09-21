@@ -1,39 +1,9 @@
-import 'package:uuid/uuid.dart';
-
-/// Represents a media item in the family gallery.
-///
-/// A gallery item stores the URL of the uploaded image or video along
-/// with metadata such as the uploader and creation time. Further
-/// enhancements might include thumbnail URLs or EXIF data.
+/// Represents an item in the family photo gallery.  Each item holds
+/// the identifier and the URL to the image.  Additional metadata
+/// could be added such as captions or upload times.
 class GalleryItem {
-  final String id;
-  final String url;
-  final String? uploaderId;
-  final DateTime createdAt;
+  final String? id;
+  final String? url;
 
-  GalleryItem({
-    String? id,
-    required this.url,
-    this.uploaderId,
-    DateTime? createdAt,
-  })  : id = id ?? const Uuid().v4(),
-        createdAt = createdAt ?? DateTime.now();
-
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'url': url,
-      'uploaderId': uploaderId,
-      'createdAt': createdAt.toIso8601String(),
-    };
-  }
-
-  static GalleryItem fromMap(Map<String, dynamic> map) {
-    return GalleryItem(
-      id: map['id'] as String?,
-      url: map['url'] as String,
-      uploaderId: map['uploaderId'] as String?,
-      createdAt: DateTime.parse(map['createdAt'] as String),
-    );
-  }
+  GalleryItem({this.id, this.url});
 }
