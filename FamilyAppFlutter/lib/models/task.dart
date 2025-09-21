@@ -1,59 +1,57 @@
+enum TaskStatus { todo, inProgress, done }
+
 class Task {
   final String id;
-  final String title;
-  final String? description;
-  final DateTime? endDateTime;
-  final String? assignedMemberId;
-  final String status; // 'Pending' | 'In Progress' | 'Completed'
-  final int points;
-  final List<DateTime> reminders;
-  final double? latitude;
-  final double? longitude;
-  final String? locationName;
+  String title;
+  String? description;
+  DateTime? dueDate;
+  TaskStatus status;
+  String? assigneeId; // id участника семьи
+  int? points; // баллы для поощрений/штрафов
 
   Task({
     required this.id,
     required this.title,
     this.description,
-    this.endDateTime,
-    this.assignedMemberId,
-    this.status = 'Pending',
-    this.points = 0,
-    List<DateTime>? reminders,
-    this.latitude,
-    this.longitude,
-    this.locationName,
-  }) : reminders = reminders ?? const [];
+    this.dueDate,
+    this.status = TaskStatus.todo,
+    this.assigneeId,
+    this.points,
+  });
 
-  Map<String, dynamic> toMap() => {
-        'id': id,
-        'title': title,
-        'description': description,
-        'endDateTime': endDateTime?.toIso8601String(),
-        'assignedMemberId': assignedMemberId,
-        'status': status,
-        'points': points,
-        'reminders': reminders.map((e) => e.toIso8601String()).toList(),
-        'latitude': latitude,
-        'longitude': longitude,
-        'locationName': locationName,
-      };
+  factory Task.fromMap(Map<String, dynamic> map) {
+    return Task(
+      id: map['id'] as String,
+      title: map['title'] as String,
+      description: map['description'] as String?,
+      dueDate: map['dueDate'] != null ? DateTime.parse(map['dueDate']) : null,
+      status: _statusFromString(map['status'] as String?),
+      assigneeId: map['assigneeId'] as String?,
+      points: map['points'] as int?,
+    );
+  }
 
-  static Task fromMap(Map<String, dynamic> m) => Task(
-        id: (m['id'] ?? '').toString(),
-        title: (m['title'] ?? '').toString(),
-        description: m['description'] as String?,
-        endDateTime: m['endDateTime'] is String ? DateTime.tryParse(m['endDateTime']) : null,
-        assignedMemberId: m['assignedMemberId'] as String?,
-        status: (m['status'] ?? 'Pending').toString(),
-        points: m['points'] is int ? m['points'] as int : int.tryParse('${m['points']}') ?? 0,
-        reminders: (m['reminders'] as List?)
-                ?.map((e) => e is String ? DateTime.tryParse(e) : null)
-                .whereType<DateTime>()
-                .toList() ??
-            const [],
-        latitude: m['latitude'] is num ? (m['latitude'] as num).toDouble() : null,
-        longitude: m['longitude'] is num ? (m['longitude'] as num).toDouble() : null,
-        locationName: m['locationName'] as String?,
-      );
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'dueDate': dueDate?.toIso8601String(),
+      'status': status.name,
+      'assigneeId': assigneeId,
+      'points': points,
+    };
+  }
+
+  static TaskStatus _statusFromString(String? s) {
+    switch (s) {
+      case 'inProgress':
+        return TaskStatus.inProgress;
+      case 'done':
+        return TaskStatus.done;
+      case 'todo':
+      default:
+        return TaskStatus.todo;
+    }
+  }
 }
