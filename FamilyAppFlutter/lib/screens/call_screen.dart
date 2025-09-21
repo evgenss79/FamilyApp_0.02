@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/conversation.dart';
 import '../providers/family_data.dart';
+import '../models/family_member.dart';
 
 /// Screen that displays an in-progress audio or video call.
 class CallScreen extends StatelessWidget {
@@ -17,11 +18,11 @@ class CallScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final familyData = Provider.of<FamilyDataV001>(context, listen: false);
+    final familyData = Provider.of<FamilyData>(context, listen: false);
     final participants = conversation.memberIds
         .map((id) => familyData.members.firstWhere(
               (member) => member.id == id,
-              orElse: () => FamilyMember(id: '', name: 'Unknown', relationship: ''),
+              orElse: () => FamilyMember(id: '', name: 'Unknown'),
             ))
         .toList();
 

@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/family_data.dart';
+import '../models/family_member.dart';
+import '../models/task.dart';
 
-
-/// Displays a leaderboard of family members ordered by total points earned.
-/// Points are accumulated from completed tasks assigned to each member.
-class ScoreboardScreenV001 extends StatelessWidget {
-  const ScoreboardScreenV001({super.key});
+/// Displays a leaderboard of family members ordered by total points
+/// earned from completed tasks.  Members with more points appear
+/// higher in the list.  When two members have the same number of
+/// points they are sorted alphabetically by name.
+class ScoreboardScreen extends StatelessWidget {
+  const ScoreboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -15,17 +18,16 @@ class ScoreboardScreenV001 extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Scoreboard'),
       ),
-      body: Consumer<FamilyDataV001>(
+      body: Consumer<FamilyData>(
         builder: (context, data, _) {
-          // Make a copy of members so sorting does not affect original order.
+          // Create a copy to sort without mutating the original list.
           final List<FamilyMember> members = List<FamilyMember>.from(data.members);
-          // Compute points for each member and sort descending by points.
+          // Sort by points descending, then by name ascending.
           members.sort((a, b) {
             final int pointsA = _calculatePointsForMember(a, data.tasks);
             final int pointsB = _calculatePointsForMember(b, data.tasks);
-            // If equal points, preserve alphabetical order by name.
             if (pointsA == pointsB) {
-              return a.name.compareTo(b.name);
+              return (a.name ?? '').compareTo(b.name ?? '');
             }
             return pointsB.compareTo(pointsA);
           });
@@ -39,8 +41,8 @@ class ScoreboardScreenV001 extends StatelessWidget {
                   backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                   child: Text('${index + 1}'),
                 ),
-                title: Text(member.name),
-                subtitle: Text(member.relationship),
+                title: Text(member.name ?? ''),
+                subtitle: Text(member.relationship ?? ''),
                 trailing: Text(
                   '$points pts',
                   style: Theme.of(context).textTheme.titleMedium,
@@ -53,12 +55,15 @@ class ScoreboardScreenV001 extends StatelessWidget {
     );
   }
 
-  /// Helper to calculate total earned points from completed tasks assigned to [member].
+  /// Calculates the sum of points for all tasks assigned to [member]
+  /// that have been marked as completed.
   int _calculatePointsForMember(FamilyMember member, List<Task> tasks) {
-    return tasks
-        .where((task) =>
-            task.assignedMemberId == member.id &&
-            task.status.toLowerCase() == 'completed')
-        .fold<int>(0, (sum, task) => sum + task.points);
+    var total = 0;
+    for (final task in tasks) {
+      if (task.assignedMemberId == member.id && task.status == TaskStatus.completed) {
+        total += task.points ?? 0;
+      }
+    }
+    return total;
   }
 }

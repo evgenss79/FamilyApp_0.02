@@ -1,32 +1,15 @@
 import 'package:flutter/material.dart';
 
+/// Shows hobbies for a specific family member.  Currently this
+/// simplified screen displays a placeholder message.
 class MemberHobbiesScreen extends StatelessWidget {
-  static const routeName = '/member-hobbies';
-
-  const MemberHobbiesScreen({Key? key}) : super(key: key);
+  const MemberHobbiesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final List<String> hobbies =
-        (ModalRoute.of(context)?.settings.arguments as List<String>?) ?? [];
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Hobbies'),
-      ),
-      body: hobbies.isEmpty
-          ? const Center(
-              child: Text('No hobbies available.'),
-            )
-          : ListView.builder(
-              itemCount: hobbies.length,
-              itemBuilder: (ctx, index) {
-                final hobby = hobbies[index];
-                return ListTile(
-                  title: Text(hobby),
-                );
-              },
-            ),
+      appBar: AppBar(title: const Text('Member Hobbies')),
+      body: const Center(child: Text('No hobbies found.')),
     );
   }
 }
