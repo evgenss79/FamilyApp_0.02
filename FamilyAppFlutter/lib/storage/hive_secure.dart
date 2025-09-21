@@ -1,31 +1,38 @@
-import 'package:hive/hive.dart';
+import 'dart:convert';
 import 'package:hive_flutter/hive_flutter.dart';
-import '../security/secure_key_store.dart';
 
-/// Initializes Hive with AES encryption using a secure key, then opens all
-/// encrypted boxes used by the application.
-///
-/// The [HiveSecure] class is responsible for bootstrapping Hive and
-/// registering encrypted boxes. It ensures that a data encryption key (DEK)
-/// is generated via [SecureKeyStore] and used to create an [HiveAesCipher].
-///
-/// New boxes can be added here when the application introduces new types of
-/// persisted data. Each call to [openBox] must supply the same cipher to
-/// ensure the contents remain encrypted.
 class HiveSecure {
-  static Future<void> initEncrypted() async {
-    await Hive.initFlutter();
-    final store = SecureKeyStore();
-    await store.ensureDek();
-    final dek = await store.getDek();
-    final cipher = HiveAesCipher(dek);
-    await Hive.openBox('familyMembersV001', encryptionCipher: cipher);
-    await Hive.openBox('tasksV001', encryptionCipher: cipher);
-    await Hive.openBox('eventsV001', encryptionCipher: cipher);
-    await Hive.openBox('conversationsV001', encryptionCipher: cipher);
-    await Hive.openBox('messagesV001', encryptionCipher: cipher);
-    // Added box for schedule items. All schedule entries are stored
-    // encrypted using the same cipher as other boxes.
-    await Hive.openBox('scheduleItemsV001', encryptionCipher: cipher);
+  static const _boxName = 'secure';
+  static const _dekKey = 'dek_b64';
+
+  /// Создаёт DEK, если отсутствует
+  static Future<void> ensureDek() async {
+    final box = await Hive.openBox(_boxName);
+    if (!box.containsKey(_dekKey)) {
+      final newKey = _generateKey();
+      final b64 = base64Encode(newKey);
+      await box.put(_dekKey, b64);
+    }
+  }
+
+  /// Возвращает ключ (List<int>)
+  static Future<List<int>> getDek() async {
+    final box = await Hive.openBox(_boxName);
+    final b64 = box.get(_dekKey) as String?;
+    if (b64 == null) {
+      await ensureDek();
+      return await getDek();
+    }
+    return base64Decode(b64);
+  }
+
+  static List<int> _generateKey() {
+    final now = DateTime.now().microsecondsSinceEpoch;
+    final bytes = utf8.encode('$now-${now * 31}');
+    final out = List<int>.filled(32, 0);
+    for (var i = 0; i < out.length; i++) {
+      out[i] = i < bytes.length ? bytes[i] : (i * 97) & 0xFF;
+    }
+    return out;
   }
 }
