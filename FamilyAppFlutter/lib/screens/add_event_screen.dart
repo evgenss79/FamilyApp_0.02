@@ -52,11 +52,14 @@ class _AddEventScreenState extends State<AddEventScreen> {
   void _save() {
     final title = _titleController.text.trim();
     if (title.isEmpty) return;
+    final start = _startDate ?? DateTime.now();
+    final end = _endDate ??
+        (_startDate ?? DateTime.now()).add(const Duration(hours: 1));
     final event = Event(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: title,
-      startDateTime: _startDate,
-      endDateTime: _endDate,
+      startDateTime: start,
+      endDateTime: end,
     );
     Provider.of<FamilyData>(context, listen: false).addEvent(event);
     Navigator.of(context).pop();
