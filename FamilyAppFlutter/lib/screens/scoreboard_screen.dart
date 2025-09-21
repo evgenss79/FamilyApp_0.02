@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/family_data.dart';
-import '../models/family_member.dart';
-import '../models/task.dart';
+
 
 /// Displays a leaderboard of family members ordered by total points earned.
 /// Points are accumulated from completed tasks assigned to each member.
