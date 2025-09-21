@@ -3,8 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/family_data.dart';
 import '../screens/add_task_screen.dart';
-import '../models/family_member.dart';
-import '../models/task.dart';
+
 
 /// Displays a list of tasks with the ability to update their status, view
 /// additional metadata and delete tasks. Users can also create new tasks
