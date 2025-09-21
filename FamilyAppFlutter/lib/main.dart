@@ -14,7 +14,6 @@ import 'providers/chat_data.dart';
 import 'providers/schedule_data.dart';
 import 'screens/schedule_screen.dart';
 import 'screens/calendar_screen.dart';
-import 'screens/chat_list_screen.dart';
 import 'screens/chat_list_screen_v2.dart';
 import 'screens/friends_screen.dart';
 import 'screens/gallery_screen.dart';
