@@ -1,62 +1,47 @@
 class ScheduleItem {
   final String id;
   final String title;
-  final DateTime startDateTime;
-  final DateTime? endDateTime;
-  final String? description;
+  final DateTime dateTime;
+  final Duration? duration;
+  final String? location;
+  final String? notes;
+  final String? memberId;
 
   ScheduleItem({
     required this.id,
     required this.title,
-    required this.startDateTime,
-    this.endDateTime,
-    this.description,
+    required this.dateTime,
+    this.duration,
+    this.location,
+    this.notes,
+    this.memberId,
   });
 
-  Map<String, dynamic> toMap() => {
-        'id': id,
-        'title': title,
-        'startDateTime': startDateTime.toIso8601String(),
-        'endDateTime': endDateTime?.toIso8601String(),
-        'description': description,
-      };
+  DateTime get endDateTime =>
+      duration == null ? dateTime : dateTime.add(duration!);
 
-  static ScheduleItem fromMap(Map<String, dynamic> m) => ScheduleItem(
-        id: (m['id'] ?? '').toString(),
-        title: (m['title'] ?? '').toString(),
-        startDateTime: m['startDateTime'] is String ? DateTime.parse(m['startDateTime']) : DateTime.now(),
-        endDateTime: m['endDateTime'] is String ? DateTime.tryParse(m['endDateTime']) : null,
-        description: m['description'] as String?,
-      );
-}
-class ScheduleItem {
-  final String id;
-  final String title;
-  final DateTime startDateTime;
-  final DateTime? endDateTime;
-  final String? description;
+  factory ScheduleItem.fromMap(Map<String, dynamic> map) {
+    return ScheduleItem(
+      id: map['id'] as String,
+      title: map['title'] as String,
+      dateTime: DateTime.parse(map['dateTime'] as String),
+      duration:
+          map['duration'] != null ? Duration(minutes: map['duration']) : null,
+      location: map['location'] as String?,
+      notes: map['notes'] as String?,
+      memberId: map['memberId'] as String?,
+    );
+  }
 
-  ScheduleItem({
-    required this.id,
-    required this.title,
-    required this.startDateTime,
-    this.endDateTime,
-    this.description,
-  });
-
-  Map<String, dynamic> toMap() => {
-        'id': id,
-        'title': title,
-        'startDateTime': startDateTime.toIso8601String(),
-        'endDateTime': endDateTime?.toIso8601String(),
-        'description': description,
-      };
-
-  static ScheduleItem fromMap(Map<String, dynamic> m) => ScheduleItem(
-        id: (m['id'] ?? '').toString(),
-        title: (m['title'] ?? '').toString(),
-        startDateTime: m['startDateTime'] is String ? DateTime.parse(m['startDateTime']) : DateTime.now(),
-        endDateTime: m['endDateTime'] is String ? DateTime.tryParse(m['endDateTime']) : null,
-        description: m['description'] as String?,
-      );
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'dateTime': dateTime.toIso8601String(),
+      'duration': duration?.inMinutes,
+      'location': location,
+      'notes': notes,
+      'memberId': memberId,
+    };
+  }
 }
