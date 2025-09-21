@@ -1,37 +1,33 @@
-import 'package:hive/hive.dart';
-
-part 'message.g.dart';
-
-/// Represents a message within a conversation.  This model is similar
-/// to [ChatMessage] but is used for conversations rather than chats.
-@HiveType(typeId: 5)
-class Message extends HiveObject {
-  /// Unique identifier for the message.  May be null for newly
-  /// constructed messages before they are saved.
-  @HiveField(0)
-  String? id;
-
-  /// Identifier of the conversation this message belongs to.
-  @HiveField(1)
-  String conversationId;
-
-  /// Identifier of the member who sent the message.
-  @HiveField(2)
-  String senderId;
-
-  /// Message content.
-  @HiveField(3)
-  String content;
-
-  /// When the message was sent.
-  @HiveField(4)
-  DateTime timestamp;
+class Message {
+  final String id;
+  final String conversationId;
+  final String senderId;
+  final String content;
+  final DateTime timestamp;
 
   Message({
-    this.id,
+    required this.id,
     required this.conversationId,
     required this.senderId,
     required this.content,
     required this.timestamp,
   });
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'conversationId': conversationId,
+        'senderId': senderId,
+        'content': content,
+        'timestamp': timestamp.toIso8601String(),
+      };
+
+  static Message fromMap(Map<String, dynamic> m) => Message(
+        id: (m['id'] ?? '').toString(),
+        conversationId: (m['conversationId'] ?? '').toString(),
+        senderId: (m['senderId'] ?? '').toString(),
+        content: (m['content'] ?? '').toString(),
+        timestamp: m['timestamp'] is String
+            ? DateTime.tryParse(m['timestamp']) ?? DateTime.now()
+            : DateTime.now(),
+      );
 }
