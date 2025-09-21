@@ -38,7 +38,7 @@ class MembersScreen extends StatelessWidget {
                         icon: const Icon(Icons.delete),
                         onPressed: () {
                           data.members.removeAt(index);
-                          data.notifyListeners();
+                          
                         },
                       ),
                     );
