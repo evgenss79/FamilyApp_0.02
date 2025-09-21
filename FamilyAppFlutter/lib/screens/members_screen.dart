@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/family_data.dart';
-import '../models/family_member.dart';
 import 'add_member_screen.dart';
 import 'member_documents_screen.dart';
 import 'member_hobbies_screen.dart';
