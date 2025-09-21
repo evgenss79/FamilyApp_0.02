@@ -27,6 +27,39 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
   final List<String> _statuses = ['Pending', 'In Progress', 'Completed'];
 
+  // List of reminder date/times. Users can add multiple reminders
+  // for a single task. Each reminder will trigger a notification
+  // separately when the time is reached. Stored as DateTime values.
+  final List<DateTime> _reminders = [];
+
+  /// Prompts the user to pick a date and time for a reminder. When both
+  /// selections are made, the resulting DateTime is added to the
+  /// [_reminders] list and the UI is updated.
+  Future<void> _addReminder() async {
+    final now = DateTime.now();
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: now,
+      lastDate: DateTime(now.year + 10),
+    );
+    if (pickedDate == null) return;
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(now),
+    );
+    if (pickedTime == null) return;
+    setState(() {
+      _reminders.add(DateTime(
+        pickedDate.year,
+        pickedDate.month,
+        pickedDate.day,
+        pickedTime.hour,
+        pickedTime.minute,
+      ));
+    });
+  }
+
   @override
   void dispose() {
     _titleController.dispose();
@@ -75,6 +108,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       assignedMemberId: _assignedMemberId,
       status: _status,
       points: points,
+      reminders: List<DateTime>.from(_reminders),
     );
 
     final data = Provider.of<FamilyDataV001>(context, listen: false);
@@ -83,6 +117,15 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     // уведомления: только Task (без второго аргумента)
     NotificationService.sendTaskCreatedNotification(newTask);
     NotificationService.scheduleDueNotifications(newTask);
+
+    // Schedule each individual reminder (if any). This will iterate
+    // through the list of reminders and schedule them via the
+    // notification service. The notification service decides how to
+    // handle these times (e.g. local notifications or push). If no
+    // reminders are present, this loop is skipped.
+    for (final reminder in _reminders) {
+      NotificationService.scheduleCustomReminder(newTask, reminder);
+    }
 
     Navigator.of(context).pop(); // закрыть экран после создания
   }
@@ -174,6 +217,45 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               ElevatedButton(
                 onPressed: _save,
                 child: const Text('Save'),
+              ),
+
+              const SizedBox(height: 16),
+              // Section to display and add reminders
+              Text(
+                'Reminders',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              // Show list of reminders with ability to remove each one
+              if (_reminders.isNotEmpty)
+                Column(
+                  children: _reminders.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final reminder = entry.value;
+                    final formatted = '${reminder.day.toString().padLeft(2, '0')}. '
+                        '${reminder.month.toString().padLeft(2, '0')}. '
+                        '${reminder.year} '
+                        '${reminder.hour.toString().padLeft(2, '0')}: '
+                        '${reminder.minute.toString().padLeft(2, '0')}';
+                    return ListTile(
+                      key: ValueKey(reminder),
+                      title: Text(formatted),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () {
+                          setState(() {
+                            _reminders.removeAt(index);
+                          });
+                        },
+                      ),
+                    );
+                  }).toList(),
+                ),
+              // Button to add a new reminder
+              TextButton.icon(
+                onPressed: _addReminder,
+                icon: const Icon(Icons.add_alert),
+                label: const Text('Add Reminder'),
               ),
             ],
           ),
