@@ -5,8 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-
-import '../models/family_member.dart';
 import '../providers/family_data.dart';
 
 /// A screen for adding or editing a family member. It handles
