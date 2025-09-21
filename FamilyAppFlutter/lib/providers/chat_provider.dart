@@ -7,39 +7,52 @@ import 'package:uuid/uuid.dart';
 import '../models/chat.dart';
 import '../models/chat_message.dart';
 
+/// Provider that manages chats and chat messages.  It persists data via
+/// Hive and exposes methods to create, delete and send messages.  The
+/// adapters for Chat, ChatMessage and MessageType are registered during
+/// initialization if they have not been registered already.
 class ChatProvider extends ChangeNotifier {
   static const String chatsBoxName = 'chats_box';
   static const String messagesBoxName = 'messages_box';
 
-  late Box<Chat> _chatsBox;
-  late Box<ChatMessage> _messagesBox;
+  late Box _chatsBox;
+  late Box _messagesBox;
 
   final _uuid = const Uuid();
 
-  Future<void> init() async {
-    if (!Hive.isAdapterRegistered(11)) Hive.registerAdapter(ChatAdapter());
-    if (!Hive.isAdapterRegistered(20)) Hive.registerAdapter(ChatMessageAdapter());
-    if (!Hive.isAdapterRegistered(21)) Hive.registerAdapter(MessageTypeAdapter());
+  Future init() async {
+    // Register Hive adapters if they haven't been registered yet.  Each
+    // registration is wrapped in a block to satisfy lint rules about
+    // curly braces around single-statement ifs.
+    if (!Hive.isAdapterRegistered(11)) {
+      Hive.registerAdapter(ChatAdapter());
+    }
+    if (!Hive.isAdapterRegistered(20)) {
+      Hive.registerAdapter(ChatMessageAdapter());
+    }
+    if (!Hive.isAdapterRegistered(21)) {
+      Hive.registerAdapter(MessageTypeAdapter());
+    }
 
-    _chatsBox = await Hive.openBox<Chat>(chatsBoxName);
-    _messagesBox = await Hive.openBox<ChatMessage>(messagesBoxName);
+    _chatsBox = await Hive.openBox(chatsBoxName);
+    _messagesBox = await Hive.openBox(messagesBoxName);
   }
 
-  List<Chat> get chats {
+  List get chats {
     final list = _chatsBox.values.toList();
     list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     return list;
   }
 
-  List<ChatMessage> messagesByChat(String chatId) {
+  List messagesByChat(String chatId) {
     final list = _messagesBox.values.where((m) => m.chatId == chatId).toList();
     list.sort((a, b) => a.createdAt.compareTo(b.createdAt));
     return list;
   }
 
-  Future<Chat> createChat({
+  Future createChat({
     required String title,
-    required List<String> memberIds,
+    required List memberIds,
   }) async {
     final chat = Chat(
       id: _uuid.v4(),
@@ -53,14 +66,17 @@ class ChatProvider extends ChangeNotifier {
     return chat;
   }
 
-  Future<void> deleteChat(String chatId) async {
-    final toDelete = _messagesBox.values.where((m) => m.chatId == chatId).map((m) => m.key).toList();
+  Future deleteChat(String chatId) async {
+    final toDelete = _messagesBox.values
+        .where((m) => m.chatId == chatId)
+        .map((m) => m.key)
+        .toList();
     await _messagesBox.deleteAll(toDelete);
     await _chatsBox.delete(chatId);
     notifyListeners();
   }
 
-  Future<ChatMessage> sendText({
+  Future sendText({
     required String chatId,
     required String senderId,
     required String text,
@@ -80,7 +96,7 @@ class ChatProvider extends ChangeNotifier {
     return msg;
   }
 
-  Future<ChatMessage> sendAttachment({
+  Future sendAttachment({
     required String chatId,
     required String senderId,
     required String localPath,
@@ -102,13 +118,18 @@ class ChatProvider extends ChangeNotifier {
       isRead: false,
     );
     await _messagesBox.put(msg.id, msg);
-    await _touchChat(chatId, preview: type == MessageType.image ? '📷 Photo' : '📎 File');
+    await _touchChat(
+      chatId,
+      preview: type == MessageType.image ? '📷 Photo' : '📎 File',
+    );
     notifyListeners();
     return msg;
   }
 
-  Future<void> markRead(String chatId) async {
-    final msgs = _messagesBox.values.where((m) => m.chatId == chatId && !m.isRead).toList();
+  Future markRead(String chatId) async {
+    final msgs = _messagesBox.values
+        .where((m) => m.chatId == chatId && !m.isRead)
+        .toList();
     for (final m in msgs) {
       m.isRead = true;
       await m.save();
@@ -116,7 +137,7 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _touchChat(String chatId, {String? preview}) async {
+  Future _touchChat(String chatId, {String? preview}) async {
     final chat = _chatsBox.get(chatId);
     if (chat == null) return;
     chat.updatedAt = DateTime.now();
