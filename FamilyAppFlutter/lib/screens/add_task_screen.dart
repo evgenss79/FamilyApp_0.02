@@ -20,6 +20,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   final _descriptionController = TextEditingController();
   final _pointsController = TextEditingController();
 
+  // Controllers for optional task location. Latitude and longitude should be
+  // provided as decimal degrees. Location name is free text.
+  final _latitudeController = TextEditingController();
+  final _longitudeController = TextEditingController();
+  final _locationNameController = TextEditingController();
+
   bool _hasDueDate = false;
   DateTime? _dueDateTime;
   String? _assignedMemberId;
@@ -65,6 +71,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     _titleController.dispose();
     _descriptionController.dispose();
     _pointsController.dispose();
+    _latitudeController.dispose();
+    _longitudeController.dispose();
+    _locationNameController.dispose();
     super.dispose();
   }
 
@@ -99,6 +108,11 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     }
     final uuid = const Uuid();
     final points = int.tryParse(_pointsController.text.trim()) ?? 0;
+    final latitude = double.tryParse(_latitudeController.text.trim());
+    final longitude = double.tryParse(_longitudeController.text.trim());
+    final locationName = _locationNameController.text.trim().isEmpty
+        ? null
+        : _locationNameController.text.trim();
     final newTask = Task(
       id: uuid.v4(),
       title: _titleController.text.trim(),
@@ -109,6 +123,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       status: _status,
       points: points,
       reminders: List<DateTime>.from(_reminders),
+      latitude: latitude,
+      longitude: longitude,
+      locationName: locationName,
     );
 
     final data = Provider.of<FamilyDataV001>(context, listen: false);
@@ -150,6 +167,38 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     (value == null || value.trim().isEmpty) ? 'Please enter a title' : null,
               ),
               const SizedBox(height: 8),
+              // Optional location fields for geofenced reminders
+              Text(
+                'Location (optional)',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 4),
+              TextFormField(
+                controller: _latitudeController,
+                decoration: const InputDecoration(
+                  labelText: 'Latitude',
+                  hintText: 'e.g. 47.3769',
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 4),
+              TextFormField(
+                controller: _longitudeController,
+                decoration: const InputDecoration(
+                  labelText: 'Longitude',
+                  hintText: 'e.g. 8.5417',
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 4),
+              TextFormField(
+                controller: _locationNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Location name',
+                  hintText: 'e.g. Supermarket',
+                ),
+              ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(labelText: 'Description'),
