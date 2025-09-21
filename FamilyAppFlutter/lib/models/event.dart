@@ -34,27 +34,27 @@ class Event {
   }
 
   factory Event.fromMap(Map<String, dynamic> map) {
-    DateTime _parseStart(dynamic v) {
+    DateTime parseStart(dynamic v) {
       if (v is int) return DateTime.fromMillisecondsSinceEpoch(v);
       if (v is String) return DateTime.parse(v);
       return DateTime.now();
     }
 
-    DateTime _parseEnd(dynamic v, DateTime fallback) {
+    DateTime parseEnd(dynamic v, DateTime fallback) {
       if (v is int) return DateTime.fromMillisecondsSinceEpoch(v);
       if (v is String) return DateTime.parse(v);
       if (v is DateTime) return v;
       return fallback;
     }
 
-    DateTime _parseUpdated(dynamic v) {
+    DateTime parseUpdated(dynamic v) {
       if (v is String) return DateTime.parse(v);
       if (v is int) return DateTime.fromMillisecondsSinceEpoch(v);
       return DateTime.now();
     }
 
-    final start = _parseStart(map['startDateTime']);
-    final end = _parseEnd(map['endDateTime'], start);
+    final start = parseStart(map['startDateTime']);
+    final end = parseEnd(map['endDateTime'], start);
 
     final participantsDynamic = map['participantIds'] as List<dynamic>?;
     final participants = participantsDynamic?.cast<String>() ?? <String>[];
@@ -66,7 +66,7 @@ class Event {
       endDateTime: end,
       description: map['description'] as String?,
       participantIds: participants,
-      updatedAt: _parseUpdated(map['updatedAt']),
+      updatedAt: parseUpdated(map['updatedAt']),
     );
   }
 }
