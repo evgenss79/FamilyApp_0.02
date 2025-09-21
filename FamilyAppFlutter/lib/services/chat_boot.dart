@@ -1,26 +1,9 @@
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter/widgets.dart';
-import '../storage/hive_secure.dart';
-
-import '../providers/chat_provider.dart';
-
-/// Bootstraps Hive and wraps the app with ChatProvider.
+/// Bootstraps chat-related services.  This placeholder class exists
+/// purely to satisfy imports and does not perform any initialization.
 class ChatBoot {
-  static Future<void> init() async {
-   await HiveSecure.initEncrypted();
-  }
-
-  static Widget withProviders({required Widget child}) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => ChatProvider()),
-      ],
-      child: child,
-    );
-  }
-
-  static Future<void> openBoxes(BuildContext context) async {
-    await context.read<ChatProvider>().init();
+  Future<void> init() async {
+    // In a real implementation this might set up push notifications
+    // or other chat-specific services.
+    return;
   }
 }

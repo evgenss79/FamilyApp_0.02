@@ -1,14 +1,9 @@
-import 'dart:io';
-import 'package:firebase_core/firebase_core.dart';
-
-/// Initializes Firebase gracefully. Returns true if initialization succeeded.
+/// Initializes Firebase and related plugins.  In this simplified
+/// version no work is performed; the class is provided to satisfy
+/// dependencies in the rest of the application.
 class FirebaseBoot {
-  static Future<bool> init() async {
-    try {
-      await Firebase.initializeApp();
-      return true;
-    } catch (_) {
-      return false;
-    }
+  Future<void> init() async {
+    // Typically you would call Firebase.initializeApp() here.
+    return;
   }
 }
