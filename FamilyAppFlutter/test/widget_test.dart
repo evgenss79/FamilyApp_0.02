@@ -4,6 +4,6 @@ import 'package:FamilyAppFlutter/main.dart';
 void main() {
   testWidgets('App smoke test', (WidgetTester tester) async {
     // Загружаем корневой виджет
-    await tester.pumpWidget(MyApp());
+    await tester.pumpWidget(FamilyApp());
   });
 }
