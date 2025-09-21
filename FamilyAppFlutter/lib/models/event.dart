@@ -1,46 +1,44 @@
-import 'package:hive/hive.dart';
-
-/// Represents a calendar event.  Events can be associated with a
-/// particular family member, have a start and end time, and optionally
-/// include a description or location.  All fields are optional except
-/// the identifier, allowing for flexible creation of events.
-@HiveType(typeId: 33)
-class Event extends HiveObject {
-  /// Unique identifier for this event.
-  @HiveField(0)
-  String? id;
-
-  /// Title or summary for the event.
-  @HiveField(1)
-  String? title;
-
-  /// Detailed description of the event.
-  @HiveField(2)
-  String? description;
-
-  /// Start date and time of the event.
-  @HiveField(3)
-  DateTime? startDateTime;
-
-  /// End date and time of the event.
-  @HiveField(4)
-  DateTime? endDateTime;
-
-  /// Physical or virtual location of the event.
-  @HiveField(5)
-  String? location;
-
-  /// Identifier of the family member associated with this event, if any.
-  @HiveField(6)
-  String? assignedMemberId;
+class Event {
+  final String id;
+  final String title;
+  final DateTime startDateTime;
+  final DateTime endDateTime;
+  final String? description;
+  final List<String> participantIds;
+  final DateTime updatedAt;
 
   Event({
-    this.id,
-    this.title,
+    required this.id,
+    required this.title,
+    required this.startDateTime,
+    required this.endDateTime,
     this.description,
-    this.startDateTime,
-    this.endDateTime,
-    this.location,
-    this.assignedMemberId,
-  });
+    List<String>? participantIds,
+    DateTime? updatedAt,
+  })  : participantIds = participantIds ?? const [],
+        updatedAt = updatedAt ?? DateTime.now();
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'title': title,
+        'startDateTime': startDateTime.toIso8601String(),
+        'endDateTime': endDateTime.toIso8601String(),
+        'description': description,
+        'participantIds': participantIds,
+        'updatedAt': updatedAt.toIso8601String(),
+      };
+
+  static Event fromMap(Map<String, dynamic> m) {
+    final start = m['startDateTime'] is String ? DateTime.tryParse(m['startDateTime']) : null;
+    final end = m['endDateTime'] is String ? DateTime.tryParse(m['endDateTime']) : null;
+    return Event(
+      id: (m['id'] ?? '').toString(),
+      title: (m['title'] ?? '').toString(),
+      startDateTime: start ?? DateTime.now(),
+      endDateTime: end ?? (start ?? DateTime.now()),
+      description: m['description'] as String?,
+      participantIds: (m['participantIds'] as List?)?.map((e) => e.toString()).toList() ?? const [],
+      updatedAt: m['updatedAt'] is String ? DateTime.tryParse(m['updatedAt']) ?? DateTime.now() : DateTime.now(),
+    );
+  }
 }
