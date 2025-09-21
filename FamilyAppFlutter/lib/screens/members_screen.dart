@@ -193,17 +193,13 @@ class MembersScreenV001 extends StatelessWidget {
                               },
                             ),
                           // Hobbies icon
-                          if (member.hobbies != null &&
-                              member.hobbies!.isNotEmpty)
-                            IconButton(
-                              icon: const Icon(Icons.star),
-                              onLongPress: () async {
-                                // Build list of hobbies (same logic as onPressed)
-                                List<String> hobbiesList;
-                                if (member.hobbies is List<String>) {
-                                  hobbiesList =
-                                      List<String>.from(member.hobbies as List);
-                                } else {
+                          if (member.hobbies != null && member.hobbies!.isNotEmpty) {
+                            final hobbyString = member.hobbies!;
+                            final hobbyFormatted = hobbyString.contains(',')
+                                ? hobbyString.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).join(', ')
+                                : hobbyString;
+                            details.add('Hobbies: $hobbyFormatted');
+                          } else {
                                   hobbiesList = member.hobbies
                                       .toString()
                                       .split(',')
