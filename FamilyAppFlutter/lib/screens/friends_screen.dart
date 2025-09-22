@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/friend.dart';
 import '../providers/friends_data.dart';
 import 'add_friend_screen.dart';
@@ -12,11 +13,14 @@ class FriendsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Friends')),
+      appBar: AppBar(title: Text(context.tr('friends'))),
       body: Consumer<FriendsData>(
         builder: (context, data, _) {
+          if (data.isLoading && data.friends.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
           if (data.friends.isEmpty) {
-            return const Center(child: Text('No friends added.'));
+            return Center(child: Text(context.tr('noFriendsLabel')));
           }
           return ListView.separated(
             itemCount: data.friends.length,
@@ -25,15 +29,16 @@ class FriendsScreen extends StatelessWidget {
               final Friend friend = data.friends[index];
               return ListTile(
                 leading: const Icon(Icons.person),
-                title: Text(friend.name ?? ''),
+                title: Text(friend.name ?? context.tr('noNameLabel')),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline),
-                  onPressed: () {
+                  onPressed: () async {
                     final id = friend.id;
                     if (id != null) {
-                      context.read<FriendsData>().removeFriend(id);
+                      await context.read<FriendsData>().removeFriend(id);
                     }
                   },
+                  tooltip: context.tr('deleteAction'),
                 ),
               );
             },
@@ -46,6 +51,7 @@ class FriendsScreen extends StatelessWidget {
             MaterialPageRoute(builder: (_) => const AddFriendScreen()),
           );
         },
+        tooltip: context.tr('addFriendTitle'),
         child: const Icon(Icons.add),
       ),
     );

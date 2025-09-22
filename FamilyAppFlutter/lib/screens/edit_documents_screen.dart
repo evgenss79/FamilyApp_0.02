@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/family_member.dart';
 import '../providers/family_data.dart';
 
@@ -15,7 +16,7 @@ class EditDocumentsScreen extends StatefulWidget {
 
 class _EditDocumentsScreenState extends State<EditDocumentsScreen> {
   final _summaryController = TextEditingController();
-  final List<_DocumentControllers> _documents = [];
+  final List<_SelectEntry> _documents = [];
 
   @override
   void initState() {
@@ -27,9 +28,9 @@ class _EditDocumentsScreenState extends State<EditDocumentsScreen> {
     } else {
       for (final doc in docs) {
         _documents.add(
-          _DocumentControllers(
-            title: TextEditingController(text: doc['title'] ?? doc['name'] ?? ''),
-            value: TextEditingController(text: doc['description'] ?? doc['value'] ?? ''),
+          _SelectEntry(
+            type: doc['type'] ?? 'other',
+            initialValue: doc['value'] ?? doc['description'] ?? '',
           ),
         );
       }
@@ -38,18 +39,15 @@ class _EditDocumentsScreenState extends State<EditDocumentsScreen> {
 
   void _addDocument() {
     setState(() {
-      _documents.add(
-        _DocumentControllers(
-          title: TextEditingController(),
-          value: TextEditingController(),
-        ),
-      );
+      _documents.add(_SelectEntry(type: _documentOptions.first));
     });
   }
 
   void _removeDocument(int index) {
     setState(() {
-      _documents.removeAt(index);
+      if (_documents.length == 1) return;
+      final removed = _documents.removeAt(index);
+      removed.dispose();
       if (_documents.isEmpty) {
         _addDocument();
       }
@@ -58,18 +56,10 @@ class _EditDocumentsScreenState extends State<EditDocumentsScreen> {
 
   void _save() {
     final summary = _summaryController.text.trim();
-    final docs = <Map<String, String>>[];
-    for (final doc in _documents) {
-      final title = doc.title.text.trim();
-      final value = doc.value.text.trim();
-      if (title.isEmpty && value.isEmpty) {
-        continue;
-      }
-      docs.add({
-        'title': title,
-        'description': value,
-      });
-    }
+    final docs = _documents
+        .map((entry) => entry.toMap())
+        .whereType<Map<String, String>>()
+        .toList();
     context.read<FamilyData>().updateMemberDocuments(
           widget.member.id,
           summary: summary.isEmpty ? null : summary,
@@ -90,7 +80,11 @@ class _EditDocumentsScreenState extends State<EditDocumentsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Edit documents – ${widget.member.name ?? ''}'.trim())),
+      appBar: AppBar(
+        title: Text(
+          context.tr('editDocumentsAction'),
+        ),
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -98,9 +92,9 @@ class _EditDocumentsScreenState extends State<EditDocumentsScreen> {
             children: [
               TextField(
                 controller: _summaryController,
-                decoration: const InputDecoration(
-                  labelText: 'Summary',
-                  hintText: 'General notes about documents',
+                decoration: InputDecoration(
+                  labelText: context.tr('documentsSummaryLabel'),
+                  hintText: context.tr('documentsHint'),
                 ),
                 maxLines: 3,
               ),
@@ -117,14 +111,26 @@ class _EditDocumentsScreenState extends State<EditDocumentsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            TextField(
-                              controller: doc.title,
-                              decoration: const InputDecoration(labelText: 'Document title'),
+                            DropdownButtonFormField<String>(
+                              value: doc.type ?? _documentOptions.first,
+                              items: [
+                                for (final option in _documentOptions)
+                                  DropdownMenuItem<String>(
+                                    value: option,
+                                    child: Text(context.tr('documentType.$option')),
+                                  ),
+                              ],
+                              onChanged: (value) => setState(() => doc.type = value),
+                              decoration: InputDecoration(
+                                labelText: context.tr('documentTypeLabel'),
+                              ),
                             ),
                             const SizedBox(height: 8),
                             TextField(
                               controller: doc.value,
-                              decoration: const InputDecoration(labelText: 'Details / description'),
+                              decoration: InputDecoration(
+                                labelText: context.tr('documentValueLabel'),
+                              ),
                               maxLines: 2,
                             ),
                             Align(
@@ -132,7 +138,7 @@ class _EditDocumentsScreenState extends State<EditDocumentsScreen> {
                               child: IconButton(
                                 onPressed: () => _removeDocument(index),
                                 icon: const Icon(Icons.delete_outline),
-                                tooltip: 'Remove',
+                                tooltip: context.tr('deleteAction'),
                               ),
                             ),
                           ],
@@ -148,13 +154,13 @@ class _EditDocumentsScreenState extends State<EditDocumentsScreen> {
                   OutlinedButton.icon(
                     onPressed: _addDocument,
                     icon: const Icon(Icons.add),
-                    label: const Text('Add document'),
+                    label: Text(context.tr('addDocumentEntry')),
                   ),
                   const Spacer(),
                   FilledButton.icon(
                     onPressed: _save,
                     icon: const Icon(Icons.save),
-                    label: const Text('Save'),
+                    label: Text(context.tr('saveAction')),
                   ),
                 ],
               ),
@@ -166,14 +172,30 @@ class _EditDocumentsScreenState extends State<EditDocumentsScreen> {
   }
 }
 
-class _DocumentControllers {
-  final TextEditingController title;
+class _SelectEntry {
+  _SelectEntry({this.type, String? initialValue})
+      : value = TextEditingController(text: initialValue ?? '');
+
+  String? type;
   final TextEditingController value;
 
-  _DocumentControllers({required this.title, required this.value});
-
-  void dispose() {
-    title.dispose();
-    value.dispose();
+  Map<String, String>? toMap() {
+    final typeKey = type;
+    final trimmed = value.text.trim();
+    if (typeKey == null || typeKey.isEmpty || trimmed.isEmpty) {
+      return null;
+    }
+    return {'type': typeKey, 'value': trimmed};
   }
+
+  void dispose() => value.dispose();
 }
+
+const List<String> _documentOptions = <String>[
+  'passport',
+  'driverLicense',
+  'birthCertificate',
+  'insurancePolicy',
+  'idCard',
+  'other',
+];

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/family_data.dart';
+import '../l10n/app_localizations.dart';
 import '../models/family_member.dart';
 import '../models/task.dart';
+import '../providers/family_data.dart';
 
 /// Displays a leaderboard of family members ordered by total points
 /// earned from completed tasks.  Members with more points appear
@@ -16,18 +17,16 @@ class ScoreboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Scoreboard'),
+        title: Text(context.tr('scoreboard')),
       ),
       body: Consumer<FamilyData>(
         builder: (context, data, _) {
-          // Create a copy to sort without mutating the original list.
           final List<FamilyMember> members = List<FamilyMember>.from(data.members);
           final Map<String, int> pointsByMember = {
             for (final member in members)
               member.id: _calculatePointsForMember(member, data.tasks),
           };
 
-          // Sort by points descending, then by name ascending.
           members.sort((a, b) {
             final int pointsA = pointsByMember[a.id] ?? 0;
             final int pointsB = pointsByMember[b.id] ?? 0;
@@ -44,13 +43,17 @@ class ScoreboardScreen extends StatelessWidget {
               return ListTile(
                 leading: CircleAvatar(
                   backgroundColor:
-                      Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                      Theme.of(context).colorScheme.primary.withOpacity(0.1),
                   child: Text('${index + 1}'),
                 ),
-                title: Text(member.name?.isNotEmpty == true ? member.name! : 'Unnamed'),
+                title: Text(member.name?.isNotEmpty == true
+                    ? member.name!
+                    : context.tr('noNameLabel')),
                 subtitle: Text(member.relationship ?? ''),
                 trailing: Text(
-                  '$points pts',
+                  context.loc.translateWithParams('pointsSuffix', {
+                    'points': points.toString(),
+                  }),
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               );
