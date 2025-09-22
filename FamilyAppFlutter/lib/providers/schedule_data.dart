@@ -12,4 +12,9 @@ class ScheduleData extends ChangeNotifier {
     items.add(item);
     notifyListeners();
   }
+
+  void removeItem(String id) {
+    items.removeWhere((item) => item.id == id);
+    notifyListeners();
+  }
 }

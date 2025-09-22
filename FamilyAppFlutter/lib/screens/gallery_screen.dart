@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/gallery_data.dart';
 import '../models/gallery_item.dart';
+import '../providers/gallery_data.dart';
+import 'add_gallery_item_screen.dart';
 
-/// Displays a grid of gallery items.  Each item simply shows the URL
-/// text in this stub; images could be displayed using a network
-/// image widget in a real implementation.
+/// Displays a grid of gallery items and allows adding/removing entries.
 class GalleryScreen extends StatelessWidget {
   const GalleryScreen({super.key});
 
@@ -29,16 +28,44 @@ class GalleryScreen extends StatelessWidget {
             itemCount: data.items.length,
             itemBuilder: (context, index) {
               final GalleryItem item = data.items[index];
-              return Container(
-                padding: const EdgeInsets.all(8),
-                color: Colors.grey.shade200,
-                child: Center(
-                  child: Text(item.url ?? ''),
-                ),
+              return Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.all(8),
+                    child: Text(
+                      item.url ?? 'No URL',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () {
+                        final id = item.id ?? item.url ?? '';
+                        context.read<GalleryData>().removeItem(id);
+                      },
+                    ),
+                  ),
+                ],
               );
             },
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AddGalleryItemScreen()),
+          );
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }

@@ -1,4 +1,6 @@
 class FamilyMember {
+  static const _sentinel = Object();
+
   final String id;
   final String? name;
   final String? relationship;
@@ -71,4 +73,45 @@ class FamilyMember {
             .map((e) => e.map((k, v) => MapEntry(k.toString(), v?.toString() ?? '')))
             .toList(),
       );
+
+  FamilyMember copyWith({
+    Object? name = _sentinel,
+    Object? relationship = _sentinel,
+    Object? birthday = _sentinel,
+    Object? phone = _sentinel,
+    Object? email = _sentinel,
+    Object? avatarUrl = _sentinel,
+    Object? socialMedia = _sentinel,
+    Object? hobbies = _sentinel,
+    Object? documents = _sentinel,
+    Object? documentsList = _sentinel,
+    Object? socialNetworks = _sentinel,
+    Object? messengers = _sentinel,
+  }) {
+    return FamilyMember(
+      id: id,
+      name: name == _sentinel ? this.name : name as String?,
+      relationship:
+          relationship == _sentinel ? this.relationship : relationship as String?,
+      birthday: birthday == _sentinel ? this.birthday : birthday as DateTime?,
+      phone: phone == _sentinel ? this.phone : phone as String?,
+      email: email == _sentinel ? this.email : email as String?,
+      avatarUrl:
+          avatarUrl == _sentinel ? this.avatarUrl : avatarUrl as String?,
+      socialMedia: socialMedia == _sentinel
+          ? this.socialMedia
+          : socialMedia as String?,
+      hobbies: hobbies == _sentinel ? this.hobbies : hobbies as String?,
+      documents: documents == _sentinel ? this.documents : documents as String?,
+      documentsList: documentsList == _sentinel
+          ? this.documentsList
+          : documentsList as List<Map<String, String>>?,
+      socialNetworks: socialNetworks == _sentinel
+          ? this.socialNetworks
+          : socialNetworks as List<Map<String, String>>?,
+      messengers: messengers == _sentinel
+          ? this.messengers
+          : messengers as List<Map<String, String>>?,
+    );
+  }
 }
