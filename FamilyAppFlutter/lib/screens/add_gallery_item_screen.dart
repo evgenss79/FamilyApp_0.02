@@ -31,17 +31,19 @@ class _AddGalleryItemScreenState extends State<AddGalleryItemScreen> {
 
   Future<void> _pickFile() async {
     final storage = context.read<StorageService>();
+    final familyId = context.read<GalleryData>().familyId;
     final result = await FilePicker.platform.pickFiles(type: FileType.image);
     if (result == null || result.files.isEmpty) return;
     final path = result.files.single.path;
     if (path == null) return;
+    if (!mounted) return;
     setState(() {
       _uploading = true;
     });
     final file = File(path);
     try {
       final upload = await storage.uploadGalleryItem(
-        familyId: context.read<GalleryData>().familyId,
+        familyId: familyId,
         file: file,
       );
       setState(() {
