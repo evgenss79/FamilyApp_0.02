@@ -40,11 +40,13 @@ struct EventsView: View {
         }
     }
 
-    /// A date formatter for displaying event dates.
-    private var dateFormatter: DateFormatter {
+    /// A shared date formatter for displaying event dates.
+    private static let eventDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
         return formatter
-    }
+    }()
+
+    private var dateFormatter: DateFormatter { Self.eventDateFormatter }
 }

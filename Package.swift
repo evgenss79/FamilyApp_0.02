@@ -1,7 +1,7 @@
 // swift-tools-version:5.5
 import PackageDescription
 
-let packge = Package(
+let package = Package(
     name: "FamilyApp",
     platforms: [
         .macOS(.v11)
