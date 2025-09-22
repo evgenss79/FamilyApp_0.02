@@ -12,10 +12,10 @@ class CallScreen extends StatelessWidget {
   final String callType; // 'audio' or 'video'
 
   const CallScreen({
-    Key? key,
+    super.key,
     required this.conversation,
     required this.callType,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

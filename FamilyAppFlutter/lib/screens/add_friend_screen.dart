@@ -32,6 +32,9 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
       name: _nameController.text.trim(),
     );
     await context.read<FriendsData>().addFriend(friend);
+
+    if (!mounted) return;
+
     Navigator.of(context).pop();
   }
 

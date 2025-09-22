@@ -47,25 +47,9 @@ class MemberDetailScreen extends StatelessWidget {
           body: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Center(
-                child: CircleAvatar(
-                  radius: 48,
-                  backgroundImage: member.avatarUrl != null
-                      ? NetworkImage(member.avatarUrl!)
-                      : null,
-                  child: member.avatarUrl == null
-                      ? Text(
-                          member.name != null && member.name!.isNotEmpty
-                              ? member.name!.substring(0, 1).toUpperCase()
-                              : '?',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineMedium
-                              ?.copyWith(color: Colors.white),
-                        )
-                      : null,
-                ),
-              ),
+
+              _MemberAvatar(member: member),
+
               const SizedBox(height: 16),
               _InfoTile(
                 title: context.tr('fieldRelationship'),
@@ -182,6 +166,34 @@ class MemberDetailScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _MemberAvatar extends StatelessWidget {
+  const _MemberAvatar({required this.member});
+
+  final FamilyMember member;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: CircleAvatar(
+        radius: 48,
+        backgroundImage:
+            member.avatarUrl != null ? NetworkImage(member.avatarUrl!) : null,
+        child: member.avatarUrl == null
+            ? Text(
+                member.name != null && member.name!.isNotEmpty
+                    ? member.name!.substring(0, 1).toUpperCase()
+                    : '?',
+                style: Theme.of(context)
+                    .textTheme
+                    .headlineMedium
+                    ?.copyWith(color: Colors.white),
+              )
+            : null,
+      ),
     );
   }
 }

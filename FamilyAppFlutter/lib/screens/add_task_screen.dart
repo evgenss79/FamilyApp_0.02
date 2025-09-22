@@ -5,7 +5,7 @@ import '../l10n/app_localizations.dart';
 import '../models/task.dart';
 import '../providers/family_data.dart';
 
-/// Screen for adding a new task.  Users can provide title, description,
+/// Screen for adding a new task. Users can provide title, description,
 /// due date, assignee and status.
 class AddTaskScreen extends StatefulWidget {
   const AddTaskScreen({super.key});
@@ -33,11 +33,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       firstDate: DateTime(now.year - 1),
       lastDate: DateTime(now.year + 5),
     );
-    if (date == null) return;
+    if (!mounted || date == null) return;
     final timeOfDay = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(_dueDate ?? now),
     );
+    if (!mounted) return;
     setState(() {
       _dueDate = DateTime(
         date.year,
@@ -69,8 +70,11 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     );
 
     await context.read<FamilyData>().addTask(task);
-    Navigator.of(context).pop();
-  }
+
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+
 
   @override
   void dispose() {
@@ -125,7 +129,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<TaskStatus>(
-                  value: _status,
+
+                  initialValue: _status,
+
                   decoration: InputDecoration(labelText: context.tr('taskStatusLabel')),
                   items: TaskStatus.values
                       .map(
@@ -143,7 +149,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String?>(
-                  value: _assigneeId,
+
+                  initialValue: _assigneeId,
+
                   decoration: InputDecoration(labelText: context.tr('assignToLabel')),
                   items: [
                     const DropdownMenuItem<String?>(

@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -21,6 +22,16 @@ class AppLocalizations {
     Locale('es'),
     Locale('zh'),
   ];
+
+
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+  ];
+
 
   final Locale locale;
 
@@ -59,6 +70,80 @@ class AppLocalizations {
       'es': 'Centro de la aplicación familiar',
       'zh': '家庭应用中心',
     },
+
+    'drawerTitle': {
+      'en': 'Family App',
+      'ru': 'Family App',
+      'de': 'Family App',
+      'fr': 'Family App',
+      'es': 'Family App',
+      'zh': '家庭应用',
+    },
+    'languageMenuTitle': {
+      'en': 'Language',
+      'ru': 'Язык',
+      'de': 'Sprache',
+      'fr': 'Langue',
+      'es': 'Idioma',
+      'zh': '语言',
+    },
+    'languageMenuSubtitle': {
+      'en': 'Choose interface language',
+      'ru': 'Выберите язык интерфейса',
+      'de': 'Sprache der Oberfläche wählen',
+      'fr': 'Choisissez la langue de l’interface',
+      'es': 'Elija el idioma de la interfaz',
+      'zh': '选择界面语言',
+    },
+    'languageEnglish': {
+      'en': 'English',
+      'ru': 'Английский',
+      'de': 'Englisch',
+      'fr': 'Anglais',
+      'es': 'Inglés',
+      'zh': '英语',
+    },
+    'languageRussian': {
+      'en': 'Russian',
+      'ru': 'Русский',
+      'de': 'Russisch',
+      'fr': 'Russe',
+      'es': 'Ruso',
+      'zh': '俄语',
+    },
+    'languageGerman': {
+      'en': 'German',
+      'ru': 'Немецкий',
+      'de': 'Deutsch',
+      'fr': 'Allemand',
+      'es': 'Alemán',
+      'zh': '德语',
+    },
+    'languageFrench': {
+      'en': 'French',
+      'ru': 'Французский',
+      'de': 'Französisch',
+      'fr': 'Français',
+      'es': 'Francés',
+      'zh': '法语',
+    },
+    'languageSpanish': {
+      'en': 'Spanish',
+      'ru': 'Испанский',
+      'de': 'Spanisch',
+      'fr': 'Espagnol',
+      'es': 'Español',
+      'zh': '西班牙语',
+    },
+    'languageChinese': {
+      'en': 'Chinese',
+      'ru': 'Китайский',
+      'de': 'Chinesisch',
+      'fr': 'Chinois',
+      'es': 'Chino',
+      'zh': '中文',
+    },
+
     'loading': {
       'en': 'Loading…',
       'ru': 'Загрузка…',
@@ -1731,6 +1816,33 @@ class AppLocalizations {
     return value;
   }
 
+
+  String t(String key, {Map<String, String>? params}) {
+    if (params == null || params.isEmpty) {
+      return translate(key);
+    }
+    return translateWithParams(key, params);
+  }
+
+  String languageName(String code) {
+    switch (code) {
+      case 'ru':
+        return translate('languageRussian');
+      case 'de':
+        return translate('languageGerman');
+      case 'fr':
+        return translate('languageFrench');
+      case 'es':
+        return translate('languageSpanish');
+      case 'zh':
+        return translate('languageChinese');
+      case 'en':
+      default:
+        return translate('languageEnglish');
+    }
+  }
+
+
   /// Formats a date respecting the current locale.
   String formatDate(DateTime date, {bool withTime = false}) {
     final DateFormat format = withTime
@@ -1785,7 +1897,15 @@ extension AppLocalizationExtension on BuildContext {
   /// Short-hand to get the current [AppLocalizations] instance.
   AppLocalizations get loc => AppLocalizations.of(this);
 
+
+  /// Backwards compatibility getter used in older code.
+  AppLocalizations get l10n => AppLocalizations.of(this);
+
   /// Translates [key] using [AppLocalizations.translate].
   String tr(String key) => loc.translate(key);
+
+  /// Translates [key] using parameters.
+  String trParams(String key, Map<String, String> params) =>
+      loc.translateWithParams(key, params);
 }
 

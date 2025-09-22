@@ -132,8 +132,12 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.08),
-                    border: Border.all(color: Colors.red.withOpacity(0.3)),
+
+                    color: Colors.red.withValues(alpha: 0.08),
+                    border: Border.all(
+                      color: Colors.red.withValues(alpha: 0.3),
+                    ),
+
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(

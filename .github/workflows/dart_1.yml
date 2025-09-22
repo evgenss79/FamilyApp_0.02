@@ -1,0 +1,28 @@
+name: Dart Analysis
+
+on:
+  push:
+    branches:
+      - codex_check
+
+jobs:
+  analyze:
+    name: Flutter Analyze
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: FamilyAppFlutter
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run analyzer
+        run: flutter analyze

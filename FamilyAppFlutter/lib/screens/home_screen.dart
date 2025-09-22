@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-
+import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
+import '../providers/language_provider.dart';
 import 'ai_suggestions_screen.dart';
 import 'calendar_feed_screen.dart';
 import 'calendar_screen.dart';
@@ -101,6 +102,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final languageProvider = context.watch<LanguageProvider>();
     return Scaffold(
       appBar: AppBar(title: Text(context.tr('homeHubTitle'))),
       drawer: Drawer(
@@ -117,6 +119,31 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
             ),
+            ListTile(
+              leading: const Icon(Icons.language),
+              title: Text(context.tr('languageMenuTitle')),
+              subtitle: Text(context.tr('languageMenuSubtitle')),
+              trailing: DropdownButtonHideUnderline(
+                child: DropdownButton<Locale>(
+                  value: languageProvider.locale,
+                  onChanged: (locale) {
+                    if (locale != null) {
+                      context.read<LanguageProvider>().setLocale(locale);
+                    }
+                  },
+                  items: [
+                    for (final locale in AppLocalizations.supportedLocales)
+                      DropdownMenuItem<Locale>(
+                        value: locale,
+                        child: Text(
+                          context.loc.languageName(locale.languageCode),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const Divider(height: 1),
             for (final feature in _features)
               ListTile(
                 leading: Icon(feature.icon),

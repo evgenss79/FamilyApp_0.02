@@ -39,11 +39,13 @@ class _AddEventScreenState extends State<AddEventScreen> {
       firstDate: DateTime(now.year - 1),
       lastDate: DateTime(now.year + 5),
     );
+    if (!mounted) return;
     if (date == null) return;
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(initial),
     );
+    if (!mounted) return;
     setState(() {
       _startDate = DateTime(
         date.year,
@@ -68,11 +70,13 @@ class _AddEventScreenState extends State<AddEventScreen> {
       firstDate: start,
       lastDate: DateTime(now.year + 5),
     );
+    if (!mounted) return;
     if (date == null) return;
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(initial),
     );
+    if (!mounted) return;
     setState(() {
       _endDate = DateTime(
         date.year,
