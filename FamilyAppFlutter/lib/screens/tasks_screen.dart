@@ -46,7 +46,8 @@ class TasksScreen extends StatelessWidget {
                       Chip(
                         label: Text(context.tr('taskStatus.${task.status.name}')),
                         backgroundColor:
-                            _statusColor(context, task.status).withOpacity(0.12),
+                            _statusColor(context, task.status)
+                                .withValues(alpha: 0.12),
                       ),
                       if (task.description?.isNotEmpty == true)
                         Padding(

@@ -49,7 +49,10 @@ class GalleryScreen extends StatelessWidget {
                       right: 4,
                       child: CircleAvatar(
                         backgroundColor:
-                            Theme.of(context).colorScheme.surface.withOpacity(0.8),
+                            Theme.of(context)
+                                .colorScheme
+                                .surface
+                                .withValues(alpha: 0.8),
                         child: IconButton(
                           onPressed: () async {
                             final id = item.id ?? item.url ?? '';
@@ -73,8 +76,8 @@ class GalleryScreen extends StatelessWidget {
             MaterialPageRoute(builder: (_) => const AddGalleryItemScreen()),
           );
         },
-        child: const Icon(Icons.add),
         tooltip: context.tr('addGalleryItemTitle'),
+        child: const Icon(Icons.add),
       ),
     );
   }
