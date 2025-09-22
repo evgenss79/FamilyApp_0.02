@@ -20,10 +20,7 @@ class ChatProvider extends ChangeNotifier {
 
   final _uuid = const Uuid();
 
-  Future init() async {
-    // Register Hive adapters if they haven't been registered yet.  Each
-    // registration is wrapped in a block to satisfy lint rules about
-    // curly braces around single-statement ifs.
+  Future<void> init() async {
     if (!Hive.isAdapterRegistered(11)) {
       Hive.registerAdapter(ChatAdapter());
     }
@@ -38,21 +35,24 @@ class ChatProvider extends ChangeNotifier {
     _messagesBox = await Hive.openBox(messagesBoxName);
   }
 
-  List get chats {
-    final list = _chatsBox.values.toList();
+  List<Chat> get chats {
+    final list = _chatsBox.values.whereType<Chat>().toList();
     list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     return list;
   }
 
-  List messagesByChat(String chatId) {
-    final list = _messagesBox.values.where((m) => m.chatId == chatId).toList();
+  List<ChatMessage> messagesByChat(String chatId) {
+    final list = _messagesBox.values
+        .whereType<ChatMessage>()
+        .where((m) => m.chatId == chatId)
+        .toList();
     list.sort((a, b) => a.createdAt.compareTo(b.createdAt));
     return list;
   }
 
-  Future createChat({
+  Future<Chat> createChat({
     required String title,
-    required List memberIds,
+    required List<String> memberIds,
   }) async {
     final chat = Chat(
       id: _uuid.v4(),
@@ -66,8 +66,9 @@ class ChatProvider extends ChangeNotifier {
     return chat;
   }
 
-  Future deleteChat(String chatId) async {
+  Future<void> deleteChat(String chatId) async {
     final toDelete = _messagesBox.values
+        .whereType<ChatMessage>()
         .where((m) => m.chatId == chatId)
         .map((m) => m.key)
         .toList();
@@ -76,7 +77,7 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future sendText({
+  Future<ChatMessage> sendText({
     required String chatId,
     required String senderId,
     required String text,
@@ -96,7 +97,7 @@ class ChatProvider extends ChangeNotifier {
     return msg;
   }
 
-  Future sendAttachment({
+  Future<ChatMessage> sendAttachment({
     required String chatId,
     required String senderId,
     required String localPath,
@@ -126,8 +127,9 @@ class ChatProvider extends ChangeNotifier {
     return msg;
   }
 
-  Future markRead(String chatId) async {
+  Future<void> markRead(String chatId) async {
     final msgs = _messagesBox.values
+        .whereType<ChatMessage>()
         .where((m) => m.chatId == chatId && !m.isRead)
         .toList();
     for (final m in msgs) {
@@ -137,9 +139,9 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future _touchChat(String chatId, {String? preview}) async {
+  Future<void> _touchChat(String chatId, {String? preview}) async {
     final chat = _chatsBox.get(chatId);
-    if (chat == null) return;
+    if (chat is! Chat) return;
     chat.updatedAt = DateTime.now();
     chat.lastMessagePreview = preview ?? chat.lastMessagePreview;
     await chat.save();

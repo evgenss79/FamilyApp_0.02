@@ -11,4 +11,11 @@ class GalleryData extends ChangeNotifier {
     items.add(item);
     notifyListeners();
   }
+
+  void removeItem(String idOrUrl) {
+    items.removeWhere(
+      (item) => item.id == idOrUrl || item.url == idOrUrl,
+    );
+    notifyListeners();
+  }
 }

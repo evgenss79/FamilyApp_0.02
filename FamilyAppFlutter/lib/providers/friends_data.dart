@@ -12,4 +12,9 @@ class FriendsData extends ChangeNotifier {
     friends.add(friend);
     notifyListeners();
   }
+
+  void removeFriend(String id) {
+    friends.removeWhere((friend) => friend.id == id);
+    notifyListeners();
+  }
 }
