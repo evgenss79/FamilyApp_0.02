@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
+
 /// Placeholder screen for a calendar feed.  This simplified view
 /// contains no data and simply informs the user that no feed is
 /// available.  Expand this screen to show recent events or
@@ -10,8 +12,8 @@ class CalendarFeedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Calendar Feed')),
-      body: const Center(child: Text('No calendar feed available.')),
+      appBar: AppBar(title: Text(context.tr('calendarFeed'))),
+      body: Center(child: Text(context.tr('noCalendarFeedLabel'))),
     );
   }
 }

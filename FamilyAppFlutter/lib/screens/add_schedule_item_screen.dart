@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/family_member.dart';
 import '../models/schedule_item.dart';
 import '../providers/family_data.dart';
@@ -48,8 +48,7 @@ class _AddScheduleItemScreenState extends State<AddScheduleItemScreen> {
       firstDate: DateTime(now.year - 1),
       lastDate: DateTime(now.year + 5),
     );
-    if (!mounted) return;
-    if (date == null) return;
+    if (!mounted || date == null) return;
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(initial),
@@ -66,7 +65,7 @@ class _AddScheduleItemScreenState extends State<AddScheduleItemScreen> {
     });
   }
 
-  void _save() {
+  Future<void> _save() async {
     final form = _formKey.currentState;
     if (form == null || !form.validate()) return;
 
@@ -85,15 +84,17 @@ class _AddScheduleItemScreenState extends State<AddScheduleItemScreen> {
       memberId: _memberId,
     );
 
-    context.read<ScheduleData>().addItem(item);
-    Navigator.of(context).pop();
+    await context.read<ScheduleData>().addItem(item);
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final members = context.watch<FamilyData>().members;
     return Scaffold(
-      appBar: AppBar(title: const Text('Add schedule item')),
+      appBar: AppBar(title: Text(context.tr('addScheduleItemTitle'))),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -104,10 +105,11 @@ class _AddScheduleItemScreenState extends State<AddScheduleItemScreen> {
               children: [
                 TextFormField(
                   controller: _titleController,
-                  decoration: const InputDecoration(labelText: 'Title'),
+                  decoration:
+                      InputDecoration(labelText: context.tr('scheduleTitleLabel')),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a title';
+                      return context.tr('validationEnterTitle');
                     }
                     return null;
                   },
@@ -115,11 +117,11 @@ class _AddScheduleItemScreenState extends State<AddScheduleItemScreen> {
                 const SizedBox(height: 12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Date & time'),
+                  title: Text(context.tr('scheduleDateTimeLabel')),
                   subtitle: Text(
                     _dateTime == null
-                        ? 'Not set'
-                        : DateFormat('dd.MM.yyyy HH:mm').format(_dateTime!),
+                        ? context.tr('notSetLabel')
+                        : context.loc.formatDate(_dateTime!, withTime: true),
                   ),
                   trailing: IconButton(
                     icon: const Icon(Icons.schedule),
@@ -128,17 +130,23 @@ class _AddScheduleItemScreenState extends State<AddScheduleItemScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<Duration?>(
-                  initialValue: _duration,
-                  decoration: const InputDecoration(labelText: 'Duration'),
+                  value: _duration,
+                  decoration:
+                      InputDecoration(labelText: context.tr('scheduleDurationLabel')),
                   items: [
-                    const DropdownMenuItem<Duration?>(
+                    DropdownMenuItem<Duration?>(
                       value: null,
-                      child: Text('Not specified'),
+                      child: Text(context.tr('durationNotSpecified')),
                     ),
                     ..._durationOptions.map(
                       (duration) => DropdownMenuItem<Duration?>(
                         value: duration,
-                        child: Text('${duration.inMinutes} minutes'),
+                        child: Text(
+                          context.loc.translateWithParams(
+                            'scheduleDurationMinutes',
+                            {'minutes': duration.inMinutes.toString()},
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -146,17 +154,17 @@ class _AddScheduleItemScreenState extends State<AddScheduleItemScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String?>(
-                  initialValue: _memberId,
-                  decoration: const InputDecoration(labelText: 'Assign to member'),
+                  value: _memberId,
+                  decoration: InputDecoration(labelText: context.tr('assignToLabel')),
                   items: [
-                    const DropdownMenuItem<String?>(
+                    DropdownMenuItem<String?>(
                       value: null,
-                      child: Text('No member'),
+                      child: Text(context.tr('noMemberOption')),
                     ),
                     ...members.map(
                       (FamilyMember member) => DropdownMenuItem<String?>(
                         value: member.id,
-                        child: Text(member.name ?? 'Unnamed'),
+                        child: Text(member.name ?? context.tr('noNameLabel')),
                       ),
                     ),
                   ],
@@ -165,12 +173,12 @@ class _AddScheduleItemScreenState extends State<AddScheduleItemScreen> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _locationController,
-                  decoration: const InputDecoration(labelText: 'Location'),
+                  decoration: InputDecoration(labelText: context.tr('locationLabel')),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _notesController,
-                  decoration: const InputDecoration(labelText: 'Notes'),
+                  decoration: InputDecoration(labelText: context.tr('notesLabel')),
                   maxLines: 3,
                 ),
                 const SizedBox(height: 24),
@@ -179,7 +187,7 @@ class _AddScheduleItemScreenState extends State<AddScheduleItemScreen> {
                   child: FilledButton.icon(
                     onPressed: _save,
                     icon: const Icon(Icons.save),
-                    label: const Text('Save item'),
+                    label: Text(context.tr('saveScheduleItemAction')),
                   ),
                 ),
               ],

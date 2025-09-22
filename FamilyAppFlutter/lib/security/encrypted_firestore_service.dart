@@ -19,10 +19,13 @@ class EncryptedFirestoreService {
     required DocumentReference<Map<String, dynamic>> ref,
   }) async {
     final snap = await ref.get();
-    if (!snap.exists) return {};
-    final raw = snap.data();
-    if (raw == null) return {};
+    return decode(snap.data());
+  }
 
+  /// Расшифровывает данные из снапшота.
+  Future<Map<String, dynamic>> decode(
+      Map<String, dynamic>? raw) async {
+    if (raw == null) return {};
     final enc = raw['enc'];
     if (enc is String) {
       try {

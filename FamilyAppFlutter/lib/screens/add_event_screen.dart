@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/event.dart';
 import '../models/family_member.dart';
 import '../providers/family_data.dart';
@@ -88,7 +88,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
     });
   }
 
-  void _save() {
+  Future<void> _save() async {
     final form = _formKey.currentState;
     if (form == null || !form.validate()) return;
 
@@ -108,15 +108,17 @@ class _AddEventScreenState extends State<AddEventScreen> {
       participantIds: _participantIds.toList(),
     );
 
-    context.read<FamilyData>().addEvent(event);
-    Navigator.of(context).pop();
+    await context.read<FamilyData>().addEvent(event);
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final members = context.watch<FamilyData>().members;
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Event')),
+      appBar: AppBar(title: Text(context.tr('addEventTitle'))),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -127,10 +129,10 @@ class _AddEventScreenState extends State<AddEventScreen> {
               children: [
                 TextFormField(
                   controller: _titleController,
-                  decoration: const InputDecoration(labelText: 'Title'),
+                  decoration: InputDecoration(labelText: context.tr('eventTitleLabel')),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a title';
+                      return context.tr('validationEnterTitle');
                     }
                     return null;
                   },
@@ -138,7 +140,8 @@ class _AddEventScreenState extends State<AddEventScreen> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _descriptionController,
-                  decoration: const InputDecoration(labelText: 'Description'),
+                  decoration:
+                      InputDecoration(labelText: context.tr('eventDescriptionLabel')),
                   maxLines: 3,
                 ),
                 const SizedBox(height: 20),
@@ -149,8 +152,8 @@ class _AddEventScreenState extends State<AddEventScreen> {
                         onPressed: _pickStartDate,
                         child: Text(
                           _startDate == null
-                              ? 'Select start'
-                              : 'Start: ${_formatDate(_startDate!)}',
+                              ? context.tr('selectStartLabel')
+                              : context.loc.formatDate(_startDate!, withTime: true),
                         ),
                       ),
                     ),
@@ -160,18 +163,19 @@ class _AddEventScreenState extends State<AddEventScreen> {
                         onPressed: _pickEndDate,
                         child: Text(
                           _endDate == null
-                              ? 'Select end'
-                              : 'End: ${_formatDate(_endDate!)}',
+                              ? context.tr('selectEndLabel')
+                              : context.loc.formatDate(_endDate!, withTime: true),
                         ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
-                Text('Participants', style: Theme.of(context).textTheme.titleMedium),
+                Text(context.tr('participantsLabel'),
+                    style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 if (members.isEmpty)
-                  const Text('Add family members to assign participants.')
+                  Text(context.tr('noMembersForParticipants'))
                 else
                   Wrap(
                     spacing: 8,
@@ -179,7 +183,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
                     children: [
                       for (final FamilyMember member in members)
                         FilterChip(
-                          label: Text(member.name ?? 'Unnamed'),
+                          label: Text(member.name ?? context.tr('noNameLabel')),
                           selected: _participantIds.contains(member.id),
                           onSelected: (selected) {
                             setState(() {
@@ -199,7 +203,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
                   child: FilledButton.icon(
                     onPressed: _save,
                     icon: const Icon(Icons.save),
-                    label: const Text('Save event'),
+                    label: Text(context.tr('saveEventAction')),
                   ),
                 ),
               ],
@@ -209,6 +213,4 @@ class _AddEventScreenState extends State<AddEventScreen> {
       ),
     );
   }
-
-  String _formatDate(DateTime date) => DateFormat('dd.MM.yyyy HH:mm').format(date);
 }

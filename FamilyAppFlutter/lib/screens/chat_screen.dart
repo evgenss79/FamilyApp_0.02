@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/chat.dart';
 import '../models/chat_message.dart';
 import '../providers/chat_provider.dart';
@@ -71,7 +71,7 @@ class _ChatScreenState extends State<ChatScreen> {
             children: [
               Expanded(
                 child: messages.isEmpty
-                    ? const Center(child: Text('No messages yet.'))
+                    ? Center(child: Text(context.tr('noMessagesLabel')))
                     : ListView.separated(
                         padding: const EdgeInsets.all(16),
                         itemCount: messages.length,
@@ -79,7 +79,8 @@ class _ChatScreenState extends State<ChatScreen> {
                         itemBuilder: (context, index) {
                           final ChatMessage message = messages[index];
                           final senderName =
-                              familyData.memberById(message.senderId)?.name ?? 'Unknown';
+                              familyData.memberById(message.senderId)?.name ??
+                                  context.tr('unknownMemberLabel');
                           return Align(
                             alignment: Alignment.centerLeft,
                             child: Container(
@@ -88,7 +89,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .primary
-                                    .withValues(alpha: 0.1),
+                                    .withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Column(
@@ -102,7 +103,10 @@ class _ChatScreenState extends State<ChatScreen> {
                                   Text(message.content),
                                   const SizedBox(height: 4),
                                   Text(
-                                    DateFormat('dd.MM.yyyy HH:mm').format(message.createdAt),
+                                    context.loc.formatDate(
+                                      message.createdAt,
+                                      withTime: true,
+                                    ),
                                     style: Theme.of(context)
                                         .textTheme
                                         .labelSmall
@@ -121,12 +125,12 @@ class _ChatScreenState extends State<ChatScreen> {
                   children: [
                     DropdownButton<String>(
                       value: _selectedSenderId,
-                      hint: const Text('Sender'),
+                      hint: Text(context.tr('senderLabel')),
                       items: [
                         for (final member in members)
                           DropdownMenuItem<String>(
                             value: member.id,
-                            child: Text(member.name ?? 'Unnamed'),
+                            child: Text(member.name ?? context.tr('noNameLabel')),
                           ),
                       ],
                       onChanged: (value) {
@@ -137,9 +141,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     Expanded(
                       child: TextField(
                         controller: _messageController,
-                        decoration: const InputDecoration(
-                          hintText: 'Type a message',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          hintText: context.tr('typeMessageHint'),
+                          border: const OutlineInputBorder(),
                         ),
                         minLines: 1,
                         maxLines: 3,
@@ -147,6 +151,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.send),
+                      tooltip: context.tr('sendAction'),
                       onPressed: _sendMessage,
                     ),
                   ],

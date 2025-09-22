@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/family_member.dart';
 
 /// Shows documents for a specific family member.
@@ -11,12 +12,20 @@ class MemberDocumentsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final docs = member.documentsList ?? const <Map<String, String>>[];
     final hasSummary = member.documents?.isNotEmpty == true;
+    final title = context.loc.translateWithParams(
+      'memberDocumentsTitle',
+      {
+        'name': member.name?.isNotEmpty == true
+            ? member.name!
+            : context.tr('memberTitle'),
+      },
+    );
     return Scaffold(
       appBar: AppBar(
-        title: Text('${member.name ?? 'Member'} documents'),
+        title: Text(title),
       ),
       body: (docs.isEmpty && !hasSummary)
-          ? const Center(child: Text('No documents available.'))
+          ? Center(child: Text(context.tr('noDocumentsLabel')))
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
@@ -25,11 +34,15 @@ class MemberDocumentsScreen extends StatelessWidget {
                     margin: const EdgeInsets.only(bottom: 16),
                     child: ListTile(
                       leading: const Icon(Icons.description),
-                      title: const Text('Summary'),
+                      title: Text(context.tr('documentsSummaryLabel')),
                       subtitle: Text(member.documents!),
                     ),
                   ),
-                for (final doc in docs) _DocumentCard(document: doc),
+                for (final doc in docs)
+                  _DocumentCard(
+                    document: doc,
+                    prefix: 'documentType',
+                  ),
               ],
             ),
     );
@@ -38,15 +51,15 @@ class MemberDocumentsScreen extends StatelessWidget {
 
 class _DocumentCard extends StatelessWidget {
   final Map<String, String> document;
-  const _DocumentCard({required this.document});
+  final String prefix;
+  const _DocumentCard({required this.document, required this.prefix});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final title = document['title'] ?? document['name'] ?? 'Document';
-    final cleaned = Map<String, String>.from(document);
-    cleaned.remove('title');
-    cleaned.remove('name');
+    final typeKey = document['type'] ?? 'other';
+    final title =
+        '${context.tr("$prefix.$typeKey")}: ${document['value'] ?? document['description'] ?? ''}';
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -55,16 +68,6 @@ class _DocumentCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(title, style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
-            if (cleaned.isEmpty)
-              const Text('No additional information')
-            else
-              ...cleaned.entries
-                  .where((entry) => entry.value.trim().isNotEmpty)
-                  .map((entry) => Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: Text('${entry.key}: ${entry.value}'),
-                      )),
           ],
         ),
       ),
