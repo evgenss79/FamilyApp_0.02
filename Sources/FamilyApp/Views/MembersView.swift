@@ -40,10 +40,12 @@ struct MembersView: View {
         }
     }
 
-    /// A date formatter used for displaying birthdays in a friendly way.
-    private var dateFormatter: DateFormatter {
+    /// A shared date formatter used for displaying birthdays in a friendly way.
+    private static let birthdayFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         return formatter
-    }
+    }()
+
+    private var dateFormatter: DateFormatter { Self.birthdayFormatter }
 }
