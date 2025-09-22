@@ -74,7 +74,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     if (mounted) {
       Navigator.of(context).pop();
     }
-
+  }
 
   @override
   void dispose() {
