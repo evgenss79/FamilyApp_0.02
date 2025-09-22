@@ -1,5 +1,21 @@
 import Foundation
+#if canImport(Combine)
+import Combine
+#elseif canImport(SwiftUI)
 import SwiftUI
+#else
+/// Minimal stand-ins so the package can be built on platforms without Combine/SwiftUI (e.g. Linux).
+public protocol ObservableObject: AnyObject {}
+
+@propertyWrapper
+public struct Published<Value> {
+    public var wrappedValue: Value
+    public init(wrappedValue: Value) {
+        self.wrappedValue = wrappedValue
+    }
+    public var projectedValue: Published<Value> { self }
+}
+#endif
 
 /// A persistent data store that holds family members, tasks, and events.
 ///
