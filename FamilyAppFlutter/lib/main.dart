@@ -21,9 +21,13 @@ import 'storage/hive_secure.dart';
 /// services required by the application.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  if (Firebase.apps.isEmpty) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } else {
+    Firebase.app();
+  }
   await Hive.initFlutter();
   await HiveSecure.ensureDek();
 
