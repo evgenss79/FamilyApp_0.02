@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/conversation.dart';
 import '../models/family_member.dart';
 import '../providers/family_data.dart';
@@ -14,9 +15,17 @@ class CallSetupScreen extends StatefulWidget {
 }
 
 class _CallSetupScreenState extends State<CallSetupScreen> {
-  final _titleController = TextEditingController(text: 'Family call');
+  final _titleController = TextEditingController();
   String _callType = 'audio';
   final Set<String> _selectedMemberIds = {};
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_titleController.text.isEmpty) {
+      _titleController.text = context.tr('callDefaultTitle');
+    }
+  }
 
   @override
   void dispose() {
@@ -30,12 +39,12 @@ class _CallSetupScreenState extends State<CallSetupScreen> {
         : members.map((member) => member.id).toList();
     if (selected.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Select at least one participant.')),
+        SnackBar(content: Text(context.tr('selectParticipantsError'))),
       );
       return;
     }
     final title = _titleController.text.trim().isEmpty
-        ? 'Call'
+        ? context.tr('callFallbackTitle')
         : _titleController.text.trim();
     final conversation = Conversation(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -57,7 +66,7 @@ class _CallSetupScreenState extends State<CallSetupScreen> {
   Widget build(BuildContext context) {
     final members = context.watch<FamilyData>().members;
     return Scaffold(
-      appBar: AppBar(title: const Text('Start a call')),
+      appBar: AppBar(title: Text(context.tr('startCall'))),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -65,15 +74,24 @@ class _CallSetupScreenState extends State<CallSetupScreen> {
           children: [
             TextField(
               controller: _titleController,
-              decoration: const InputDecoration(labelText: 'Call title'),
+              decoration: InputDecoration(labelText: context.tr('callTitleLabel')),
             ),
             const SizedBox(height: 16),
-            Text('Call type', style: Theme.of(context).textTheme.titleMedium),
+            Text(context.tr('callTypeLabel'),
+                style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'audio', label: Text('Audio'), icon: Icon(Icons.call)),
-                ButtonSegment(value: 'video', label: Text('Video'), icon: Icon(Icons.videocam)),
+              segments: [
+                ButtonSegment(
+                  value: 'audio',
+                  label: Text(context.tr('audioLabel')),
+                  icon: const Icon(Icons.call),
+                ),
+                ButtonSegment(
+                  value: 'video',
+                  label: Text(context.tr('videoLabel')),
+                  icon: const Icon(Icons.videocam),
+                ),
               ],
               selected: <String>{_callType},
               onSelectionChanged: (selection) {
@@ -81,10 +99,11 @@ class _CallSetupScreenState extends State<CallSetupScreen> {
               },
             ),
             const SizedBox(height: 24),
-            Text('Participants', style: Theme.of(context).textTheme.titleMedium),
+            Text(context.tr('participantsLabel'),
+                style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             if (members.isEmpty)
-              const Text('Add family members to start a call.')
+              Text(context.tr('noMembersForCall'))
             else
               Wrap(
                 spacing: 8,
@@ -92,7 +111,7 @@ class _CallSetupScreenState extends State<CallSetupScreen> {
                 children: [
                   for (final member in members)
                     FilterChip(
-                      label: Text(member.name ?? 'Unnamed'),
+                      label: Text(member.name ?? context.tr('noNameLabel')),
                       selected: _selectedMemberIds.contains(member.id),
                       onSelected: (selected) {
                         setState(() {
@@ -112,7 +131,7 @@ class _CallSetupScreenState extends State<CallSetupScreen> {
               child: FilledButton.icon(
                 onPressed: () => _startCall(members),
                 icon: const Icon(Icons.play_arrow),
-                label: const Text('Start call'),
+                label: Text(context.tr('startCallAction')),
               ),
             ),
           ],

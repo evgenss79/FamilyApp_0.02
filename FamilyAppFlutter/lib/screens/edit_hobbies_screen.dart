@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/family_member.dart';
 import '../providers/family_data.dart';
 
@@ -38,17 +39,21 @@ class _EditHobbiesScreenState extends State<EditHobbiesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final memberName = widget.member.name?.isNotEmpty == true
+        ? widget.member.name!
+        : context.tr('memberTitle');
+    final title = '${context.tr('editHobbiesAction')} – $memberName';
     return Scaffold(
-      appBar: AppBar(title: Text('Edit hobbies – ${widget.member.name ?? ''}'.trim())),
+      appBar: AppBar(title: Text(title)),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             TextField(
               controller: _controller,
-              decoration: const InputDecoration(
-                labelText: 'Hobbies',
-                hintText: 'Describe hobbies, interests and skills',
+              decoration: InputDecoration(
+                labelText: context.tr('fieldHobbies'),
+                hintText: context.tr('hobbiesHint'),
               ),
               maxLines: 5,
             ),
@@ -58,7 +63,7 @@ class _EditHobbiesScreenState extends State<EditHobbiesScreen> {
               child: FilledButton.icon(
                 onPressed: _save,
                 icon: const Icon(Icons.save),
-                label: const Text('Save'),
+                label: Text(context.tr('saveAction')),
               ),
             ),
           ],

@@ -8,6 +8,7 @@ class FamilyMember {
   final String? phone;
   final String? email;
   final String? avatarUrl;
+  final String? avatarStoragePath;
   final String? socialMedia;
   final String? hobbies;
   final String? documents;
@@ -23,6 +24,7 @@ class FamilyMember {
     this.phone,
     this.email,
     this.avatarUrl,
+    this.avatarStoragePath,
     this.socialMedia,
     this.hobbies,
     this.documents,
@@ -39,6 +41,7 @@ class FamilyMember {
         'phone': phone,
         'email': email,
         'avatarUrl': avatarUrl,
+        'avatarStoragePath': avatarStoragePath,
         'socialMedia': socialMedia,
         'hobbies': hobbies,
         'documents': documents,
@@ -57,6 +60,7 @@ class FamilyMember {
         phone: m['phone'] as String?,
         email: m['email'] as String?,
         avatarUrl: m['avatarUrl'] as String?,
+        avatarStoragePath: m['avatarStoragePath'] as String?,
         socialMedia: m['socialMedia'] as String?,
         hobbies: m['hobbies'] as String?,
         documents: m['documents'] as String?,
@@ -81,6 +85,7 @@ class FamilyMember {
     Object? phone = _sentinel,
     Object? email = _sentinel,
     Object? avatarUrl = _sentinel,
+    Object? avatarStoragePath = _sentinel,
     Object? socialMedia = _sentinel,
     Object? hobbies = _sentinel,
     Object? documents = _sentinel,
@@ -98,6 +103,9 @@ class FamilyMember {
       email: email == _sentinel ? this.email : email as String?,
       avatarUrl:
           avatarUrl == _sentinel ? this.avatarUrl : avatarUrl as String?,
+      avatarStoragePath: avatarStoragePath == _sentinel
+          ? this.avatarStoragePath
+          : avatarStoragePath as String?,
       socialMedia: socialMedia == _sentinel
           ? this.socialMedia
           : socialMedia as String?,

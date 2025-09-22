@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/family_member.dart';
 import '../providers/chat_provider.dart';
 import '../providers/family_data.dart';
@@ -28,7 +29,7 @@ class _AddChatScreenState extends State<AddChatScreen> {
     if (form == null || !form.validate()) return;
     if (_selectedMemberIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Select at least one participant.')),
+        SnackBar(content: Text(context.tr('selectParticipantsError'))),
       );
       return;
     }
@@ -46,7 +47,7 @@ class _AddChatScreenState extends State<AddChatScreen> {
   Widget build(BuildContext context) {
     final members = context.watch<FamilyData>().members;
     return Scaffold(
-      appBar: AppBar(title: const Text('Create chat')),
+      appBar: AppBar(title: Text(context.tr('createChatTitle'))),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -56,19 +57,20 @@ class _AddChatScreenState extends State<AddChatScreen> {
             children: [
               TextFormField(
                 controller: _titleController,
-                decoration: const InputDecoration(labelText: 'Chat title'),
+                decoration: InputDecoration(labelText: context.tr('chatTitleLabel')),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a title';
+                    return context.tr('chatTitleValidation');
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 16),
-              Text('Participants', style: Theme.of(context).textTheme.titleMedium),
+              Text(context.tr('participantsLabel'),
+                  style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
               if (members.isEmpty)
-                const Text('Add family members first to create a chat.')
+                Text(context.tr('noMembersForChat'))
               else
                 Wrap(
                   spacing: 8,
@@ -76,7 +78,7 @@ class _AddChatScreenState extends State<AddChatScreen> {
                   children: [
                     for (final FamilyMember member in members)
                       FilterChip(
-                        label: Text(member.name ?? 'Unnamed'),
+                        label: Text(member.name ?? context.tr('noNameLabel')),
                         selected: _selectedMemberIds.contains(member.id),
                         onSelected: (selected) {
                           setState(() {
@@ -96,7 +98,7 @@ class _AddChatScreenState extends State<AddChatScreen> {
                 child: FilledButton.icon(
                   onPressed: _save,
                   icon: const Icon(Icons.save),
-                  label: const Text('Create chat'),
+                  label: Text(context.tr('createChatAction')),
                 ),
               ),
             ],

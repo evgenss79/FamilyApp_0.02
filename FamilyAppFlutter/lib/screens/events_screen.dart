@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/event.dart';
 import '../providers/family_data.dart';
 import 'add_event_screen.dart';
@@ -14,14 +14,17 @@ class EventsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Events')),
+      appBar: AppBar(title: Text(context.tr('events'))),
       body: Consumer<FamilyData>(
         builder: (context, data, _) {
-          final List<Event> events = data.events;
-          if (events.isEmpty) {
-            return const Center(child: Text('No events added yet.'));
+          final List<Event> events = data.events.toList()
+            ..sort((a, b) => a.startDateTime.compareTo(b.startDateTime));
+          if (data.isLoading && events.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
           }
-          events.sort((a, b) => a.startDateTime.compareTo(b.startDateTime));
+          if (events.isEmpty) {
+            return Center(child: Text(context.tr('noEventsLabel')));
+          }
           return ListView.separated(
             padding: const EdgeInsets.all(12),
             itemCount: events.length,
@@ -29,7 +32,8 @@ class EventsScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final event = events[index];
               final participants = event.participantIds
-                  .map((id) => data.memberById(id)?.name ?? 'Unknown member')
+                  .map((id) => data.memberById(id)?.name ?? context.tr('unknownMemberLabel'))
+                  .where((name) => name.isNotEmpty)
                   .toList();
               return Card(
                 child: ListTile(
@@ -38,7 +42,10 @@ class EventsScreen extends StatelessWidget {
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(_formatRange(event.startDateTime, event.endDateTime)),
+                      Text(
+                        context.loc
+                            .formatDateRange(event.startDateTime, event.endDateTime),
+                      ),
                       if (event.description?.isNotEmpty == true)
                         Padding(
                           padding: const EdgeInsets.only(top: 4),
@@ -47,13 +54,15 @@ class EventsScreen extends StatelessWidget {
                       if (participants.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 4),
-                          child: Text('Participants: ${participants.join(', ')}'),
+                          child: Text(
+                            '${context.tr('participantsLabel')}: ${participants.join(', ')}',
+                          ),
                         ),
                     ],
                   ),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete),
-                    tooltip: 'Delete event',
+                    tooltip: context.tr('deleteEventAction'),
                     onPressed: () => _confirmDelete(context, event),
                   ),
                 ),
@@ -68,33 +77,31 @@ class EventsScreen extends StatelessWidget {
             MaterialPageRoute(builder: (_) => const AddEventScreen()),
           );
         },
+        tooltip: context.tr('addEventTitle'),
         child: const Icon(Icons.add),
       ),
     );
-  }
-
-  String _formatRange(DateTime start, DateTime end) {
-    final formatter = DateFormat('dd.MM.yyyy HH:mm');
-    return '${formatter.format(start)} – ${formatter.format(end)}';
   }
 
   void _confirmDelete(BuildContext context, Event event) {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete event'),
-        content: Text('Delete "${event.title}"?'),
+        title: Text(context.tr('deleteEventAction')),
+        content: Text(context.loc.confirmDelete(event.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: Text(context.tr('cancelAction')),
           ),
           FilledButton(
-            onPressed: () {
-              context.read<FamilyData>().removeEvent(event.id);
-              Navigator.of(ctx).pop();
+            onPressed: () async {
+              await context.read<FamilyData>().removeEvent(event.id);
+              if (context.mounted) {
+                Navigator.of(ctx).pop();
+              }
             },
-            child: const Text('Delete'),
+            child: Text(context.tr('deleteAction')),
           ),
         ],
       ),
