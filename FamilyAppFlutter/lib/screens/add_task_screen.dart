@@ -33,11 +33,13 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       firstDate: DateTime(now.year - 1),
       lastDate: DateTime(now.year + 5),
     );
+    if (!mounted) return;
     if (date == null) return;
     final timeOfDay = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(_dueDate ?? now),
     );
+    if (!mounted) return;
     setState(() {
       _dueDate = DateTime(
         date.year,
@@ -125,7 +127,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<TaskStatus>(
-                  value: _status,
+                  initialValue: _status,
                   decoration: const InputDecoration(labelText: 'Status'),
                   items: TaskStatus.values
                       .map(
@@ -143,7 +145,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String?>(
-                  value: _assigneeId,
+                  initialValue: _assigneeId,
                   decoration: const InputDecoration(labelText: 'Assign to'),
                   items: [
                     const DropdownMenuItem<String?>(
