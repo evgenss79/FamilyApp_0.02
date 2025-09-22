@@ -15,7 +15,7 @@ class MembersScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<FamilyData>(
       builder: (context, data, _) {
-        final members = data.members;
+        final List<FamilyMember> members = data.members;
         return Scaffold(
           appBar: AppBar(title: const Text('Members')),
           body: members.isEmpty

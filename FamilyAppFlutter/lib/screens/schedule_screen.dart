@@ -24,8 +24,8 @@ class ScheduleScreen extends StatelessWidget {
               final ScheduleItem item = data.items[index];
               return ListTile(
                 leading: const Icon(Icons.calendar_today),
-                title: Text(item.title ?? ''),
-                subtitle: Text(item.dateTime?.toString() ?? ''),
+                title: Text(item.title),
+                subtitle: Text(item.dateTime.toString()),
               );
             },
           );

@@ -26,8 +26,8 @@ class TasksScreen extends StatelessWidget {
               final Task task = tasks[index];
               return ListTile(
                 leading: const Icon(Icons.check_box_outline_blank),
-                title: Text(task.title ?? ''),
-                subtitle: Text(task.status?.toString().split('.').last ?? ''),
+                title: Text(task.title),
+                subtitle: Text(task.status.name),
               );
             },
           );
