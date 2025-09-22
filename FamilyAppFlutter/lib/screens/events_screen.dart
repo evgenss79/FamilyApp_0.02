@@ -17,7 +17,7 @@ class EventsScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Events')),
       body: Consumer<FamilyData>(
         builder: (context, data, _) {
-          final events = data.events;
+          final List<Event> events = data.events;
           if (events.isEmpty) {
             return const Center(child: Text('No events added yet.'));
           }
@@ -27,8 +27,8 @@ class EventsScreen extends StatelessWidget {
               final event = events[index];
               return ListTile(
                 leading: const Icon(Icons.event),
-                title: Text(event.title ?? ''),
-                subtitle: Text(event.startDateTime?.toString() ?? ''),
+                title: Text(event.title),
+                subtitle: Text(event.startDateTime.toString()),
               );
             },
           );

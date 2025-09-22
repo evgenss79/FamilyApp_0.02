@@ -22,7 +22,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     final task = Task(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: title,
-      status: TaskStatus.pending,
+      status: TaskStatus.todo,
       points: 0,
     );
     Provider.of<FamilyData>(context, listen: false).addTask(task);

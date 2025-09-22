@@ -47,8 +47,9 @@ class FirestoreService {
 
     final List<Task> out = [];
     for (final doc in snapshot.docs) {
-      final dec = await _enc.getDecrypted(ref: coll.doc(doc.id));
-      final data = dec ?? Map<String, dynamic>.from(doc.data());
+      final decrypted = await _enc.getDecrypted(ref: coll.doc(doc.id));
+      final data =
+          decrypted.isEmpty ? Map<String, dynamic>.from(doc.data()) : decrypted;
       out.add(Task.fromMap(data));
     }
     return out;
@@ -71,8 +72,9 @@ class FirestoreService {
 
     final List<Event> out = [];
     for (final doc in snapshot.docs) {
-      final dec = await _enc.getDecrypted(ref: coll.doc(doc.id));
-      final data = dec ?? Map<String, dynamic>.from(doc.data());
+      final decrypted = await _enc.getDecrypted(ref: coll.doc(doc.id));
+      final data =
+          decrypted.isEmpty ? Map<String, dynamic>.from(doc.data()) : decrypted;
       out.add(Event.fromMap(data));
     }
     return out;
@@ -97,8 +99,9 @@ class FirestoreService {
 
     final List<ScheduleItem> out = [];
     for (final doc in snapshot.docs) {
-      final dec = await _enc.getDecrypted(ref: coll.doc(doc.id));
-      final data = dec ?? Map<String, dynamic>.from(doc.data());
+      final decrypted = await _enc.getDecrypted(ref: coll.doc(doc.id));
+      final data =
+          decrypted.isEmpty ? Map<String, dynamic>.from(doc.data()) : decrypted;
       out.add(ScheduleItem.fromMap(data));
     }
     return out;
@@ -157,8 +160,9 @@ class FirestoreService {
 
     final List<Message> out = [];
     for (final doc in snapshot.docs) {
-      final dec = await _enc.getDecrypted(ref: coll.doc(doc.id));
-      final data = dec ?? Map<String, dynamic>.from(doc.data());
+      final decrypted = await _enc.getDecrypted(ref: coll.doc(doc.id));
+      final data =
+          decrypted.isEmpty ? Map<String, dynamic>.from(doc.data()) : decrypted;
       out.add(Message.fromMap(data));
     }
     return out;

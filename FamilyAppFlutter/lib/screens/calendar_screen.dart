@@ -27,8 +27,8 @@ class CalendarScreen extends StatelessWidget {
             ));
             children.addAll(data.events.map((Event e) {
               return ListTile(
-                title: Text(e.title ?? ''),
-                subtitle: Text(e.startDateTime?.toString() ?? ''),
+                title: Text(e.title),
+                subtitle: Text(e.startDateTime.toString()),
               );
             }));
           }
@@ -42,7 +42,7 @@ class CalendarScreen extends StatelessWidget {
             ));
             children.addAll(data.tasks.map((Task t) {
               return ListTile(
-                title: Text(t.title ?? ''),
+                title: Text(t.title),
                 subtitle: Text(t.dueDate?.toString() ?? ''),
               );
             }));
