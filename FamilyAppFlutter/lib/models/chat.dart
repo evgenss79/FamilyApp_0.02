@@ -18,7 +18,7 @@ class Chat extends HiveObject {
 
   /// List of member identifiers participating in this chat.
   @HiveField(2)
-  List<dynamic> memberIds;
+  List<String> memberIds;
 
   /// Timestamp of the last activity in this chat.
   @HiveField(3)
@@ -35,4 +35,25 @@ class Chat extends HiveObject {
     required this.updatedAt,
     this.lastMessagePreview,
   });
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'title': title,
+        'memberIds': memberIds,
+        'updatedAt': updatedAt.toIso8601String(),
+        'lastMessagePreview': lastMessagePreview,
+      };
+
+  static Chat fromMap(Map<String, dynamic> map) => Chat(
+        id: (map['id'] ?? '').toString(),
+        title: (map['title'] ?? '').toString(),
+        memberIds: (map['memberIds'] as List?)
+                ?.map((dynamic e) => e.toString())
+                .toList() ??
+            <String>[],
+        updatedAt: map['updatedAt'] is String
+            ? DateTime.tryParse(map['updatedAt']) ?? DateTime.now()
+            : DateTime.now(),
+        lastMessagePreview: map['lastMessagePreview'] as String?,
+      );
 }

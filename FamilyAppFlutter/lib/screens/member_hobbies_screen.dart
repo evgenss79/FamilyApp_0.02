@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/family_member.dart';
 
 /// Shows hobbies for a specific family member.
@@ -10,12 +11,18 @@ class MemberHobbiesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hobbies = member.hobbies;
+    final name = member.name?.isNotEmpty == true
+        ? member.name!
+        : context.tr('memberTitle');
+    final title = context.loc.translateWithParams('memberHobbiesTitle', {
+      'name': name,
+    });
     return Scaffold(
       appBar: AppBar(
-        title: Text('${member.name ?? 'Member'} hobbies'),
+        title: Text(title),
       ),
       body: hobbies == null || hobbies.isEmpty
-          ? const Center(child: Text('No hobbies found.'))
+          ? Center(child: Text(context.tr('noHobbiesLabel')))
           : Padding(
               padding: const EdgeInsets.all(16),
               child: Text(

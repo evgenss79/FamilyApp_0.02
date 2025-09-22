@@ -49,6 +49,10 @@ class ChatMessage extends HiveObject {
   @HiveField(6)
   bool isRead;
 
+  /// Optional storage path of the attachment (if any).
+  @HiveField(7)
+  String? storagePath;
+
   ChatMessage({
     required this.id,
     required this.chatId,
@@ -57,5 +61,44 @@ class ChatMessage extends HiveObject {
     required this.createdAt,
     required this.type,
     required this.isRead,
+    this.storagePath,
   });
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'chatId': chatId,
+        'senderId': senderId,
+        'content': content,
+        'createdAt': createdAt.toIso8601String(),
+        'type': type.name,
+        'isRead': isRead,
+        'storagePath': storagePath,
+      };
+
+  static ChatMessage fromMap(Map<String, dynamic> map) => ChatMessage(
+        id: (map['id'] ?? '').toString(),
+        chatId: (map['chatId'] ?? '').toString(),
+        senderId: (map['senderId'] ?? '').toString(),
+        content: (map['content'] ?? '').toString(),
+        createdAt: map['createdAt'] is String
+            ? DateTime.tryParse(map['createdAt']) ?? DateTime.now()
+            : DateTime.now(),
+        type: _messageTypeFromString(map['type']),
+        isRead: map['isRead'] is bool
+            ? map['isRead'] as bool
+            : (map['isRead']?.toString().toLowerCase() == 'true'),
+        storagePath: map['storagePath'] as String?,
+      );
+
+  static MessageType _messageTypeFromString(dynamic value) {
+    final name = value?.toString();
+    switch (name) {
+      case 'image':
+        return MessageType.image;
+      case 'file':
+        return MessageType.file;
+      default:
+        return MessageType.text;
+    }
+  }
 }

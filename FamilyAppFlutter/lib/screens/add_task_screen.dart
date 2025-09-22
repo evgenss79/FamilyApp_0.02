@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/task.dart';
 import '../providers/family_data.dart';
 
@@ -49,7 +49,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     });
   }
 
-  void _save() {
+  Future<void> _save() async {
     final form = _formKey.currentState;
     if (form == null || !form.validate()) {
       return;
@@ -68,7 +68,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       points: pointsValue,
     );
 
-    context.read<FamilyData>().addTask(task);
+    await context.read<FamilyData>().addTask(task);
     Navigator.of(context).pop();
   }
 
@@ -84,7 +84,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   Widget build(BuildContext context) {
     final members = context.watch<FamilyData>().members;
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Task')),
+      appBar: AppBar(title: Text(context.tr('addTaskTitle'))),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -95,10 +95,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               children: [
                 TextFormField(
                   controller: _titleController,
-                  decoration: const InputDecoration(labelText: 'Title'),
+                  decoration: InputDecoration(labelText: context.tr('taskTitleLabel')),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a title';
+                      return context.tr('validationEnterTitle');
                     }
                     return null;
                   },
@@ -106,17 +106,17 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _descriptionController,
-                  decoration: const InputDecoration(labelText: 'Description'),
+                  decoration: InputDecoration(labelText: context.tr('taskDescriptionLabel')),
                   maxLines: 3,
                 ),
                 const SizedBox(height: 12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Due date'),
+                  title: Text(context.tr('taskDueDate')),
                   subtitle: Text(
                     _dueDate == null
-                        ? 'Not set'
-                        : DateFormat('dd.MM.yyyy HH:mm').format(_dueDate!),
+                        ? context.tr('dateNotSet')
+                        : context.loc.formatDate(_dueDate!, withTime: true),
                   ),
                   trailing: IconButton(
                     onPressed: _pickDueDate,
@@ -126,12 +126,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 const SizedBox(height: 12),
                 DropdownButtonFormField<TaskStatus>(
                   value: _status,
-                  decoration: const InputDecoration(labelText: 'Status'),
+                  decoration: InputDecoration(labelText: context.tr('taskStatusLabel')),
                   items: TaskStatus.values
                       .map(
                         (status) => DropdownMenuItem(
                           value: status,
-                          child: Text(status.name),
+                          child: Text(context.tr('taskStatus.${status.name}')),
                         ),
                       )
                       .toList(),
@@ -144,16 +144,16 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String?>(
                   value: _assigneeId,
-                  decoration: const InputDecoration(labelText: 'Assign to'),
+                  decoration: InputDecoration(labelText: context.tr('assignToLabel')),
                   items: [
                     const DropdownMenuItem<String?>(
                       value: null,
-                      child: Text('Unassigned'),
+                      child: Text('—'),
                     ),
                     ...members.map(
                       (member) => DropdownMenuItem<String?>(
                         value: member.id,
-                        child: Text(member.name ?? 'Unnamed'),
+                        child: Text(member.name ?? context.tr('noNameLabel')),
                       ),
                     ),
                   ],
@@ -162,9 +162,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _pointsController,
-                  decoration: const InputDecoration(
-                    labelText: 'Reward points',
-                    hintText: 'Optional integer value',
+                  decoration: InputDecoration(
+                    labelText: context.tr('rewardPointsLabel'),
+                    hintText: context.tr('rewardPointsHint'),
                   ),
                   keyboardType: TextInputType.number,
                 ),
@@ -174,7 +174,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   child: FilledButton.icon(
                     onPressed: _save,
                     icon: const Icon(Icons.save),
-                    label: const Text('Save'),
+                    label: Text(context.tr('saveAction')),
                   ),
                 ),
               ],

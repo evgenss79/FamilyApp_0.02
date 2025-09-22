@@ -1,53 +1,77 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:hive/hive.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/chat.dart';
 import '../models/chat_message.dart';
+import '../services/firestore_service.dart';
+import '../services/storage_service.dart';
 
-/// Provider that manages chats and chat messages.  It persists data via
-/// Hive and exposes methods to create, delete and send messages.  The
-/// adapters for Chat, ChatMessage and MessageType are registered during
-/// initialization if they have not been registered already.
+/// Provider that manages chats and chat messages backed by Firestore.
 class ChatProvider extends ChangeNotifier {
-  static const String chatsBoxName = 'chats_box';
-  static const String messagesBoxName = 'messages_box';
+  ChatProvider({
+    required FirestoreService firestore,
+    required StorageService storage,
+    required this.familyId,
+  })  : _firestore = firestore,
+        _storage = storage;
 
-  late Box _chatsBox;
-  late Box _messagesBox;
+  final FirestoreService _firestore;
+  final StorageService _storage;
+  final String familyId;
 
-  final _uuid = const Uuid();
+  final List<Chat> _chats = [];
+  final Map<String, List<ChatMessage>> _messages = {};
+  final Set<String> _loadedChatMessages = <String>{};
+  final Set<String> _loadingChatMessages = <String>{};
 
-  Future<void> init() async {
-    if (!Hive.isAdapterRegistered(11)) {
-      Hive.registerAdapter(ChatAdapter());
+  final Uuid _uuid = const Uuid();
+
+  bool _loaded = false;
+  bool _isLoading = false;
+
+  bool get isLoading => _isLoading;
+
+  List<Chat> get chats => List.unmodifiable(_chats);
+
+  Future<void> init() async => load();
+
+  Future<void> load() async {
+    if (_loaded || _isLoading) return;
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final fetchedChats = await _firestore.fetchChats(familyId);
+      _chats
+        ..clear()
+        ..addAll(fetchedChats);
+      _messages.clear();
+      for (final chat in _chats) {
+        _messages[chat.id] = <ChatMessage>[];
+      }
+      _loaded = true;
+      _resortChats();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-    if (!Hive.isAdapterRegistered(20)) {
-      Hive.registerAdapter(ChatMessageAdapter());
-    }
-    if (!Hive.isAdapterRegistered(21)) {
-      Hive.registerAdapter(MessageTypeAdapter());
-    }
-
-    _chatsBox = await Hive.openBox(chatsBoxName);
-    _messagesBox = await Hive.openBox(messagesBoxName);
-  }
-
-  List<Chat> get chats {
-    final list = _chatsBox.values.whereType<Chat>().toList();
-    list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-    return list;
   }
 
   List<ChatMessage> messagesByChat(String chatId) {
-    final list = _messagesBox.values
-        .whereType<ChatMessage>()
-        .where((m) => m.chatId == chatId)
-        .toList();
-    list.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-    return list;
+    if (!_loadedChatMessages.contains(chatId) &&
+        !_loadingChatMessages.contains(chatId)) {
+      _loadingChatMessages.add(chatId);
+      _firestore.fetchChatMessages(familyId, chatId).then((messages) {
+        _messages[chatId] = messages;
+        _loadedChatMessages.add(chatId);
+        _loadingChatMessages.remove(chatId);
+        notifyListeners();
+      }).catchError((_) {
+        _loadingChatMessages.remove(chatId);
+      });
+    }
+    return List.unmodifiable(_messages[chatId] ?? const []);
   }
 
   Future<Chat> createChat({
@@ -61,19 +85,29 @@ class ChatProvider extends ChangeNotifier {
       updatedAt: DateTime.now(),
       lastMessagePreview: null,
     );
-    await _chatsBox.put(chat.id, chat);
+    await _firestore.upsertChat(familyId, chat);
+    _chats.add(chat);
+    _messages[chat.id] = <ChatMessage>[];
+    _loadedChatMessages.add(chat.id);
+    _resortChats();
     notifyListeners();
     return chat;
   }
 
   Future<void> deleteChat(String chatId) async {
-    final toDelete = _messagesBox.values
-        .whereType<ChatMessage>()
-        .where((m) => m.chatId == chatId)
-        .map((m) => m.key)
-        .toList();
-    await _messagesBox.deleteAll(toDelete);
-    await _chatsBox.delete(chatId);
+    final messages = _loadedChatMessages.contains(chatId)
+        ? List<ChatMessage>.from(_messages[chatId] ?? const [])
+        : await _firestore.fetchChatMessages(familyId, chatId);
+    for (final message in messages) {
+      if (message.storagePath != null) {
+        await _storage.deleteByPath(message.storagePath!);
+      }
+    }
+    await _firestore.deleteChatMessages(familyId, chatId);
+    await _firestore.deleteChat(familyId, chatId);
+    _messages.remove(chatId);
+    _loadedChatMessages.remove(chatId);
+    _chats.removeWhere((chat) => chat.id == chatId);
     notifyListeners();
   }
 
@@ -82,7 +116,7 @@ class ChatProvider extends ChangeNotifier {
     required String senderId,
     required String text,
   }) async {
-    final msg = ChatMessage(
+    final message = ChatMessage(
       id: _uuid.v4(),
       chatId: chatId,
       senderId: senderId,
@@ -91,10 +125,16 @@ class ChatProvider extends ChangeNotifier {
       type: MessageType.text,
       isRead: false,
     );
-    await _messagesBox.put(msg.id, msg);
-    await _touchChat(chatId, preview: text);
+    await _firestore.upsertChatMessage(familyId, chatId, message);
+    final chat = _chats.firstWhere((c) => c.id == chatId, orElse: () => throw ArgumentError('Chat not found'));
+    chat.updatedAt = DateTime.now();
+    chat.lastMessagePreview = text;
+    await _firestore.upsertChat(familyId, chat);
+    _messages.putIfAbsent(chatId, () => <ChatMessage>[]).add(message);
+    _loadedChatMessages.add(chatId);
+    _resortChats();
     notifyListeners();
-    return msg;
+    return message;
   }
 
   Future<ChatMessage> sendAttachment({
@@ -106,44 +146,56 @@ class ChatProvider extends ChangeNotifier {
     if (type == MessageType.text) {
       throw ArgumentError('Attachment must be image or file');
     }
-    if (!await File(localPath).exists()) {
+    final file = File(localPath);
+    if (!await file.exists()) {
       throw ArgumentError('File not found: $localPath');
     }
-    final msg = ChatMessage(
+    final upload = await _storage.uploadChatAttachment(
+      familyId: familyId,
+      chatId: chatId,
+      file: file,
+    );
+    final preview = type == MessageType.image ? '📷 Photo' : '📎 File';
+    final message = ChatMessage(
       id: _uuid.v4(),
       chatId: chatId,
       senderId: senderId,
-      content: localPath,
+      content: upload.downloadUrl,
       createdAt: DateTime.now(),
       type: type,
       isRead: false,
+      storagePath: upload.storagePath,
     );
-    await _messagesBox.put(msg.id, msg);
-    await _touchChat(
-      chatId,
-      preview: type == MessageType.image ? '📷 Photo' : '📎 File',
-    );
+    await _firestore.upsertChatMessage(familyId, chatId, message);
+    final chat = _chats.firstWhere((c) => c.id == chatId, orElse: () => throw ArgumentError('Chat not found'));
+    chat.updatedAt = DateTime.now();
+    chat.lastMessagePreview = preview;
+    await _firestore.upsertChat(familyId, chat);
+    _messages.putIfAbsent(chatId, () => <ChatMessage>[]).add(message);
+    _loadedChatMessages.add(chatId);
+    _resortChats();
     notifyListeners();
-    return msg;
+    return message;
   }
 
   Future<void> markRead(String chatId) async {
-    final msgs = _messagesBox.values
-        .whereType<ChatMessage>()
-        .where((m) => m.chatId == chatId && !m.isRead)
-        .toList();
-    for (final m in msgs) {
-      m.isRead = true;
-      await m.save();
+    final messages = await _firestore.fetchChatMessages(familyId, chatId);
+    bool changed = false;
+    for (final message in messages) {
+      if (!message.isRead) {
+        message.isRead = true;
+        await _firestore.upsertChatMessage(familyId, chatId, message);
+        changed = true;
+      }
     }
-    notifyListeners();
+    if (changed) {
+      _messages[chatId] = messages;
+      _loadedChatMessages.add(chatId);
+      notifyListeners();
+    }
   }
 
-  Future<void> _touchChat(String chatId, {String? preview}) async {
-    final chat = _chatsBox.get(chatId);
-    if (chat is! Chat) return;
-    chat.updatedAt = DateTime.now();
-    chat.lastMessagePreview = preview ?? chat.lastMessagePreview;
-    await chat.save();
+  void _resortChats() {
+    _chats.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import 'ai_suggestions_screen.dart';
 import 'calendar_feed_screen.dart';
 import 'calendar_screen.dart';
@@ -17,82 +18,82 @@ import 'tasks_screen.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  static final List<_Feature> _features = [
+  static const List<_Feature> _features = [
     _Feature(
-      title: 'Members',
-      description: 'Manage family members and view details',
+      titleKey: 'members',
+      descriptionKey: 'membersDescription',
       icon: Icons.group,
       builder: (_) => const MembersScreen(),
     ),
     _Feature(
-      title: 'Tasks',
-      description: 'Assign chores and track status',
+      titleKey: 'tasks',
+      descriptionKey: 'tasksDescription',
       icon: Icons.checklist,
       builder: (_) => const TasksScreen(),
     ),
     _Feature(
-      title: 'Events',
-      description: 'Plan family events and gatherings',
+      titleKey: 'events',
+      descriptionKey: 'eventsDescription',
       icon: Icons.event,
       builder: (_) => const EventsScreen(),
     ),
     _Feature(
-      title: 'Calendar',
-      description: 'Overview of upcoming events and tasks',
+      titleKey: 'calendar',
+      descriptionKey: 'calendarDescription',
       icon: Icons.calendar_today,
       builder: (_) => const CalendarScreen(),
     ),
     _Feature(
-      title: 'Schedule',
-      description: 'Personal schedule and agenda',
+      titleKey: 'schedule',
+      descriptionKey: 'scheduleDescription',
       icon: Icons.schedule,
       builder: (_) => const ScheduleScreen(),
     ),
     _Feature(
-      title: 'Scoreboard',
-      description: 'Gamify tasks with points',
+      titleKey: 'scoreboard',
+      descriptionKey: 'scoreboardDescription',
       icon: Icons.leaderboard,
       builder: (_) => const ScoreboardScreen(),
     ),
     _Feature(
-      title: 'Gallery',
-      description: 'Family photos and memories',
+      titleKey: 'gallery',
+      descriptionKey: 'galleryDescription',
       icon: Icons.photo_library,
       builder: (_) => const GalleryScreen(),
     ),
     _Feature(
-      title: 'Friends',
-      description: 'Keep track of friends of the family',
+      titleKey: 'friends',
+      descriptionKey: 'friendsDescription',
       icon: Icons.people_alt,
       builder: (_) => const FriendsScreen(),
     ),
     _Feature(
-      title: 'Chats',
-      description: 'Group and private conversations',
+      titleKey: 'chats',
+      descriptionKey: 'chatsDescription',
       icon: Icons.chat_bubble_outline,
       builder: (_) => const ChatListScreen(),
     ),
     _Feature(
-      title: 'AI suggestions',
-      description: 'Get ideas from the assistant',
+      titleKey: 'aiSuggestions',
+      descriptionKey: 'aiSuggestionsDescription',
       icon: Icons.auto_awesome,
       builder: (_) => const AiSuggestionsScreen(),
     ),
     _Feature(
-      title: 'Calendar feed',
-      description: 'Latest updates from the calendar',
+      titleKey: 'calendarFeed',
+      descriptionKey: 'calendarFeedDescription',
       icon: Icons.rss_feed,
       builder: (_) => const CalendarFeedScreen(),
     ),
     _Feature(
-      title: 'Start a call',
-      description: 'Create an audio or video call',
+      titleKey: 'startCall',
+      descriptionKey: 'startCallDescription',
       icon: Icons.call,
       builder: (_) => const CallSetupScreen(),
     ),
     _Feature(
-      title: 'Cloud call',
-      description: 'Join the cloud call lobby',
+      titleKey: 'cloudCall',
+      descriptionKey: 'cloudCallDescription',
       icon: Icons.cloud,
       builder: (_) => const CloudCallScreen(),
     ),
@@ -101,26 +102,26 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Family App Hub')),
+      appBar: AppBar(title: Text(context.tr('homeHubTitle'))),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.indigo),
+            DrawerHeader(
+              decoration: const BoxDecoration(color: Colors.indigo),
               child: Align(
                 alignment: Alignment.bottomLeft,
                 child: Text(
-                  'Family App',
-                  style: TextStyle(color: Colors.white, fontSize: 24),
+                  context.tr('appTitle'),
+                  style: const TextStyle(color: Colors.white, fontSize: 24),
                 ),
               ),
             ),
             for (final feature in _features)
               ListTile(
                 leading: Icon(feature.icon),
-                title: Text(feature.title),
-                subtitle: Text(feature.description),
+                title: Text(context.tr(feature.titleKey)),
+                subtitle: Text(context.tr(feature.descriptionKey)),
                 onTap: () {
                   Navigator.of(context).pop();
                   Navigator.of(context).push(
@@ -175,12 +176,12 @@ class _FeatureCard extends StatelessWidget {
               Icon(feature.icon, size: 40, color: Theme.of(context).colorScheme.primary),
               const SizedBox(height: 16),
               Text(
-                feature.title,
+                context.tr(feature.titleKey),
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
               Text(
-                feature.description,
+                context.tr(feature.descriptionKey),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).textTheme.bodySmall?.color,
                     ),
@@ -194,14 +195,14 @@ class _FeatureCard extends StatelessWidget {
 }
 
 class _Feature {
-  final String title;
-  final String description;
+  final String titleKey;
+  final String descriptionKey;
   final IconData icon;
   final WidgetBuilder builder;
 
   const _Feature({
-    required this.title,
-    required this.description,
+    required this.titleKey,
+    required this.descriptionKey,
     required this.icon,
     required this.builder,
   });

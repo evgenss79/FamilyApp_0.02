@@ -22,7 +22,7 @@ class ChatAdapter extends TypeAdapter<Chat> {
     return Chat(
       id: fields[0] as String,
       title: fields[1] as String,
-      memberIds: (fields[2] as List).cast(),
+      memberIds: (fields[2] as List).cast<String>(),
       updatedAt: fields[3] as DateTime,
       lastMessagePreview: fields[4] as String?,
     );

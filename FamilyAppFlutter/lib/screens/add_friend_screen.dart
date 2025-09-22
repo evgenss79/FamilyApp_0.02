@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/friend.dart';
 import '../providers/friends_data.dart';
 
@@ -23,21 +24,21 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     final form = _formKey.currentState;
     if (form == null || !form.validate()) return;
     final friend = Friend(
       id: _uuid.v4(),
       name: _nameController.text.trim(),
     );
-    context.read<FriendsData>().addFriend(friend);
+    await context.read<FriendsData>().addFriend(friend);
     Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add friend')),
+      appBar: AppBar(title: Text(context.tr('addFriendTitle'))),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -46,10 +47,10 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
+                decoration: InputDecoration(labelText: context.tr('fieldName')),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a name';
+                    return context.tr('validationEnterName');
                   }
                   return null;
                 },
@@ -60,7 +61,7 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
                 child: FilledButton.icon(
                   onPressed: _save,
                   icon: const Icon(Icons.save),
-                  label: const Text('Save'),
+                  label: Text(context.tr('saveAction')),
                 ),
               ),
             ],

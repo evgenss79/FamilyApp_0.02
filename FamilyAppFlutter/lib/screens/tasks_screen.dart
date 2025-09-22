@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/task.dart';
 import '../providers/family_data.dart';
 import 'add_task_screen.dart';
@@ -14,12 +14,15 @@ class TasksScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Tasks')),
+      appBar: AppBar(title: Text(context.tr('tasks'))),
       body: Consumer<FamilyData>(
         builder: (context, data, _) {
           final tasks = data.tasks;
+          if (data.isLoading && tasks.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
           if (tasks.isEmpty) {
-            return const Center(child: Text('No tasks added yet.'));
+            return Center(child: Text(context.tr('noTasksLabel')));
           }
           return ListView.separated(
             padding: const EdgeInsets.all(12),
@@ -41,9 +44,9 @@ class TasksScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Chip(
-                        label: Text(task.status.name),
+                        label: Text(context.tr('taskStatus.${task.status.name}')),
                         backgroundColor:
-                            _statusColor(context, task.status).withValues(alpha: 0.12),
+                            _statusColor(context, task.status).withOpacity(0.12),
                       ),
                       if (task.description?.isNotEmpty == true)
                         Padding(
@@ -53,32 +56,32 @@ class TasksScreen extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
-                          'Due: ${_formatDueDate(task.dueDate)}',
+                          '${context.tr('taskDueDate')}: ${_formatDueDate(task.dueDate, context)}',
                         ),
                       ),
                       Text(
-                        'Assignee: ${assigneeName?.isNotEmpty == true ? assigneeName : 'Unassigned'}',
+                        '${context.tr('assignToLabel')}: ${assigneeName?.isNotEmpty == true ? assigneeName : context.tr('unassignedLabel')}',
                       ),
                       if (task.points != null)
-                        Text('Points: ${task.points}'),
+                        Text('${context.tr('rewardPointsLabel')}: ${task.points}'),
                     ],
                   ),
                   isThreeLine: true,
                   trailing: PopupMenuButton<String>(
-                    onSelected: (value) {
+                    onSelected: (value) async {
                       switch (value) {
                         case 'todo':
-                          context
+                          await context
                               .read<FamilyData>()
                               .updateTaskStatus(task.id, TaskStatus.todo);
                           break;
                         case 'inProgress':
-                          context
+                          await context
                               .read<FamilyData>()
                               .updateTaskStatus(task.id, TaskStatus.inProgress);
                           break;
                         case 'done':
-                          context
+                          await context
                               .read<FamilyData>()
                               .updateTaskStatus(task.id, TaskStatus.done);
                           break;
@@ -87,34 +90,34 @@ class TasksScreen extends StatelessWidget {
                           break;
                       }
                     },
-                    itemBuilder: (context) => const [
+                    itemBuilder: (context) => [
                       PopupMenuItem(
                         value: 'todo',
                         child: ListTile(
-                          leading: Icon(Icons.radio_button_unchecked),
-                          title: Text('Mark as TODO'),
+                          leading: const Icon(Icons.radio_button_unchecked),
+                          title: Text(context.tr('markTodoAction')),
                         ),
                       ),
                       PopupMenuItem(
                         value: 'inProgress',
                         child: ListTile(
-                          leading: Icon(Icons.timelapse),
-                          title: Text('Mark in progress'),
+                          leading: const Icon(Icons.timelapse),
+                          title: Text(context.tr('markInProgressAction')),
                         ),
                       ),
                       PopupMenuItem(
                         value: 'done',
                         child: ListTile(
-                          leading: Icon(Icons.check_circle),
-                          title: Text('Mark as done'),
+                          leading: const Icon(Icons.check_circle),
+                          title: Text(context.tr('markDoneAction')),
                         ),
                       ),
-                      PopupMenuDivider(),
+                      const PopupMenuDivider(),
                       PopupMenuItem(
                         value: 'delete',
                         child: ListTile(
-                          leading: Icon(Icons.delete),
-                          title: Text('Delete task'),
+                          leading: const Icon(Icons.delete),
+                          title: Text(context.tr('deleteTaskAction')),
                         ),
                       ),
                     ],
@@ -131,14 +134,15 @@ class TasksScreen extends StatelessWidget {
             MaterialPageRoute(builder: (_) => const AddTaskScreen()),
           );
         },
+        tooltip: context.tr('addTaskTitle'),
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  String _formatDueDate(DateTime? date) {
-    if (date == null) return 'No due date';
-    return DateFormat('dd.MM.yyyy HH:mm').format(date);
+  String _formatDueDate(DateTime? date, BuildContext context) {
+    if (date == null) return context.tr('noDueDate');
+    return context.loc.formatDate(date, withTime: true);
   }
 
   IconData _statusIcon(TaskStatus status) {
@@ -168,19 +172,21 @@ class TasksScreen extends StatelessWidget {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete task'),
-        content: Text('Delete "${task.title}"?'),
+        title: Text(context.tr('deleteTaskAction')),
+        content: Text(context.loc.confirmDelete(task.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: Text(context.tr('cancelAction')),
           ),
           FilledButton(
-            onPressed: () {
-              context.read<FamilyData>().removeTask(task.id);
-              Navigator.of(ctx).pop();
+            onPressed: () async {
+              await context.read<FamilyData>().removeTask(task.id);
+              if (context.mounted) {
+                Navigator.of(ctx).pop();
+              }
             },
-            child: const Text('Delete'),
+            child: Text(context.tr('deleteAction')),
           ),
         ],
       ),

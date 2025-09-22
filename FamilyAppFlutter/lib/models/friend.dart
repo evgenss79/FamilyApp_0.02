@@ -9,4 +9,14 @@ class Friend {
   final String? name;
 
   Friend({this.id, this.name});
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'name': name,
+      };
+
+  static Friend fromMap(Map<String, dynamic> map) => Friend(
+        id: (map['id'] ?? '').toString(),
+        name: map['name'] as String?,
+      );
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/family_member.dart';
 import '../providers/family_data.dart';
 import 'add_member_screen.dart';
@@ -16,78 +17,90 @@ class MembersScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<FamilyData>(
       builder: (context, data, _) {
-        final List<FamilyMember> members = data.members;
+        final members = data.members;
+        final isLoading = data.isLoading && members.isEmpty;
         return Scaffold(
-          appBar: AppBar(title: const Text('Family members')),
-          body: members.isEmpty
-              ? const Center(child: Text('No members added yet.'))
-              : ListView.separated(
-                  padding: const EdgeInsets.all(12),
-                  itemBuilder: (context, index) {
-                    final member = members[index];
-                    return Card(
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          child: Text(_initials(member)),
-                        ),
-                        title: Text(member.name ?? 'No name'),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (member.relationship?.isNotEmpty == true)
-                              Text(member.relationship!),
-                            if (member.phone?.isNotEmpty == true)
-                              Text(member.phone!),
-                            if (member.email?.isNotEmpty == true)
-                              Text(member.email!),
-                          ],
-                        ),
-                        isThreeLine: true,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => MemberDetailScreen(memberId: member.id),
+          appBar: AppBar(title: Text(context.tr('members'))),
+          body: isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : members.isEmpty
+                  ? Center(child: Text(context.tr('noMembersLabel')))
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(12),
+                      itemBuilder: (context, index) {
+                        final member = members[index];
+                        return Card(
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundImage: member.avatarUrl != null
+                                  ? NetworkImage(member.avatarUrl!)
+                                  : null,
+                              child: member.avatarUrl == null
+                                  ? Text(_initials(member))
+                                  : null,
                             ),
-                          );
-                        },
-                        trailing: PopupMenuButton<String>(
-                          onSelected: (value) {
-                            switch (value) {
-                              case 'edit':
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => AddMemberScreen(initialMember: member),
+                            title: Text(member.name ?? context.tr('noNameLabel')),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (member.relationship?.isNotEmpty == true)
+                                  Text(member.relationship!),
+                                if (member.phone?.isNotEmpty == true)
+                                  Text(
+                                    '${context.tr('fieldPhone')}: ${member.phone}',
                                   ),
-                                );
-                                break;
-                              case 'delete':
-                                _confirmDeletion(context, member);
-                                break;
-                            }
-                          },
-                          itemBuilder: (context) => const [
-                            PopupMenuItem(
-                              value: 'edit',
-                              child: ListTile(
-                                leading: Icon(Icons.edit),
-                                title: Text('Edit'),
-                              ),
+                                if (member.email?.isNotEmpty == true)
+                                  Text(
+                                    '${context.tr('fieldEmail')}: ${member.email}',
+                                  ),
+                              ],
                             ),
-                            PopupMenuItem(
-                              value: 'delete',
-                              child: ListTile(
-                                leading: Icon(Icons.delete),
-                                title: Text('Delete'),
-                              ),
+                            isThreeLine: true,
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => MemberDetailScreen(memberId: member.id),
+                                ),
+                              );
+                            },
+                            trailing: PopupMenuButton<String>(
+                              onSelected: (value) {
+                                switch (value) {
+                                  case 'edit':
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => AddMemberScreen(initialMember: member),
+                                      ),
+                                    );
+                                    break;
+                                  case 'delete':
+                                    _confirmDeletion(context, member);
+                                    break;
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: 'edit',
+                                  child: ListTile(
+                                    leading: const Icon(Icons.edit),
+                                    title: Text(context.tr('editAction')),
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: ListTile(
+                                    leading: const Icon(Icons.delete),
+                                    title: Text(context.tr('deleteAction')),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemCount: members.length,
-                ),
+                          ),
+                        );
+                      },
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemCount: members.length,
+                    ),
           floatingActionButton: FloatingActionButton(
             onPressed: () {
               Navigator.of(context).push(
@@ -95,6 +108,7 @@ class MembersScreen extends StatelessWidget {
               );
             },
             child: const Icon(Icons.add),
+            tooltip: context.tr('addMember'),
           ),
         );
       },
@@ -118,22 +132,28 @@ class MembersScreen extends StatelessWidget {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('Delete member'),
-          content: Text('Remove ${member.name ?? 'this member'} from the family?'),
+          title: Text(context.tr('deleteMemberDialogTitle')),
+          content: Text(
+            ctx.loc.confirmRemoveMember(
+              member.name ?? ctx.tr('memberFallback'),
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Cancel'),
+              child: Text(context.tr('cancelAction')),
             ),
             FilledButton(
-              onPressed: () {
-                context.read<FamilyData>().removeMember(member);
-                Navigator.of(ctx).pop();
+              onPressed: () async {
+                await context.read<FamilyData>().removeMember(member);
+                if (context.mounted) {
+                  Navigator.of(ctx).pop();
+                }
               },
               style: FilledButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.errorContainer,
               ),
-              child: const Text('Delete'),
+              child: Text(context.tr('deleteAction')),
             ),
           ],
         );
