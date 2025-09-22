@@ -241,12 +241,12 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return const Center(
       child: Opacity(
         opacity: 0.7,
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: const [
+          children: [
             Icon(Icons.lightbulb, size: 48),
             SizedBox(height: 8),
             Text('Пока нет подсказок — введите запрос и нажмите «Сгенерировать».'),

@@ -11,7 +11,7 @@ import '../security/encrypted_firestore_service.dart';
 /// Service wrapping common Firestore operations for the app.
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final EncryptedFirestoreService _enc = EncryptedFirestoreService();
+  final EncryptedFirestoreService _enc = const EncryptedFirestoreService();
 
   /// --------- FAMILY MEMBERS (encrypted upsert in DataSyncService) ----------
   Future<List<FamilyMember>> fetchFamilyMembers(String familyId) async {

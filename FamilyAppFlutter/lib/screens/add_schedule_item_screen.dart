@@ -48,6 +48,7 @@ class _AddScheduleItemScreenState extends State<AddScheduleItemScreen> {
       firstDate: DateTime(now.year - 1),
       lastDate: DateTime(now.year + 5),
     );
+    if (!mounted) return;
     if (date == null) return;
     final time = await showTimePicker(
       context: context,
@@ -127,7 +128,7 @@ class _AddScheduleItemScreenState extends State<AddScheduleItemScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<Duration?>(
-                  value: _duration,
+                  initialValue: _duration,
                   decoration: const InputDecoration(labelText: 'Duration'),
                   items: [
                     const DropdownMenuItem<Duration?>(
@@ -145,7 +146,7 @@ class _AddScheduleItemScreenState extends State<AddScheduleItemScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String?>(
-                  value: _memberId,
+                  initialValue: _memberId,
                   decoration: const InputDecoration(labelText: 'Assign to member'),
                   items: [
                     const DropdownMenuItem<String?>(
