@@ -206,6 +206,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
     } else {
       await familyData.updateMember(member);
     }
+    if (!mounted) return;
     Navigator.of(context).pop();
   }
 
@@ -456,7 +457,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
             child: Column(
               children: [
                 DropdownButtonFormField<String>(
-                  value: entry.type ?? options.first,
+                  initialValue: entry.type ?? options.first,
                   items: [
                     for (final option in options)
                       DropdownMenuItem<String>(

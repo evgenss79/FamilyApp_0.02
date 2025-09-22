@@ -107,8 +107,8 @@ class MembersScreen extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => const AddMemberScreen()),
               );
             },
-            child: const Icon(Icons.add),
             tooltip: context.tr('addMember'),
+            child: const Icon(Icons.add),
           ),
         );
       },

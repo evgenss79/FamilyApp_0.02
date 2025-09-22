@@ -66,6 +66,7 @@ class _AddGalleryItemScreenState extends State<AddGalleryItemScreen> {
       storagePath: _storagePath,
     );
     await context.read<GalleryData>().addItem(item);
+    if (!mounted) return;
     Navigator.of(context).pop();
   }
 

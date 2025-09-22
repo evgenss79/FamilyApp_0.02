@@ -130,7 +130,7 @@ class _AddScheduleItemScreenState extends State<AddScheduleItemScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<Duration?>(
-                  value: _duration,
+                  initialValue: _duration,
                   decoration:
                       InputDecoration(labelText: context.tr('scheduleDurationLabel')),
                   items: [
@@ -154,7 +154,7 @@ class _AddScheduleItemScreenState extends State<AddScheduleItemScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String?>(
-                  value: _memberId,
+                  initialValue: _memberId,
                   decoration: InputDecoration(labelText: context.tr('assignToLabel')),
                   items: [
                     DropdownMenuItem<String?>(

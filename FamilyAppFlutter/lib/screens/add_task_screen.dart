@@ -128,7 +128,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<TaskStatus>(
-                  value: _status,
+                  initialValue: _status,
                   decoration: InputDecoration(labelText: context.tr('taskStatusLabel')),
                   items: TaskStatus.values
                       .map(
@@ -146,7 +146,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String?>(
-                  value: _assigneeId,
+                  initialValue: _assigneeId,
                   decoration: InputDecoration(labelText: context.tr('assignToLabel')),
                   items: [
                     const DropdownMenuItem<String?>(
