@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
+import '../providers/language_provider.dart';
 import 'ai_suggestions_screen.dart';
 import 'calendar_feed_screen.dart';
 import 'calendar_screen.dart';
@@ -17,106 +20,54 @@ import 'tasks_screen.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  static final List<_Feature> _features = [
-    _Feature(
-      title: 'Members',
-      description: 'Manage family members and view details',
-      icon: Icons.group,
-      builder: (_) => const MembersScreen(),
-    ),
-    _Feature(
-      title: 'Tasks',
-      description: 'Assign chores and track status',
-      icon: Icons.checklist,
-      builder: (_) => const TasksScreen(),
-    ),
-    _Feature(
-      title: 'Events',
-      description: 'Plan family events and gatherings',
-      icon: Icons.event,
-      builder: (_) => const EventsScreen(),
-    ),
-    _Feature(
-      title: 'Calendar',
-      description: 'Overview of upcoming events and tasks',
-      icon: Icons.calendar_today,
-      builder: (_) => const CalendarScreen(),
-    ),
-    _Feature(
-      title: 'Schedule',
-      description: 'Personal schedule and agenda',
-      icon: Icons.schedule,
-      builder: (_) => const ScheduleScreen(),
-    ),
-    _Feature(
-      title: 'Scoreboard',
-      description: 'Gamify tasks with points',
-      icon: Icons.leaderboard,
-      builder: (_) => const ScoreboardScreen(),
-    ),
-    _Feature(
-      title: 'Gallery',
-      description: 'Family photos and memories',
-      icon: Icons.photo_library,
-      builder: (_) => const GalleryScreen(),
-    ),
-    _Feature(
-      title: 'Friends',
-      description: 'Keep track of friends of the family',
-      icon: Icons.people_alt,
-      builder: (_) => const FriendsScreen(),
-    ),
-    _Feature(
-      title: 'Chats',
-      description: 'Group and private conversations',
-      icon: Icons.chat_bubble_outline,
-      builder: (_) => const ChatListScreen(),
-    ),
-    _Feature(
-      title: 'AI suggestions',
-      description: 'Get ideas from the assistant',
-      icon: Icons.auto_awesome,
-      builder: (_) => const AiSuggestionsScreen(),
-    ),
-    _Feature(
-      title: 'Calendar feed',
-      description: 'Latest updates from the calendar',
-      icon: Icons.rss_feed,
-      builder: (_) => const CalendarFeedScreen(),
-    ),
-    _Feature(
-      title: 'Start a call',
-      description: 'Create an audio or video call',
-      icon: Icons.call,
-      builder: (_) => const CallSetupScreen(),
-    ),
-    _Feature(
-      title: 'Cloud call',
-      description: 'Join the cloud call lobby',
-      icon: Icons.cloud,
-      builder: (_) => const CloudCallScreen(),
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final languageProvider = context.watch<LanguageProvider>();
+    final features = _buildFeatures(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Family App Hub')),
+      appBar: AppBar(title: Text(l10n.t('homeHubTitle'))),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.indigo),
+            DrawerHeader(
+              decoration: const BoxDecoration(color: Colors.indigo),
               child: Align(
                 alignment: Alignment.bottomLeft,
                 child: Text(
-                  'Family App',
-                  style: TextStyle(color: Colors.white, fontSize: 24),
+                  l10n.t('drawerTitle'),
+                  style: const TextStyle(color: Colors.white, fontSize: 24),
                 ),
               ),
             ),
-            for (final feature in _features)
+            ListTile(
+              leading: const Icon(Icons.language),
+              title: Text(l10n.t('languageMenuTitle')),
+              subtitle: Text(l10n.t('languageMenuSubtitle')),
+              trailing: DropdownButtonHideUnderline(
+                child: DropdownButton<Locale>(
+                  value: languageProvider.locale,
+                  onChanged: (locale) {
+                    if (locale != null) {
+                      context.read<LanguageProvider>().setLocale(locale);
+                    }
+                  },
+                  items: [
+                    for (final locale in AppLocalizations.supportedLocales)
+                      DropdownMenuItem<Locale>(
+                        value: locale,
+                        child: Text(
+                          l10n.languageName(locale.languageCode),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const Divider(height: 1),
+            for (final feature in features)
               ListTile(
                 leading: Icon(feature.icon),
                 title: Text(feature.title),
@@ -139,13 +90,97 @@ class HomeScreen extends StatelessWidget {
           mainAxisSpacing: 16,
           childAspectRatio: 1.2,
         ),
-        itemCount: _features.length,
+        itemCount: features.length,
         itemBuilder: (context, index) {
-          final feature = _features[index];
+          final feature = features[index];
           return _FeatureCard(feature: feature);
         },
       ),
     );
+  }
+
+  List<_Feature> _buildFeatures(BuildContext context) {
+    final l10n = context.l10n;
+    return [
+      _Feature(
+        title: l10n.t('feature.members.title'),
+        description: l10n.t('feature.members.description'),
+        icon: Icons.group,
+        builder: (_) => const MembersScreen(),
+      ),
+      _Feature(
+        title: l10n.t('feature.tasks.title'),
+        description: l10n.t('feature.tasks.description'),
+        icon: Icons.checklist,
+        builder: (_) => const TasksScreen(),
+      ),
+      _Feature(
+        title: l10n.t('feature.events.title'),
+        description: l10n.t('feature.events.description'),
+        icon: Icons.event,
+        builder: (_) => const EventsScreen(),
+      ),
+      _Feature(
+        title: l10n.t('feature.calendar.title'),
+        description: l10n.t('feature.calendar.description'),
+        icon: Icons.calendar_today,
+        builder: (_) => const CalendarScreen(),
+      ),
+      _Feature(
+        title: l10n.t('feature.schedule.title'),
+        description: l10n.t('feature.schedule.description'),
+        icon: Icons.schedule,
+        builder: (_) => const ScheduleScreen(),
+      ),
+      _Feature(
+        title: l10n.t('feature.scoreboard.title'),
+        description: l10n.t('feature.scoreboard.description'),
+        icon: Icons.leaderboard,
+        builder: (_) => const ScoreboardScreen(),
+      ),
+      _Feature(
+        title: l10n.t('feature.gallery.title'),
+        description: l10n.t('feature.gallery.description'),
+        icon: Icons.photo_library,
+        builder: (_) => const GalleryScreen(),
+      ),
+      _Feature(
+        title: l10n.t('feature.friends.title'),
+        description: l10n.t('feature.friends.description'),
+        icon: Icons.people_alt,
+        builder: (_) => const FriendsScreen(),
+      ),
+      _Feature(
+        title: l10n.t('feature.chats.title'),
+        description: l10n.t('feature.chats.description'),
+        icon: Icons.chat_bubble_outline,
+        builder: (_) => const ChatListScreen(),
+      ),
+      _Feature(
+        title: l10n.t('feature.ai.title'),
+        description: l10n.t('feature.ai.description'),
+        icon: Icons.auto_awesome,
+        builder: (_) => const AiSuggestionsScreen(),
+      ),
+      _Feature(
+        title: l10n.t('feature.calendarFeed.title'),
+        description: l10n.t('feature.calendarFeed.description'),
+        icon: Icons.rss_feed,
+        builder: (_) => const CalendarFeedScreen(),
+      ),
+      _Feature(
+        title: l10n.t('feature.callSetup.title'),
+        description: l10n.t('feature.callSetup.description'),
+        icon: Icons.call,
+        builder: (_) => const CallSetupScreen(),
+      ),
+      _Feature(
+        title: l10n.t('feature.cloudCall.title'),
+        description: l10n.t('feature.cloudCall.description'),
+        icon: Icons.cloud,
+        builder: (_) => const CloudCallScreen(),
+      ),
+    ];
   }
 }
 

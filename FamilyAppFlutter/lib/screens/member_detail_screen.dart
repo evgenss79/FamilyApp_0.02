@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../models/family_member.dart';
 import '../providers/family_data.dart';
 import 'add_member_screen.dart';
 import 'edit_documents_screen.dart';
