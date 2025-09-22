@@ -109,7 +109,6 @@ class MembersScreen extends StatelessWidget {
             },
             tooltip: context.tr('addMember'),
             child: const Icon(Icons.add),
-            tooltip: context.tr('addMember'),
           ),
         );
       },

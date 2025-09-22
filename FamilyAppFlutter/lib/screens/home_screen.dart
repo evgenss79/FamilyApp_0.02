@@ -19,7 +19,7 @@ import 'tasks_screen.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  static const List<_Feature> _features = [
+  static final List<_Feature> _features = [
     _Feature(
       titleKey: 'members',
       descriptionKey: 'membersDescription',
