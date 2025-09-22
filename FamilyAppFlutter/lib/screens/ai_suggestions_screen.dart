@@ -163,11 +163,11 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
                               color: Theme.of(context)
                                   .colorScheme
                                   .surface
-                                  .withOpacity(0.6),
+                                  .withValues(alpha: 0.6),
                               border: Border.all(
                                 color: Theme.of(context)
                                     .dividerColor
-                                    .withOpacity(0.3),
+                                    .withValues(alpha: 0.3),
                               ),
                               borderRadius: BorderRadius.circular(10),
                             ),

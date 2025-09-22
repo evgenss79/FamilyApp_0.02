@@ -80,7 +80,6 @@ class GalleryScreen extends StatelessWidget {
         },
         tooltip: context.tr('addGalleryItemTitle'),
         child: const Icon(Icons.add),
-        tooltip: context.tr('addGalleryItemTitle'),
       ),
     );
   }
