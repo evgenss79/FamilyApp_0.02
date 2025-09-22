@@ -1,8 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
-
 import 'config/app_config.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
@@ -17,6 +17,7 @@ import 'services/firestore_service.dart';
 import 'services/storage_service.dart';
 import 'storage/hive_secure.dart';
 
+
 /// Entry point for the Family App. Initializes Firebase, Hive and all
 /// services required by the application.
 Future<void> main() async {
@@ -26,6 +27,7 @@ Future<void> main() async {
   );
   await Hive.initFlutter();
   await HiveSecure.ensureDek();
+
   final settingsBox = await Hive.openBox('settings');
 
   final firestore = FirestoreService();
@@ -53,15 +55,18 @@ class MyApp extends StatelessWidget {
   final StorageService storage;
   final LanguageProvider languageProvider;
 
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         Provider<FirestoreService>.value(value: firestore),
         Provider<StorageService>.value(value: storage),
+
         ChangeNotifierProvider<LanguageProvider>.value(
           value: languageProvider,
         ),
+
         ChangeNotifierProvider<ChatProvider>(
           create: (_) => ChatProvider(
             firestore: firestore,
@@ -110,6 +115,7 @@ class MyApp extends StatelessWidget {
             home: const HomeScreen(),
           );
         },
+
       ),
     );
   }

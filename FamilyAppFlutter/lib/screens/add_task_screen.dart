@@ -70,10 +70,11 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     );
 
     await context.read<FamilyData>().addTask(task);
+
     if (mounted) {
       Navigator.of(context).pop();
     }
-  }
+
 
   @override
   void dispose() {
@@ -128,7 +129,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<TaskStatus>(
+
                   initialValue: _status,
+
                   decoration: InputDecoration(labelText: context.tr('taskStatusLabel')),
                   items: TaskStatus.values
                       .map(
@@ -146,7 +149,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String?>(
+
                   initialValue: _assigneeId,
+
                   decoration: InputDecoration(labelText: context.tr('assignToLabel')),
                   items: [
                     const DropdownMenuItem<String?>(

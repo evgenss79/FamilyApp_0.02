@@ -23,6 +23,7 @@ class AppLocalizations {
     Locale('zh'),
   ];
 
+
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
     delegate,
@@ -30,6 +31,7 @@ class AppLocalizations {
     GlobalWidgetsLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
   ];
+
 
   final Locale locale;
 
@@ -68,6 +70,7 @@ class AppLocalizations {
       'es': 'Centro de la aplicación familiar',
       'zh': '家庭应用中心',
     },
+
     'drawerTitle': {
       'en': 'Family App',
       'ru': 'Family App',
@@ -140,6 +143,7 @@ class AppLocalizations {
       'es': 'Chino',
       'zh': '中文',
     },
+
     'loading': {
       'en': 'Loading…',
       'ru': 'Загрузка…',
@@ -1812,6 +1816,7 @@ class AppLocalizations {
     return value;
   }
 
+
   String t(String key, {Map<String, String>? params}) {
     if (params == null || params.isEmpty) {
       return translate(key);
@@ -1836,6 +1841,7 @@ class AppLocalizations {
         return translate('languageEnglish');
     }
   }
+
 
   /// Formats a date respecting the current locale.
   String formatDate(DateTime date, {bool withTime = false}) {
@@ -1890,6 +1896,7 @@ class _AppLocalizationsDelegate
 extension AppLocalizationExtension on BuildContext {
   /// Short-hand to get the current [AppLocalizations] instance.
   AppLocalizations get loc => AppLocalizations.of(this);
+
 
   /// Backwards compatibility getter used in older code.
   AppLocalizations get l10n => AppLocalizations.of(this);

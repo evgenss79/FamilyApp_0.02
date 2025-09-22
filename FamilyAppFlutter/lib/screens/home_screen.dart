@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../l10n/app_localizations.dart';
 import '../providers/language_provider.dart';
 import 'ai_suggestions_screen.dart';
@@ -20,7 +19,7 @@ import 'tasks_screen.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  static final List<_Feature> _features = [
+  static const List<_Feature> _features = [
     _Feature(
       titleKey: 'members',
       descriptionKey: 'membersDescription',

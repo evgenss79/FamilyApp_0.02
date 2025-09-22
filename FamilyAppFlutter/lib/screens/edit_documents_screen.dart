@@ -112,7 +112,9 @@ class _EditDocumentsScreenState extends State<EditDocumentsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             DropdownButtonFormField<String>(
+
                               initialValue: doc.type ?? _documentOptions.first,
+
                               items: [
                                 for (final option in _documentOptions)
                                   DropdownMenuItem<String>(

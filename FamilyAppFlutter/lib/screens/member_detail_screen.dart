@@ -47,7 +47,9 @@ class MemberDetailScreen extends StatelessWidget {
           body: ListView(
             padding: const EdgeInsets.all(16),
             children: [
+
               _MemberAvatar(member: member),
+
               const SizedBox(height: 16),
               _InfoTile(
                 title: context.tr('fieldRelationship'),

@@ -43,7 +43,7 @@ class ScoreboardScreen extends StatelessWidget {
               return ListTile(
                 leading: CircleAvatar(
                   backgroundColor:
-                      Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                      Theme.of(context).colorScheme.primary.withOpacity(0.1),
                   child: Text('${index + 1}'),
                 ),
                 title: Text(member.name?.isNotEmpty == true

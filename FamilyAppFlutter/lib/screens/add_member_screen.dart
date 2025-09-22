@@ -457,7 +457,9 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
             child: Column(
               children: [
                 DropdownButtonFormField<String>(
+
                   initialValue: entry.type ?? options.first,
+
                   items: [
                     for (final option in options)
                       DropdownMenuItem<String>(
