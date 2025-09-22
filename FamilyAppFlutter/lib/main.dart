@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 
-import 'models/chat.dart';
 import 'providers/family_data.dart';
 import 'providers/chat_provider.dart';
 import 'providers/friends_data.dart';
