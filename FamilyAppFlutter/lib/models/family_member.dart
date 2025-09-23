@@ -64,13 +64,15 @@ class FamilyMember {
     List<Map<String, String>>? _mapList(dynamic value) {
       if (value is List) {
         return value
-            .whereType<Map>()
-            .map((dynamic entry) => entry.map(
-                  (dynamic key, dynamic val) => MapEntry(
-                    key.toString(),
-                    val?.toString() ?? '',
-                  ),
-                ))
+            .whereType<Map<dynamic, dynamic>>()
+            .map(
+              (Map<dynamic, dynamic> entry) => entry.map<String, String>(
+                (dynamic key, dynamic val) => MapEntry<String, String>(
+                  key.toString(),
+                  val?.toString() ?? '',
+                ),
+              ),
+            )
             .toList();
       }
       return null;
