@@ -27,9 +27,12 @@ class FriendsScreen extends StatelessWidget {
             separatorBuilder: (_, __) => const Divider(height: 0),
             itemBuilder: (context, index) {
               final Friend friend = data.friends[index];
+              final String displayName = friend.name.trim().isEmpty
+                  ? context.tr('noNameLabel')
+                  : friend.name;
               return ListTile(
                 leading: const Icon(Icons.person),
-                title: Text(friend.name ?? context.tr('noNameLabel')),
+                title: Text(displayName),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline),
                   onPressed: () async {

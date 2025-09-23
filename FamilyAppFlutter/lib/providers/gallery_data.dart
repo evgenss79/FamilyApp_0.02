@@ -52,7 +52,7 @@ class GalleryData extends ChangeNotifier {
     );
     if (index == -1) return;
     final item = items[index];
-    await _firestore.deleteGalleryItem(familyId, item.id ?? idOrUrl);
+    await _firestore.deleteGalleryItem(familyId, item.id);
     if (item.storagePath != null) {
       await _storage.deleteByPath(item.storagePath!);
     } else if (item.url != null) {

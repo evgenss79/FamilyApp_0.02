@@ -1,6 +1,8 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+
 import 'config/app_config.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
@@ -15,28 +17,18 @@ import 'services/firestore_service.dart';
 import 'services/storage_service.dart';
 import 'storage/hive_secure.dart';
 
-
 /// Entry point for the Family App. Initializes Firebase, Hive and all
 /// services required by the application.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (Firebase.apps.isEmpty) {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  } else {
-    Firebase.app();
-  }
+  await _initFirebase();
   await Hive.initFlutter();
   await HiveSecure.ensureDek();
-
-  final settingsBox = await Hive.openBox('settings');
-
-
-  final StorageService storageService = StorageService();
   final Box<Object?> settingsBox = await Hive.openBox<Object?>('settings');
-  final LanguageProvider languageProvider = LanguageProvider(box: settingsBox);
 
+  final FirestoreService firestore = FirestoreService();
+  final StorageService storage = StorageService();
+  final LanguageProvider languageProvider = LanguageProvider(box: settingsBox);
 
   runApp(
     MyApp(
@@ -45,6 +37,16 @@ Future<void> main() async {
       languageProvider: languageProvider,
     ),
   );
+}
+
+Future<void> _initFirebase() async {
+  if (Firebase.apps.isEmpty) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } else {
+    Firebase.app();
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -59,18 +61,15 @@ class MyApp extends StatelessWidget {
   final StorageService storage;
   final LanguageProvider languageProvider;
 
-
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         Provider<FirestoreService>.value(value: firestore),
         Provider<StorageService>.value(value: storage),
-
         ChangeNotifierProvider<LanguageProvider>.value(
           value: languageProvider,
         ),
-
         ChangeNotifierProvider<ChatProvider>(
           create: (_) => ChatProvider(
             firestore: firestore,
@@ -105,7 +104,7 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: Consumer<LanguageProvider>(
-        builder: (context, language, _) {
+        builder: (BuildContext context, LanguageProvider language, _) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             theme: ThemeData(
@@ -115,11 +114,10 @@ class MyApp extends StatelessWidget {
             locale: language.locale,
             supportedLocales: AppLocalizations.supportedLocales,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
-            onGenerateTitle: (context) => context.tr('appTitle'),
+            onGenerateTitle: (BuildContext context) => context.tr('appTitle'),
             home: const HomeScreen(),
           );
         },
-
       ),
     );
   }
