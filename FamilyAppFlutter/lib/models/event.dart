@@ -3,8 +3,7 @@ import '../utils/parsing.dart';
 /// Calendar event shared between family members.
 class Event {
   static final Object _sentinel = Object();
-
-  Event({
+  const Event({
     required this.id,
     required this.title,
     required this.startDateTime,
@@ -14,7 +13,6 @@ class Event {
     this.createdAt,
     this.updatedAt,
   }) : participantIds = List.unmodifiable(participantIds ?? <String>[]);
-
   final String id;
   final String title;
   final DateTime startDateTime;
