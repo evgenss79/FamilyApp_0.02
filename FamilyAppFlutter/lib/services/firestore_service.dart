@@ -12,107 +12,70 @@ import '../models/schedule_item.dart';
 import '../models/task.dart';
 import '../security/encrypted_firestore_service.dart';
 
-/// Service wrapping common Firestore operations for the app.
+/// Service wrapping common Firestore operations for the app.  All data is
+/// written through [EncryptedFirestoreService] to keep the payload private.
 class FirestoreService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final EncryptedFirestoreService _enc = const EncryptedFirestoreService();
+  FirestoreService({
+    FirebaseFirestore? firestore,
+    EncryptedFirestoreService? encryption,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _encryption = encryption ?? const EncryptedFirestoreService();
+
+  final FirebaseFirestore _firestore;
+  final EncryptedFirestoreService _encryption;
 
   CollectionReference<Map<String, dynamic>> _collection(
     String familyId,
     String collection,
   ) {
-
     return _firestore
         .collection('families')
         .doc(familyId)
-        .collection(collection)
-        .withConverter<_EncryptedDoc>(
-          fromFirestore: (snapshot, _) => _EncryptedDoc(
-            snapshot.id,
-            Map<String, dynamic>.from(snapshot.data() ?? <String, dynamic>{}),
-          ),
-          toFirestore: (value, _) => value.raw,
-        );
+        .collection(collection);
   }
 
-  CollectionReference<_EncryptedDoc> _messageCollection(
-    String familyId,
-    String conversationId,
-  ) {
-    return _firestore
-        .collection('families')
-        .doc(familyId)
-        .collection('conversations')
-        .doc(conversationId)
-        .collection('messages')
-        .withConverter<_EncryptedDoc>(
-          fromFirestore: (snapshot, _) => _EncryptedDoc(
-            snapshot.id,
-            Map<String, dynamic>.from(snapshot.data() ?? <String, dynamic>{}),
-          ),
-          toFirestore: (value, _) => value.raw,
-        );
-  }
-
-  Future<void> replayPendingOperations() async {
-    final Box<Object?> box = await _openBox(_pendingBoxName);
-    final List<PendingOp> ops = box.values
-        .whereType<Map<Object?, Object?>>()
-        .map((Map<Object?, Object?> value) =>
-            PendingOp.fromMap(Map<String, dynamic>.from(value)))
-        .toList()
-      ..sort((PendingOp a, PendingOp b) => a.createdAt.compareTo(b.createdAt));
-
-    for (final PendingOp op in ops) {
-      try {
-        if (op.action == PendingAction.delete) {
-          await _deleteDocument(op.path, original: op);
-        } else {
-          await _setDocument(
-            path: op.path,
-            openData: op.openData ?? <String, dynamic>{},
-            metadata: op.metadata,
-            isNew: op.isNew,
-            original: op,
-          );
-        }
-      } on FirebaseException catch (error) {
-        if (!_shouldQueue(error)) {
-          rethrow;
-        }
-        break;
-      }
+  Future<Map<String, dynamic>> _decodeSnapshot(
+    DocumentSnapshot<Map<String, dynamic>> snapshot, {
+    Map<String, dynamic>? extras,
+  }) async {
+    final Map<String, dynamic> decrypted =
+        await _encryption.decode(snapshot.data());
+    final Map<String, dynamic> result = decrypted.isEmpty
+        ? Map<String, dynamic>.from(snapshot.data() ?? <String, dynamic>{})
+        : Map<String, dynamic>.from(decrypted);
+    result.remove('enc');
+    result['id'] = snapshot.id;
+    if (extras != null) {
+      result.addAll(extras);
     }
-  }
-
-  Future<Map<String, dynamic>> _decodedMap(
-    DocumentSnapshot<Map<String, dynamic>> doc,
-  ) async {
-    final Map<String, dynamic> raw = await _enc.decode(doc.data());
-    final Map<String, dynamic> map = raw.isEmpty
-        ? Map<String, dynamic>.from(doc.data() ?? <String, dynamic>{})
-        : Map<String, dynamic>.from(raw);
-    map.putIfAbsent('id', () => doc.id);
-    return map;
+    return result;
   }
 
   // ------------------------------ MEMBERS ----------------------------------
   Future<List<FamilyMember>> fetchFamilyMembers(String familyId) async {
-    final snapshot = await _collection(familyId, 'members').get();
-    return [
-      for (final doc in snapshot.docs) FamilyMember.fromMap(await _decodedMap(doc)),
-    ];
+    final QuerySnapshot<Map<String, dynamic>> snapshot =
+        await _collection(familyId, 'members').get();
+    final List<FamilyMember> members = <FamilyMember>[];
+    for (final QueryDocumentSnapshot<Map<String, dynamic>> doc in snapshot.docs) {
+      members.add(FamilyMember.fromMap(await _decodeSnapshot(doc)));
+    }
+    return members;
   }
 
   Future<void> upsertFamilyMember(
     String familyId,
     FamilyMember member,
   ) async {
-    await _enc.setEncrypted(
+    await _encryption.setEncrypted(
       ref: _collection(familyId, 'members').doc(member.id),
       data: member.toMap(),
     );
   }
+
+  Future<void> updateFamilyMember(
+    String familyId,
+    FamilyMember member,
+  ) => upsertFamilyMember(familyId, member);
 
   Future<void> deleteFamilyMember(String familyId, String memberId) async {
     await _collection(familyId, 'members').doc(memberId).delete();
@@ -120,25 +83,29 @@ class FirestoreService {
 
   // -------------------------------- TASKS ----------------------------------
   Future<List<Task>> fetchTasks(String familyId) async {
-    final snapshot = await _collection(familyId, 'tasks').get();
-    final tasks = <Task>[];
-    for (final doc in snapshot.docs) {
-      tasks.add(Task.fromMap(await _decodedMap(doc)));
+    final QuerySnapshot<Map<String, dynamic>> snapshot =
+        await _collection(familyId, 'tasks').get();
+    final List<Task> tasks = <Task>[];
+    for (final QueryDocumentSnapshot<Map<String, dynamic>> doc in snapshot.docs) {
+      tasks.add(Task.fromMap(await _decodeSnapshot(doc)));
     }
-    tasks.sort((a, b) {
-      final aDue = a.dueDate ?? DateTime.fromMillisecondsSinceEpoch(0);
-      final bDue = b.dueDate ?? DateTime.fromMillisecondsSinceEpoch(0);
+    tasks.sort((Task a, Task b) {
+      final DateTime aDue = a.dueDate ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final DateTime bDue = b.dueDate ?? DateTime.fromMillisecondsSinceEpoch(0);
       return aDue.compareTo(bDue);
     });
     return tasks;
   }
 
   Future<void> upsertTask(String familyId, Task task) async {
-    await _enc.setEncrypted(
+    await _encryption.setEncrypted(
       ref: _collection(familyId, 'tasks').doc(task.id),
       data: task.toMap(),
     );
   }
+
+  Future<void> updateTask(String familyId, Task task) =>
+      upsertTask(familyId, task);
 
   Future<void> deleteTask(String familyId, String taskId) async {
     await _collection(familyId, 'tasks').doc(taskId).delete();
@@ -146,17 +113,18 @@ class FirestoreService {
 
   // ------------------------------- EVENTS ----------------------------------
   Future<List<Event>> fetchEvents(String familyId) async {
-    final snapshot = await _collection(familyId, 'events').get();
-    final events = <Event>[];
-    for (final doc in snapshot.docs) {
-      events.add(Event.fromMap(await _decodedMap(doc)));
+    final QuerySnapshot<Map<String, dynamic>> snapshot =
+        await _collection(familyId, 'events').get();
+    final List<Event> events = <Event>[];
+    for (final QueryDocumentSnapshot<Map<String, dynamic>> doc in snapshot.docs) {
+      events.add(Event.fromMap(await _decodeSnapshot(doc)));
     }
-    events.sort((a, b) => a.startDateTime.compareTo(b.startDateTime));
+    events.sort((Event a, Event b) => a.startDateTime.compareTo(b.startDateTime));
     return events;
   }
 
   Future<void> upsertEvent(String familyId, Event event) async {
-    await _enc.setEncrypted(
+    await _encryption.setEncrypted(
       ref: _collection(familyId, 'events').doc(event.id),
       data: event.toMap(),
     );
@@ -168,17 +136,19 @@ class FirestoreService {
 
   // -------------------------- SCHEDULE ITEMS -------------------------------
   Future<List<ScheduleItem>> fetchScheduleItems(String familyId) async {
-    final snapshot = await _collection(familyId, 'scheduleItems').get();
-    final items = <ScheduleItem>[];
-    for (final doc in snapshot.docs) {
-      items.add(ScheduleItem.fromMap(await _decodedMap(doc)));
+    final QuerySnapshot<Map<String, dynamic>> snapshot =
+        await _collection(familyId, 'scheduleItems').get();
+    final List<ScheduleItem> items = <ScheduleItem>[];
+    for (final QueryDocumentSnapshot<Map<String, dynamic>> doc in snapshot.docs) {
+      items.add(ScheduleItem.fromMap(await _decodeSnapshot(doc)));
     }
-    items.sort((a, b) => a.dateTime.compareTo(b.dateTime));
+    items.sort((ScheduleItem a, ScheduleItem b) =>
+        a.dateTime.compareTo(b.dateTime));
     return items;
   }
 
   Future<void> upsertScheduleItem(String familyId, ScheduleItem item) async {
-    await _enc.setEncrypted(
+    await _encryption.setEncrypted(
       ref: _collection(familyId, 'scheduleItems').doc(item.id),
       data: item.toMap(),
     );
@@ -190,14 +160,18 @@ class FirestoreService {
 
   // ------------------------------- FRIENDS ---------------------------------
   Future<List<Friend>> fetchFriends(String familyId) async {
-    final snapshot = await _collection(familyId, 'friends').get();
-    return [
-      for (final doc in snapshot.docs) Friend.fromMap(await _decodedMap(doc)),
-    ];
+    final QuerySnapshot<Map<String, dynamic>> snapshot =
+        await _collection(familyId, 'friends').get();
+    final List<Friend> friends = <Friend>[];
+    for (final QueryDocumentSnapshot<Map<String, dynamic>> doc in snapshot.docs) {
+      friends.add(Friend.fromMap(await _decodeSnapshot(doc)));
+    }
+    friends.sort((Friend a, Friend b) => a.name.compareTo(b.name));
+    return friends;
   }
 
   Future<void> upsertFriend(String familyId, Friend friend) async {
-    await _enc.setEncrypted(
+    await _encryption.setEncrypted(
       ref: _collection(familyId, 'friends').doc(friend.id),
       data: friend.toMap(),
     );
@@ -209,14 +183,17 @@ class FirestoreService {
 
   // ------------------------------- GALLERY ---------------------------------
   Future<List<GalleryItem>> fetchGalleryItems(String familyId) async {
-    final snapshot = await _collection(familyId, 'gallery').get();
-    return [
-      for (final doc in snapshot.docs) GalleryItem.fromMap(await _decodedMap(doc)),
-    ];
+    final QuerySnapshot<Map<String, dynamic>> snapshot =
+        await _collection(familyId, 'gallery').get();
+    final List<GalleryItem> items = <GalleryItem>[];
+    for (final QueryDocumentSnapshot<Map<String, dynamic>> doc in snapshot.docs) {
+      items.add(GalleryItem.fromMap(await _decodeSnapshot(doc)));
+    }
+    return items;
   }
 
   Future<void> upsertGalleryItem(String familyId, GalleryItem item) async {
-    await _enc.setEncrypted(
+    await _encryption.setEncrypted(
       ref: _collection(familyId, 'gallery').doc(item.id),
       data: item.toMap(),
     );
@@ -228,23 +205,27 @@ class FirestoreService {
 
   // -------------------------------- CHATS ----------------------------------
   Future<List<Chat>> fetchChats(String familyId) async {
-    final snapshot = await _collection(familyId, 'chats').get();
-    final chats = <Chat>[];
-    for (final doc in snapshot.docs) {
-      chats.add(Chat.fromMap(await _decodedMap(doc)));
+    final QuerySnapshot<Map<String, dynamic>> snapshot =
+        await _collection(familyId, 'chats').get();
+    final List<Chat> chats = <Chat>[];
+    for (final QueryDocumentSnapshot<Map<String, dynamic>> doc in snapshot.docs) {
+      chats.add(Chat.fromMap(await _decodeSnapshot(doc)));
     }
-    chats.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    chats.sort((Chat a, Chat b) => b.updatedAt.compareTo(a.updatedAt));
     return chats;
   }
 
   Future<void> upsertChat(String familyId, Chat chat) async {
-    await _enc.setEncrypted(
+    await _encryption.setEncrypted(
       ref: _collection(familyId, 'chats').doc(chat.id),
       data: chat.toMap(),
     );
   }
 
   Future<void> deleteChat(String familyId, String chatId) async {
+    await _deleteSubcollection(
+      _collection(familyId, 'chats').doc(chatId).collection('messages'),
+    );
     await _collection(familyId, 'chats').doc(chatId).delete();
   }
 
@@ -252,78 +233,96 @@ class FirestoreService {
     String familyId,
     String chatId,
   ) async {
-
-    final Box<Object?> box = await _openBox(boxName);
-    final List<Object?>? raw = box.get('data') as List<Object?>?;
-    if (raw == null) {
-      return <T>[];
+    final QuerySnapshot<Map<String, dynamic>> snapshot = await _collection(familyId, 'chats')
+        .doc(chatId)
+        .collection('messages')
+        .get();
+    final List<ChatMessage> messages = <ChatMessage>[];
+    for (final QueryDocumentSnapshot<Map<String, dynamic>> doc in snapshot.docs) {
+      final Map<String, dynamic> data =
+          await _decodeSnapshot(doc, extras: <String, dynamic>{'chatId': chatId});
+      messages.add(ChatMessage.fromMap(data));
     }
-    return raw
-        .whereType<Map<Object?, Object?>>()
-        .map((Map<Object?, Object?> entry) =>
-            builder(Map<String, dynamic>.from(entry)))
-        .toList();
+    messages.sort((ChatMessage a, ChatMessage b) =>
+        a.createdAt.compareTo(b.createdAt));
+    return messages;
   }
 
-  Future<void> _cacheList(String boxName, List<Map<String, dynamic>> data) async {
-    final Box<Object?> box = await _openBox(boxName);
-    await box.put('data', data);
+  Future<void> upsertChatMessage(
+    String familyId,
+    String chatId,
+    ChatMessage message,
+  ) async {
+    await _encryption.setEncrypted(
+      ref: _collection(familyId, 'chats')
+          .doc(chatId)
+          .collection('messages')
+          .doc(message.id),
+      data: message.toMap(),
+    );
   }
 
-  Future<Box<Object?>> _openBox(String name) async {
-    if (Hive.isBoxOpen(name)) {
-      return Hive.box<Object?>(name);
-    }
-    return Hive.openBox<Object?>(name);
-  }
-
-  Future<List<T>> _decryptDocuments<T>({
-    required Iterable<QueryDocumentSnapshot<_EncryptedDoc>> docs,
-    required T Function(
-            _EncryptedDoc doc, Map<String, dynamic> open, Map<String, dynamic> metadata)
-        builder,
-  }) async {
-    final List<T> result = <T>[];
-    for (final QueryDocumentSnapshot<_EncryptedDoc> entry in docs) {
-      final _EncryptedDoc doc = entry.data();
-      final Map<String, dynamic> metadata = _metadata(doc);
-      final EncryptedBlob? blob = EncryptedBlob.fromFirestore(doc.raw);
-      Map<String, dynamic> open = <String, dynamic>{};
-      if (blob != null) {
-        open = await _encryption.decrypt(blob);
-      }
-      result.add(builder(doc, open, metadata));
-    }
-    return result;
+  Future<void> deleteChatMessages(String familyId, String chatId) async {
+    await _deleteSubcollection(
+      _collection(familyId, 'chats').doc(chatId).collection('messages'),
+    );
   }
 
   // ---------------------------- CALL CONVERSATIONS -------------------------
   Future<List<Conversation>> fetchConversations(String familyId) async {
-    final snapshot = await _collection(familyId, 'conversations').get();
-    return [
-      for (final doc in snapshot.docs)
-        Conversation.fromMap(await _decodedMap(doc)),
-    ];
+    final QuerySnapshot<Map<String, dynamic>> snapshot =
+        await _collection(familyId, 'conversations').get();
+    final List<Conversation> conversations = <Conversation>[];
+    for (final QueryDocumentSnapshot<Map<String, dynamic>> doc in snapshot.docs) {
+      conversations.add(Conversation.fromMap(await _decodeSnapshot(doc)));
+    }
+    conversations.sort((Conversation a, Conversation b) =>
+        b.createdAt.compareTo(a.createdAt));
+    return conversations;
   }
 
   Future<void> upsertConversation(
     String familyId,
     Conversation conversation,
   ) async {
-    await _enc.setEncrypted(
+    await _encryption.setEncrypted(
       ref: _collection(familyId, 'conversations').doc(conversation.id),
       data: conversation.toMap(),
     );
   }
 
-  Future<void> _savePending(PendingOp op) async {
-    final Box<Object?> box = await _openBox(_pendingBoxName);
-    await box.put(op.id, op.toMap());
+  Future<void> deleteConversation(
+    String familyId,
+    String conversationId,
+  ) async {
+    await _deleteSubcollection(
+      _collection(familyId, 'conversations')
+          .doc(conversationId)
+          .collection('messages'),
+    );
+    await _collection(familyId, 'conversations').doc(conversationId).delete();
   }
 
-  Future<void> _removePending(String id) async {
-    final Box<Object?> box = await _openBox(_pendingBoxName);
-    await box.delete(id);
+  Future<List<Message>> fetchCallMessages(
+    String familyId,
+    String conversationId,
+  ) async {
+    final QuerySnapshot<Map<String, dynamic>> snapshot = await _collection(familyId, 'conversations')
+        .doc(conversationId)
+        .collection('messages')
+        .get();
+    final List<Message> messages = <Message>[];
+    for (final QueryDocumentSnapshot<Map<String, dynamic>> doc in snapshot.docs) {
+      final Map<String, dynamic> data = await _decodeSnapshot(
+        doc,
+        extras: <String, dynamic>{
+          'conversationId': conversationId,
+        },
+      );
+      messages.add(Message.fromMap(data));
+    }
+    messages.sort((Message a, Message b) => a.createdAt.compareTo(b.createdAt));
+    return messages;
   }
 
   Future<void> upsertCallMessage(
@@ -331,7 +330,7 @@ class FirestoreService {
     String conversationId,
     Message message,
   ) async {
-    await _enc.setEncrypted(
+    await _encryption.setEncrypted(
       ref: _collection(familyId, 'conversations')
           .doc(conversationId)
           .collection('messages')
@@ -340,27 +339,23 @@ class FirestoreService {
     );
   }
 
-  DateTime? _toDateTime(dynamic value) {
-    if (value is Timestamp) {
-      return value.toDate();
-    }
-    if (value is DateTime) {
-      return value;
-    }
-    if (value is String && value.isNotEmpty) {
-      return DateTime.tryParse(value);
-    }
-    return null;
+  Future<void> deleteCallMessages(
+    String familyId,
+    String conversationId,
+  ) async {
+    await _deleteSubcollection(
+      _collection(familyId, 'conversations')
+          .doc(conversationId)
+          .collection('messages'),
+    );
   }
 
-  String _previewForType(MessageType type) {
-    switch (type) {
-      case MessageType.image:
-        return '📷 Image';
-      case MessageType.file:
-        return '📎 Attachment';
-      case MessageType.text:
-        return 'Message';
+  Future<void> _deleteSubcollection(
+    CollectionReference<Map<String, dynamic>> reference,
+  ) async {
+    final QuerySnapshot<Map<String, dynamic>> snapshot = await reference.get();
+    for (final QueryDocumentSnapshot<Map<String, dynamic>> doc in snapshot.docs) {
+      await doc.reference.delete();
     }
   }
 }
