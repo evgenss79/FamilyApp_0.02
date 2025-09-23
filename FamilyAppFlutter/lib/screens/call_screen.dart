@@ -20,14 +20,14 @@ class CallScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final familyData = Provider.of<FamilyData>(context, listen: false);
-    final List<FamilyMember> participants = conversation.participantIds
-        .map(
-          (String id) => familyData.memberById(id) ??
-              FamilyMember(
-                id: id,
+    final participants = conversation.memberIds
+        .map((id) => familyData.members.firstWhere(
+              (member) => member.id == id,
+              orElse: () => FamilyMember(
+                id: '',
                 name: context.tr('unknownMemberLabel'),
               ),
-        )
+            ))
         .toList();
 
     final typeLabel =
