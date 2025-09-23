@@ -8,7 +8,7 @@ part 'chat.g.dart';
 /// metadata such as the title and last message preview.
 @HiveType(typeId: 11)
 class Chat {
-  const Chat({
+  Chat({
     required this.id,
     required this.title,
     required List<String> memberIds,
