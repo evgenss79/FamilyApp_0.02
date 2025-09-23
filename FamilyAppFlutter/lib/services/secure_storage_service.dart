@@ -9,10 +9,8 @@ class SecureStorageService {
       : _storage = storage ??
             const FlutterSecureStorage(
               aOptions: AndroidOptions(encryptedSharedPreferences: true),
-              iOptions:
-                  IOSOptions(accessibility: KeychainAccessibility.first_unlock),
-              mOptions:
-                  MacOsOptions(accessibility: KeychainAccessibility.first_unlock),
+              iOptions: IOSOptions(accessibility: KeychainAccessibility.afterFirstUnlock),
+              mOptions: MacOsOptions(accessibility: KeychainAccessibility.afterFirstUnlock),
             );
 
   static const String _encKeyName = 'familyapp_e2ee_master_key_v1';

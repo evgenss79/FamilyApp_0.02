@@ -75,11 +75,11 @@ class FirestoreService {
   }
 
   Future<void> replayPendingOperations() async {
-    final Box<dynamic> box = await _openBox(_pendingBoxName);
+    final Box box = await _openBox(_pendingBoxName);
     final List<PendingOp> ops = box.values
-        .whereType<Map<dynamic, dynamic>>()
-        .map((Map<dynamic, dynamic> value) =>
-            PendingOp.fromMap(Map<String, dynamic>.from(value)))
+        .whereType<Map>()
+        .map((dynamic value) =>
+            PendingOp.fromMap(Map<String, dynamic>.from(value as Map)))
         .toList()
       ..sort((PendingOp a, PendingOp b) => a.createdAt.compareTo(b.createdAt));
 
@@ -605,28 +605,28 @@ class FirestoreService {
     String boxName,
     T Function(Map<String, dynamic>) builder,
   ) async {
-    final Box<dynamic> box = await _openBox(boxName);
+    final Box box = await _openBox(boxName);
     final List<dynamic>? raw = box.get('data') as List<dynamic>?;
     if (raw == null) {
       return <T>[];
     }
     return raw
-        .whereType<Map<dynamic, dynamic>>()
-        .map((Map<dynamic, dynamic> entry) =>
-            builder(Map<String, dynamic>.from(entry)))
+        .whereType<Map>()
+        .map((dynamic entry) =>
+            builder(Map<String, dynamic>.from(entry as Map)))
         .toList();
   }
 
   Future<void> _cacheList(String boxName, List<Map<String, dynamic>> data) async {
-    final Box<dynamic> box = await _openBox(boxName);
+    final Box box = await _openBox(boxName);
     await box.put('data', data);
   }
 
-  Future<Box<dynamic>> _openBox(String name) async {
+  Future<Box> _openBox(String name) async {
     if (Hive.isBoxOpen(name)) {
-      return Hive.box<dynamic>(name);
+      return Hive.box(name);
     }
-    return Hive.openBox<dynamic>(name);
+    return Hive.openBox(name);
   }
 
   Future<List<T>> _decryptDocuments<T>({
@@ -726,12 +726,12 @@ class FirestoreService {
   }
 
   Future<void> _savePending(PendingOp op) async {
-    final Box<dynamic> box = await _openBox(_pendingBoxName);
+    final Box box = await _openBox(_pendingBoxName);
     await box.put(op.id, op.toMap());
   }
 
   Future<void> _removePending(String id) async {
-    final Box<dynamic> box = await _openBox(_pendingBoxName);
+    final Box box = await _openBox(_pendingBoxName);
     await box.delete(id);
   }
 
@@ -761,6 +761,7 @@ class FirestoreService {
       case MessageType.file:
         return '📎 Attachment';
       case MessageType.text:
+      default:
         return 'Message';
     }
   }

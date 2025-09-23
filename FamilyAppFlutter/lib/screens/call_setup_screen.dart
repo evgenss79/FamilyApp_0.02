@@ -49,7 +49,7 @@ class _CallSetupScreenState extends State<CallSetupScreen> {
     final conversation = Conversation(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: title,
-      participantIds: selected,
+      memberIds: selected,
       createdAt: DateTime.now(),
     );
     Navigator.of(context).push(

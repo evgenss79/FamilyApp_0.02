@@ -147,66 +147,6 @@ class FamilyData extends ChangeNotifier {
     await _firestore.deleteEvent(familyId, id);
   }
 
-  FamilyMember? memberById(String id) {
-    if (id.isEmpty) {
-      return null;
-    }
-    try {
-      return members.firstWhere((FamilyMember member) => member.id == id);
-    } on StateError {
-      return null;
-    }
-  }
-
-  Future<void> updateMemberDocuments(
-    String memberId, {
-    String? summary,
-    List<Map<String, String>>? documentsList,
-  }) async {
-    final int index =
-        members.indexWhere((FamilyMember member) => member.id == memberId);
-    if (index == -1) {
-      return;
-    }
-    final FamilyMember updated = members[index].copyWith(
-      documents: summary,
-      documentsList: documentsList,
-      updatedAt: DateTime.now(),
-    );
-    members[index] = updated;
-    notifyListeners();
-    await _firestore.updateFamilyMember(familyId, updated);
-  }
-
-  Future<void> updateMemberHobbies(String memberId, String? hobbies) async {
-    final int index =
-        members.indexWhere((FamilyMember member) => member.id == memberId);
-    if (index == -1) {
-      return;
-    }
-    final FamilyMember updated = members[index].copyWith(
-      hobbies: hobbies,
-      updatedAt: DateTime.now(),
-    );
-    members[index] = updated;
-    notifyListeners();
-    await _firestore.updateFamilyMember(familyId, updated);
-  }
-
-  Future<void> updateTaskStatus(String taskId, TaskStatus status) async {
-    final int index = tasks.indexWhere((Task task) => task.id == taskId);
-    if (index == -1) {
-      return;
-    }
-    final Task updated = tasks[index].copyWith(
-      status: status,
-      updatedAt: DateTime.now(),
-    );
-    tasks[index] = updated;
-    notifyListeners();
-    await _firestore.updateTask(familyId, updated);
-  }
-
   @override
   void dispose() {
     _membersSub?.cancel();
