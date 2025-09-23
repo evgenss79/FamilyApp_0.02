@@ -61,7 +61,7 @@ class FamilyMember {
       };
 
   static FamilyMember fromDecodableMap(Map<String, dynamic> map) {
-    List<Map<String, String>>? _mapList(dynamic value) {
+    List<Map<String, String>>? mapList(dynamic value) {
       if (value is List) {
         return value
             .whereType<Map>()
@@ -76,7 +76,7 @@ class FamilyMember {
       return null;
     }
 
-    DateTime? _parseDate(dynamic value) {
+    DateTime? parseDate(dynamic value) {
       if (value is DateTime) {
         return value;
       }
@@ -90,7 +90,7 @@ class FamilyMember {
       id: (map['id'] ?? '').toString(),
       name: map['name'] as String?,
       relationship: map['relationship'] as String?,
-      birthday: _parseDate(map['birthday']),
+      birthday: parseDate(map['birthday']),
       phone: map['phone'] as String?,
       email: map['email'] as String?,
       avatarUrl: map['avatarUrl'] as String?,
@@ -98,11 +98,11 @@ class FamilyMember {
       socialMedia: map['socialMedia'] as String?,
       hobbies: map['hobbies'] as String?,
       documents: map['documents'] as String?,
-      documentsList: _mapList(map['documentsList']),
-      socialNetworks: _mapList(map['socialNetworks']),
-      messengers: _mapList(map['messengers']),
-      createdAt: _parseDate(map['createdAt']),
-      updatedAt: _parseDate(map['updatedAt']),
+      documentsList: mapList(map['documentsList']),
+      socialNetworks: mapList(map['socialNetworks']),
+      messengers: mapList(map['messengers']),
+      createdAt: parseDate(map['createdAt']),
+      updatedAt: parseDate(map['updatedAt']),
     );
   }
 
