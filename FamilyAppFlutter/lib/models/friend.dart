@@ -1,5 +1,3 @@
-import 'package:family_app_flutter/utils/parsing.dart';
-
 class Friend {
   const Friend({
     required this.id,
@@ -31,16 +29,21 @@ class Friend {
       };
 
   static Friend fromDecodableMap(Map<String, dynamic> map) {
+    DateTime? _parseDate(dynamic value) {
+      if (value is DateTime) return value;
+      if (value is String && value.isNotEmpty) {
+        return DateTime.tryParse(value);
+      }
+      return null;
+    }
 
     return Friend(
       id: (map['id'] ?? '').toString(),
       name: map['name'] as String?,
       phone: map['phone'] as String?,
       notes: map['notes'] as String?,
-
-      createdAt: parseNullableDateTime(map['createdAt']),
-      updatedAt: parseNullableDateTime(map['updatedAt']),
-
+      createdAt: _parseDate(map['createdAt']),
+      updatedAt: _parseDate(map['updatedAt']),
     );
   }
 }
