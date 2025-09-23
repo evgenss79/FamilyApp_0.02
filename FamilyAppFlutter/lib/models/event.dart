@@ -4,7 +4,7 @@ import '../utils/parsing.dart';
 class Event {
   static const Object _sentinel = Object();
 
-  Event({
+  const Event({
     required this.id,
     required this.title,
     required this.startDateTime,
