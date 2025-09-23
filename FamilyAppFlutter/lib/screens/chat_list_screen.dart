@@ -33,7 +33,8 @@ class ChatListScreen extends StatelessWidget {
               final String participantNames = conversation.participantIds
                   .map(
                     (String id) =>
-                        familyData.memberById(id)?.name ?? context.tr('unknownMemberLabel'),
+                        familyData.findMemberById(id)?.name ??
+                            context.tr('unknownMemberLabel'),
                   )
                   .join(', ');
               final String subtitle = conversation.lastMessagePreview?.isNotEmpty == true

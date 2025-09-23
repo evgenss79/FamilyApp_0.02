@@ -29,7 +29,7 @@ class GalleryItem {
       };
 
   static GalleryItem fromDecodableMap(Map<String, dynamic> map) {
-    DateTime? _parseDate(dynamic value) {
+    DateTime? parseDate(dynamic value) {
       if (value is DateTime) return value;
       if (value is String && value.isNotEmpty) {
         return DateTime.tryParse(value);
@@ -42,8 +42,8 @@ class GalleryItem {
       url: map['url'] as String?,
       storagePath: map['storagePath'] as String?,
       caption: map['caption'] as String?,
-      createdAt: _parseDate(map['createdAt']),
-      updatedAt: _parseDate(map['updatedAt']),
+      createdAt: parseDate(map['createdAt']),
+      updatedAt: parseDate(map['updatedAt']),
     );
   }
 }
