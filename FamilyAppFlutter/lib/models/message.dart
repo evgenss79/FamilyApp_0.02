@@ -68,6 +68,7 @@ class Message {
     required String iv,
     required int encVersion,
   }) {
+
     DateTime createdAt = parseDateTimeOrNow(metadata['createdAt']);
     final DateTime? legacyCreated =
         parseNullableDateTime(openData['createdAtLocal']);

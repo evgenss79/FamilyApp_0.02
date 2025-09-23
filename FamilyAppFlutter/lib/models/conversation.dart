@@ -40,6 +40,7 @@ class Conversation {
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
+
     return Conversation(
       id: id,
       participantIds: participantIds,
@@ -48,6 +49,7 @@ class Conversation {
       lastMessagePreview: openData['lastMessagePreview'] as String?,
       createdAt: createdAt ?? parseNullableDateTime(openData['createdAt']),
       updatedAt: updatedAt ?? parseNullableDateTime(openData['updatedAt']),
+
     );
   }
 

@@ -46,6 +46,7 @@ class Event {
       participantIds: parseStringList(map['participantIds']),
       createdAt: parseNullableDateTime(map['createdAt']),
       updatedAt: parseNullableDateTime(map['updatedAt']),
+
     );
   }
 }

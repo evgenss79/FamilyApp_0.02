@@ -63,6 +63,7 @@ class FamilyMember {
       };
 
   static FamilyMember fromDecodableMap(Map<String, dynamic> map) {
+
     return FamilyMember(
       id: (map['id'] ?? '').toString(),
       name: map['name'] as String?,
@@ -80,6 +81,7 @@ class FamilyMember {
       messengers: parseStringMapList(map['messengers']),
       createdAt: parseNullableDateTime(map['createdAt']),
       updatedAt: parseNullableDateTime(map['updatedAt']),
+
     );
   }
 
