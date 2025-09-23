@@ -41,7 +41,7 @@ class ScheduleItem {
       };
 
   static ScheduleItem fromDecodableMap(Map<String, dynamic> map) {
-    DateTime parseDate(dynamic value) {
+    DateTime _parseDate(dynamic value) {
       if (value is DateTime) return value;
       if (value is String && value.isNotEmpty) {
         return DateTime.tryParse(value) ?? DateTime.now();
@@ -49,7 +49,7 @@ class ScheduleItem {
       return DateTime.now();
     }
 
-    Duration? parseDuration(dynamic value) {
+    Duration? _parseDuration(dynamic value) {
       if (value is int) return Duration(minutes: value);
       if (value is String && value.isNotEmpty) {
         final int? minutes = int.tryParse(value);
@@ -58,7 +58,7 @@ class ScheduleItem {
       return null;
     }
 
-    DateTime? parseNullable(dynamic value) {
+    DateTime? _parseNullable(dynamic value) {
       if (value is DateTime) return value;
       if (value is String && value.isNotEmpty) {
         return DateTime.tryParse(value);
@@ -69,13 +69,13 @@ class ScheduleItem {
     return ScheduleItem(
       id: (map['id'] ?? '').toString(),
       title: (map['title'] ?? '').toString(),
-      dateTime: parseDate(map['dateTime']),
-      duration: parseDuration(map['duration']),
+      dateTime: _parseDate(map['dateTime']),
+      duration: _parseDuration(map['duration']),
       location: map['location'] as String?,
       notes: map['notes'] as String?,
       memberId: map['memberId'] as String?,
-      createdAt: parseNullable(map['createdAt']),
-      updatedAt: parseNullable(map['updatedAt']),
+      createdAt: _parseNullable(map['createdAt']),
+      updatedAt: _parseNullable(map['updatedAt']),
     );
   }
 }

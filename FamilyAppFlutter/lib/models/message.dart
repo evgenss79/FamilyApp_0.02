@@ -66,7 +66,7 @@ class Message {
     required String iv,
     required int encVersion,
   }) {
-    DateTime parseDate(dynamic value) {
+    DateTime _parseDate(dynamic value) {
       if (value is DateTime) return value;
       if (value is String && value.isNotEmpty) {
         return DateTime.tryParse(value) ?? DateTime.now();
@@ -74,7 +74,7 @@ class Message {
       return DateTime.now();
     }
 
-    DateTime? parseNullable(dynamic value) {
+    DateTime? _parseNullable(dynamic value) {
       if (value is DateTime) return value;
       if (value is String && value.isNotEmpty) {
         return DateTime.tryParse(value);
@@ -82,7 +82,7 @@ class Message {
       return null;
     }
 
-    MessageType parseType(dynamic value) {
+    MessageType _parseType(dynamic value) {
       final String name = value?.toString() ?? 'text';
       return MessageType.values.firstWhere(
         (MessageType type) => type.name == name,
@@ -90,7 +90,7 @@ class Message {
       );
     }
 
-    MessageStatus parseStatus(dynamic value) {
+    MessageStatus _parseStatus(dynamic value) {
       final String name = value?.toString() ?? 'sent';
       return MessageStatus.values.firstWhere(
         (MessageStatus status) => status.name == name,
@@ -98,8 +98,8 @@ class Message {
       );
     }
 
-    DateTime createdAt = parseDate(metadata['createdAt']);
-    final DateTime? legacyCreated = parseNullable(openData['createdAtLocal']);
+    DateTime createdAt = _parseDate(metadata['createdAt']);
+    final DateTime? legacyCreated = _parseNullable(openData['createdAtLocal']);
     if (legacyCreated != null) {
       createdAt = legacyCreated;
     }
@@ -107,13 +107,13 @@ class Message {
       id: id,
       conversationId: conversationId,
       senderId: metadata['senderId']?.toString() ?? '',
-      type: parseType(metadata['type']),
+      type: _parseType(metadata['type']),
       ciphertext: ciphertext,
       iv: iv,
       encVersion: encVersion,
       createdAt: createdAt,
-      editedAt: parseNullable(metadata['editedAt']),
-      status: parseStatus(metadata['status']),
+      editedAt: _parseNullable(metadata['editedAt']),
+      status: _parseStatus(metadata['status']),
       openData: openData,
     );
   }
