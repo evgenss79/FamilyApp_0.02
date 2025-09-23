@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 
 import '../firebase_options.dart';
 
@@ -30,18 +31,19 @@ class FirebaseService {
 
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-    final Settings currentSettings = firestore.settings;
-    final Settings updatedSettings = currentSettings.copyWith(
-      persistenceEnabled: true,
-      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-    );
-
-    try {
-      firestore.settings = updatedSettings;
-    } on FirebaseException {
-      // Some platforms (e.g. certain web browsers) may not support persistence
-      // or might already have it configured. Swallowing the exception keeps
-      // initialization resilient while still enabling persistence elsewhere.
+    if (kIsWeb) {
+      try {
+        await firestore.enablePersistence(
+          const PersistenceSettings(synchronizeTabs: true),
+        );
+      } on FirebaseException {
+        // On some browsers persistence may already be enabled or unsupported.
+      }
+    } else {
+      firestore.settings = const Settings(
+        persistenceEnabled: true,
+        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+      );
     }
 
     _initialized = true;

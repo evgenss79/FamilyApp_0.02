@@ -1,5 +1,3 @@
-import 'package:family_app_flutter/utils/parsing.dart';
-
 class Event {
   const Event({
     required this.id,
@@ -37,17 +35,38 @@ class Event {
       };
 
   static Event fromDecodableMap(Map<String, dynamic> map) {
+    DateTime _parseDate(dynamic value) {
+      if (value is DateTime) return value;
+      if (value is String && value.isNotEmpty) {
+        return DateTime.tryParse(value) ?? DateTime.now();
+      }
+      return DateTime.now();
+    }
+
+    List<String> _parseList(dynamic value) {
+      if (value is List) {
+        return value.map((dynamic e) => e.toString()).toList();
+      }
+      return const <String>[];
+    }
+
+    DateTime? _parseNullable(dynamic value) {
+      if (value is DateTime) return value;
+      if (value is String && value.isNotEmpty) {
+        return DateTime.tryParse(value);
+      }
+      return null;
+    }
 
     return Event(
       id: (map['id'] ?? '').toString(),
       title: (map['title'] ?? '').toString(),
-      startDateTime: parseDateTimeOrNow(map['startDateTime']),
-      endDateTime: parseDateTimeOrNow(map['endDateTime']),
+      startDateTime: _parseDate(map['startDateTime']),
+      endDateTime: _parseDate(map['endDateTime']),
       description: map['description'] as String?,
-      participantIds: parseStringList(map['participantIds']),
-      createdAt: parseNullableDateTime(map['createdAt']),
-      updatedAt: parseNullableDateTime(map['updatedAt']),
-
+      participantIds: _parseList(map['participantIds']),
+      createdAt: _parseNullable(map['createdAt']),
+      updatedAt: _parseNullable(map['updatedAt']),
     );
   }
 }
