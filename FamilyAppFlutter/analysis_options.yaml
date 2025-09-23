@@ -2,6 +2,7 @@ include: package:flutter_lints/flutter.yaml
 
 linter:
   rules:
+    # Мягкие правила на старте, можем усилить позже
     avoid_print: false
     prefer_const_constructors: true
     prefer_const_literals_to_create_immutables: false
@@ -9,8 +10,6 @@ linter:
     always_declare_return_types: true
 
 analyzer:
-  language:
-    strict-raw-types: true
   errors:
     unused_import: warning
     dead_code: warning

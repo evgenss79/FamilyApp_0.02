@@ -1,49 +1,22 @@
+/// Represents a person who is a friend of the user.  This model is
+/// intentionally simple and may be expanded as needed.  It is not
+/// persisted via Hive in this example.
 class Friend {
-  const Friend({
-    required this.id,
-    this.name,
-    this.phone,
-    this.notes,
-    this.createdAt,
-    this.updatedAt,
-  });
+  /// Unique identifier for the friend.
+  final String? id;
 
-  final String id;
+  /// Display name of the friend.
   final String? name;
-  final String? phone;
-  final String? notes;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
 
-  Map<String, dynamic> toEncodableMap() => <String, dynamic>{
-        'name': name,
-        'phone': phone,
-        'notes': notes,
-      };
+  Friend({this.id, this.name});
 
-  Map<String, dynamic> toLocalMap() => <String, dynamic>{
+  Map<String, dynamic> toMap() => {
         'id': id,
-        ...toEncodableMap(),
-        'createdAt': createdAt?.toIso8601String(),
-        'updatedAt': updatedAt?.toIso8601String(),
+        'name': name,
       };
 
-  static Friend fromDecodableMap(Map<String, dynamic> map) {
-    DateTime? _parseDate(dynamic value) {
-      if (value is DateTime) return value;
-      if (value is String && value.isNotEmpty) {
-        return DateTime.tryParse(value);
-      }
-      return null;
-    }
-
-    return Friend(
-      id: (map['id'] ?? '').toString(),
-      name: map['name'] as String?,
-      phone: map['phone'] as String?,
-      notes: map['notes'] as String?,
-      createdAt: _parseDate(map['createdAt']),
-      updatedAt: _parseDate(map['updatedAt']),
-    );
-  }
+  static Friend fromMap(Map<String, dynamic> map) => Friend(
+        id: (map['id'] ?? '').toString(),
+        name: map['name'] as String?,
+      );
 }
