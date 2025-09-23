@@ -1,10 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 
 import '../models/friend.dart';
 import '../services/firestore_service.dart';
 
+/// Provider for managing a list of friends stored remotely.
 class FriendsData extends ChangeNotifier {
   FriendsData({required FirestoreService firestore, required this.familyId})
       : _firestore = firestore;
@@ -12,53 +11,38 @@ class FriendsData extends ChangeNotifier {
   final FirestoreService _firestore;
   final String familyId;
 
-  final List<Friend> friends = <Friend>[];
+  final List<Friend> friends = [];
 
-  StreamSubscription<List<Friend>>? _subscription;
-  bool _initialized = false;
-  bool _loading = false;
+  bool _loaded = false;
+  bool _isLoading = false;
 
-  bool get isLoading => _loading;
+  bool get isLoading => _isLoading;
 
-  Future<void> init() async {
-    if (_initialized) {
-      return;
-    }
-    _loading = true;
+  Future<void> load() async {
+    if (_loaded || _isLoading) return;
+    _isLoading = true;
     notifyListeners();
-
-    final List<Friend> cached = await _firestore.loadCachedFriends(familyId);
-    friends
-      ..clear()
-      ..addAll(cached);
-
-    _subscription = _firestore.watchFriends(familyId).listen((List<Friend> data) {
+    try {
+      final fetched = await _firestore.fetchFriends(familyId);
       friends
         ..clear()
-        ..addAll(data);
+        ..addAll(fetched);
+      _loaded = true;
+    } finally {
+      _isLoading = false;
       notifyListeners();
-    });
-
-    _initialized = true;
-    _loading = false;
-    notifyListeners();
+    }
   }
 
   Future<void> addFriend(Friend friend) async {
+    await _firestore.upsertFriend(familyId, friend);
     friends.add(friend);
     notifyListeners();
-    await _firestore.upsertFriend(familyId, friend);
   }
 
   Future<void> removeFriend(String id) async {
-    friends.removeWhere((Friend friend) => friend.id == id);
-    notifyListeners();
     await _firestore.deleteFriend(familyId, id);
-  }
-
-  @override
-  void dispose() {
-    _subscription?.cancel();
-    super.dispose();
+    friends.removeWhere((friend) => friend.id == id);
+    notifyListeners();
   }
 }

@@ -1,10 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 
 import '../models/schedule_item.dart';
 import '../services/firestore_service.dart';
 
+/// Provider for managing schedule items backed by Firestore.
 class ScheduleData extends ChangeNotifier {
   ScheduleData({required FirestoreService firestore, required this.familyId})
       : _firestore = firestore;
@@ -12,55 +11,38 @@ class ScheduleData extends ChangeNotifier {
   final FirestoreService _firestore;
   final String familyId;
 
-  final List<ScheduleItem> items = <ScheduleItem>[];
+  final List<ScheduleItem> items = [];
 
-  StreamSubscription<List<ScheduleItem>>? _subscription;
-  bool _initialized = false;
-  bool _loading = false;
+  bool _loaded = false;
+  bool _isLoading = false;
 
-  bool get isLoading => _loading;
+  bool get isLoading => _isLoading;
 
-  Future<void> init() async {
-    if (_initialized) {
-      return;
-    }
-    _loading = true;
+  Future<void> load() async {
+    if (_loaded || _isLoading) return;
+    _isLoading = true;
     notifyListeners();
-
-    final List<ScheduleItem> cached =
-        await _firestore.loadCachedSchedule(familyId);
-    items
-      ..clear()
-      ..addAll(cached);
-
-    _subscription = _firestore.watchSchedule(familyId).listen((List<ScheduleItem> data) {
+    try {
+      final fetched = await _firestore.fetchScheduleItems(familyId);
       items
         ..clear()
-        ..addAll(data);
-      items.sort((ScheduleItem a, ScheduleItem b) => a.dateTime.compareTo(b.dateTime));
+        ..addAll(fetched);
+      _loaded = true;
+    } finally {
+      _isLoading = false;
       notifyListeners();
-    });
-
-    _initialized = true;
-    _loading = false;
-    notifyListeners();
+    }
   }
 
   Future<void> addItem(ScheduleItem item) async {
+    await _firestore.upsertScheduleItem(familyId, item);
     items.add(item);
     notifyListeners();
-    await _firestore.createScheduleItem(familyId, item);
   }
 
   Future<void> removeItem(String id) async {
-    items.removeWhere((ScheduleItem element) => element.id == id);
-    notifyListeners();
     await _firestore.deleteScheduleItem(familyId, id);
-  }
-
-  @override
-  void dispose() {
-    _subscription?.cancel();
-    super.dispose();
+    items.removeWhere((item) => item.id == id);
+    notifyListeners();
   }
 }

@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 
-import '../models/conversation.dart';
+import '../models/chat.dart';
 
+/// An alternative chat screen used for testing new layouts or features.
+/// This stub displays only the chat title and a placeholder message.
 class ChatScreenNew extends StatelessWidget {
-  const ChatScreenNew({super.key, required this.conversation});
+  final Chat chat;
 
-  final Conversation conversation;
+  const ChatScreenNew({super.key, required this.chat});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('${conversation.title ?? 'Chat'} (new)')),
+      appBar: AppBar(title: Text('${chat.title} (new)')),
       body: const Center(child: Text('Chat screen new has no content.')),
     );
   }
