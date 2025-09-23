@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
@@ -39,7 +40,7 @@ Future<void> main() async {
   await migrationService.migrateLegacyHiveData(AppConfig.familyId);
 
   final StorageService storageService = StorageService();
-  final Box<dynamic> settingsBox = await Hive.openBox<dynamic>('settings');
+  final Box settingsBox = await Hive.openBox('settings');
   final LanguageProvider languageProvider = LanguageProvider(box: settingsBox);
 
   runApp(
