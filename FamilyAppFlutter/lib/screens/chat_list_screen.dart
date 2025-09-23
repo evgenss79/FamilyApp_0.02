@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
-import '../models/chat.dart';
+import '../models/conversation.dart';
 import '../providers/chat_provider.dart';
 import '../providers/family_data.dart';
 import 'add_chat_screen.dart';
 import 'chat_screen.dart';
 
-/// Displays a list of chat conversations backed by [ChatProvider].
 class ChatListScreen extends StatelessWidget {
   const ChatListScreen({super.key});
 
@@ -17,46 +16,47 @@ class ChatListScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(context.tr('chats'))),
       body: Consumer2<ChatProvider, FamilyData>(
-        builder: (context, chatProvider, familyData, _) {
-          final List<Chat> chats = chatProvider.chats;
-          if (chatProvider.isLoading && chats.isEmpty) {
+        builder: (BuildContext context, ChatProvider chatProvider,
+            FamilyData familyData, _) {
+          final List<Conversation> conversations = chatProvider.conversations;
+          if (chatProvider.isLoading && conversations.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (chats.isEmpty) {
+          if (conversations.isEmpty) {
             return Center(child: Text(context.tr('noChatsLabel')));
           }
           return ListView.separated(
-            itemCount: chats.length,
+            itemCount: conversations.length,
             separatorBuilder: (_, __) => const Divider(height: 0),
-            itemBuilder: (context, index) {
-              final chat = chats[index];
-              final participantNames = chat.memberIds
+            itemBuilder: (BuildContext context, int index) {
+              final Conversation conversation = conversations[index];
+              final String participantNames = conversation.participantIds
                   .map(
-                    (id) => familyData.memberById(id)?.name ??
-                        context.tr('unknownMemberLabel'),
+                    (String id) =>
+                        familyData.memberById(id)?.name ?? context.tr('unknownMemberLabel'),
                   )
                   .join(', ');
-              final subtitle = chat.lastMessagePreview?.isNotEmpty == true
-                  ? chat.lastMessagePreview!
+              final String subtitle = conversation.lastMessagePreview?.isNotEmpty == true
+                  ? conversation.lastMessagePreview!
                   : context.loc.translateWithParams(
                       'participantsListLabel',
                       {'names': participantNames},
                     );
               return ListTile(
                 leading: const Icon(Icons.chat_bubble_outline),
-                title: Text(chat.title),
+                title: Text(conversation.title ?? context.tr('appTitle')),
                 subtitle: Text(subtitle),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline),
                   tooltip: context.tr('deleteChatAction'),
                   onPressed: () async {
-                    await chatProvider.deleteChat(chat.id);
+                    await chatProvider.deleteConversation(conversation.id);
                   },
                 ),
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => ChatScreen(chat: chat),
+                      builder: (_) => ChatScreen(conversation: conversation),
                     ),
                   );
                 },

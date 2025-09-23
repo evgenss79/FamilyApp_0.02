@@ -1,9 +1,9 @@
-import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+
 import 'config/app_config.dart';
-import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/chat_provider.dart';
 import 'providers/family_data.dart';
@@ -12,35 +12,41 @@ import 'providers/gallery_data.dart';
 import 'providers/language_provider.dart';
 import 'providers/schedule_data.dart';
 import 'screens/home_screen.dart';
+import 'services/encryption_service.dart';
+import 'services/firebase_service.dart';
 import 'services/firestore_service.dart';
+import 'services/migration_service.dart';
 import 'services/storage_service.dart';
-import 'storage/hive_secure.dart';
 
-
-/// Entry point for the Family App. Initializes Firebase, Hive and all
-/// services required by the application.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (Firebase.apps.isEmpty) {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  } else {
-    Firebase.app();
-  }
   await Hive.initFlutter();
-  await HiveSecure.ensureDek();
 
-  final settingsBox = await Hive.openBox('settings');
+  final FirebaseService firebaseService = FirebaseService();
+  await firebaseService.initialize();
 
-  final firestore = FirestoreService();
-  final storage = StorageService();
-  final languageProvider = LanguageProvider(box: settingsBox);
+  final EncryptionService encryptionService = EncryptionService();
+  await encryptionService.ensureKey();
+
+  final FirestoreService firestoreService = FirestoreService(
+    firestore: firebaseService.firestore,
+    encryptionService: encryptionService,
+  );
+  await firestoreService.replayPendingOperations();
+
+  final MigrationService migrationService = MigrationService(
+    firestore: firestoreService,
+  );
+  await migrationService.migrateLegacyHiveData(AppConfig.familyId);
+
+  final StorageService storageService = StorageService();
+  final Box settingsBox = await Hive.openBox('settings');
+  final LanguageProvider languageProvider = LanguageProvider(box: settingsBox);
 
   runApp(
     MyApp(
-      firestore: firestore,
-      storage: storage,
+      firestore: firestoreService,
+      storage: storageService,
       languageProvider: languageProvider,
     ),
   );
@@ -58,18 +64,15 @@ class MyApp extends StatelessWidget {
   final StorageService storage;
   final LanguageProvider languageProvider;
 
-
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         Provider<FirestoreService>.value(value: firestore),
         Provider<StorageService>.value(value: storage),
-
         ChangeNotifierProvider<LanguageProvider>.value(
           value: languageProvider,
         ),
-
         ChangeNotifierProvider<ChatProvider>(
           create: (_) => ChatProvider(
             firestore: firestore,
@@ -81,30 +84,30 @@ class MyApp extends StatelessWidget {
           create: (_) => FamilyData(
             firestore: firestore,
             familyId: AppConfig.familyId,
-          )..load(),
+          )..init(),
         ),
         ChangeNotifierProvider<FriendsData>(
           create: (_) => FriendsData(
             firestore: firestore,
             familyId: AppConfig.familyId,
-          )..load(),
+          )..init(),
         ),
         ChangeNotifierProvider<GalleryData>(
           create: (_) => GalleryData(
             firestore: firestore,
             storage: storage,
             familyId: AppConfig.familyId,
-          )..load(),
+          )..init(),
         ),
         ChangeNotifierProvider<ScheduleData>(
           create: (_) => ScheduleData(
             firestore: firestore,
             familyId: AppConfig.familyId,
-          )..load(),
+          )..init(),
         ),
       ],
       child: Consumer<LanguageProvider>(
-        builder: (context, language, _) {
+        builder: (BuildContext context, LanguageProvider language, _) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             theme: ThemeData(
@@ -114,11 +117,10 @@ class MyApp extends StatelessWidget {
             locale: language.locale,
             supportedLocales: AppLocalizations.supportedLocales,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
-            onGenerateTitle: (context) => context.tr('appTitle'),
+            onGenerateTitle: (BuildContext context) => context.tr('appTitle'),
             home: const HomeScreen(),
           );
         },
-
       ),
     );
   }
