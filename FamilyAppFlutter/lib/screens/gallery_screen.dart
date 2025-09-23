@@ -57,8 +57,9 @@ class GalleryScreen extends StatelessWidget {
 
                         child: IconButton(
                           onPressed: () async {
-                            final id = item.id ?? item.url ?? '';
-                            await context.read<GalleryData>().removeItem(id);
+                            await context
+                                .read<GalleryData>()
+                                .removeItem(item.id);
                           },
                           icon: const Icon(Icons.delete, size: 18),
                           tooltip: context.tr('deleteAction'),

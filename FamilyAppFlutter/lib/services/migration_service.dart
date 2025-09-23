@@ -113,7 +113,6 @@ class MigrationService {
       case legacy.MessageType.file:
         return MessageType.file;
       case legacy.MessageType.text:
-      default:
         return MessageType.text;
     }
   }
