@@ -1,3 +1,5 @@
+import 'package:family_app_flutter/utils/parsing.dart';
+
 class Conversation {
   const Conversation({
     required this.id,
@@ -36,22 +38,16 @@ class Conversation {
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
-    DateTime? _parseDate(dynamic value) {
-      if (value is DateTime) return value;
-      if (value is String && value.isNotEmpty) {
-        return DateTime.tryParse(value);
-      }
-      return null;
-    }
-
     return Conversation(
       id: id,
       participantIds: participantIds,
       title: openData['title'] as String?,
       avatarUrl: openData['avatarUrl'] as String?,
       lastMessagePreview: openData['lastMessagePreview'] as String?,
-      createdAt: createdAt ?? _parseDate(openData['createdAt']),
-      updatedAt: updatedAt ?? _parseDate(openData['updatedAt']),
+
+      createdAt: createdAt ?? parseNullableDateTime(openData['createdAt']),
+      updatedAt: updatedAt ?? parseNullableDateTime(openData['updatedAt']),
+
     );
   }
 

@@ -1,3 +1,5 @@
+import 'package:family_app_flutter/utils/parsing.dart';
+
 enum MessageType { text, image, file }
 
 enum MessageStatus { sending, sent, delivered, read }
@@ -66,23 +68,9 @@ class Message {
     required String iv,
     required int encVersion,
   }) {
-    DateTime _parseDate(dynamic value) {
-      if (value is DateTime) return value;
-      if (value is String && value.isNotEmpty) {
-        return DateTime.tryParse(value) ?? DateTime.now();
-      }
-      return DateTime.now();
-    }
 
-    DateTime? _parseNullable(dynamic value) {
-      if (value is DateTime) return value;
-      if (value is String && value.isNotEmpty) {
-        return DateTime.tryParse(value);
-      }
-      return null;
-    }
+    MessageType parseType(dynamic value) {
 
-    MessageType _parseType(dynamic value) {
       final String name = value?.toString() ?? 'text';
       return MessageType.values.firstWhere(
         (MessageType type) => type.name == name,
@@ -98,8 +86,11 @@ class Message {
       );
     }
 
-    DateTime createdAt = _parseDate(metadata['createdAt']);
-    final DateTime? legacyCreated = _parseNullable(openData['createdAtLocal']);
+
+    DateTime createdAt = parseDateTimeOrNow(metadata['createdAt']);
+    final DateTime? legacyCreated =
+        parseNullableDateTime(openData['createdAtLocal']);
+
     if (legacyCreated != null) {
       createdAt = legacyCreated;
     }
@@ -112,8 +103,10 @@ class Message {
       iv: iv,
       encVersion: encVersion,
       createdAt: createdAt,
-      editedAt: _parseNullable(metadata['editedAt']),
-      status: _parseStatus(metadata['status']),
+
+      editedAt: parseNullableDateTime(metadata['editedAt']),
+      status: parseStatus(metadata['status']),
+
       openData: openData,
     );
   }
