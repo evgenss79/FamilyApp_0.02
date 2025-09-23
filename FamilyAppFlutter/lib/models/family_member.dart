@@ -61,16 +61,20 @@ class FamilyMember {
       };
 
   static FamilyMember fromDecodableMap(Map<String, dynamic> map) {
-    List<Map<String, String>>? _mapList(dynamic value) {
-      if (value is List) {
+
+    List<Map<String, String>>? mapList(dynamic value) {
+      if (value is List<dynamic>) {
+
         return value
-            .whereType<Map>()
-            .map((dynamic entry) => entry.map(
-                  (dynamic key, dynamic val) => MapEntry(
-                    key.toString(),
-                    val?.toString() ?? '',
-                  ),
-                ))
+            .whereType<Map<dynamic, dynamic>>()
+            .map(
+              (Map<dynamic, dynamic> entry) => entry.map<String, String>(
+                (dynamic key, dynamic val) => MapEntry<String, String>(
+                  key.toString(),
+                  val == null ? '' : val.toString(),
+                ),
+              ),
+            )
             .toList();
       }
       return null;
