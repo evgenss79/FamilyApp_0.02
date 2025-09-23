@@ -18,6 +18,18 @@ class FamilyData extends ChangeNotifier {
   final List<Task> tasks = <Task>[];
   final List<Event> events = <Event>[];
 
+  FamilyMember? memberById(String? memberId) {
+    if (memberId == null) {
+      return null;
+    }
+    for (final FamilyMember member in members) {
+      if (member.id == memberId) {
+        return member;
+      }
+    }
+    return null;
+  }
+
   StreamSubscription<List<FamilyMember>>? _membersSub;
   StreamSubscription<List<Task>>? _tasksSub;
   StreamSubscription<List<Event>>? _eventsSub;
