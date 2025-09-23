@@ -61,36 +61,11 @@ class FamilyMember {
       };
 
   static FamilyMember fromDecodableMap(Map<String, dynamic> map) {
-    List<Map<String, String>>? mapList(dynamic value) {
-      if (value is List) {
-        return value
-            .whereType<Map>()
-            .map((dynamic entry) => entry.map(
-                  (dynamic key, dynamic val) => MapEntry(
-                    key.toString(),
-                    val?.toString() ?? '',
-                  ),
-                ))
-            .toList();
-      }
-      return null;
-    }
-
-    DateTime? parseDate(dynamic value) {
-      if (value is DateTime) {
-        return value;
-      }
-      if (value is String && value.isNotEmpty) {
-        return DateTime.tryParse(value);
-      }
-      return null;
-    }
-
     return FamilyMember(
       id: (map['id'] ?? '').toString(),
       name: map['name'] as String?,
       relationship: map['relationship'] as String?,
-      birthday: parseDate(map['birthday']),
+      birthday: _parseDate(map['birthday']),
       phone: map['phone'] as String?,
       email: map['email'] as String?,
       avatarUrl: map['avatarUrl'] as String?,
@@ -98,12 +73,50 @@ class FamilyMember {
       socialMedia: map['socialMedia'] as String?,
       hobbies: map['hobbies'] as String?,
       documents: map['documents'] as String?,
-      documentsList: mapList(map['documentsList']),
-      socialNetworks: mapList(map['socialNetworks']),
-      messengers: mapList(map['messengers']),
-      createdAt: parseDate(map['createdAt']),
-      updatedAt: parseDate(map['updatedAt']),
+      documentsList: _mapList(map['documentsList']),
+      socialNetworks: _mapList(map['socialNetworks']),
+      messengers: _mapList(map['messengers']),
+      createdAt: _parseDate(map['createdAt']),
+      updatedAt: _parseDate(map['updatedAt']),
     );
+  }
+
+  static List<Map<String, String>>? _mapList(dynamic value) {
+    if (value is! List) {
+      return null;
+    }
+
+    final List<Map<String, String>> result = <Map<String, String>>[];
+    for (final Object? entry in value) {
+      if (entry is! Map<Object?, Object?>) {
+        continue;
+      }
+      final Map<String, String> converted = <String, String>{};
+      entry.forEach((Object? key, Object? val) {
+        if (key == null) {
+          return;
+        }
+        converted[key.toString()] = val == null ? '' : val.toString();
+      });
+      if (converted.isNotEmpty) {
+        result.add(converted);
+      }
+    }
+
+    if (result.isEmpty) {
+      return <Map<String, String>>[];
+    }
+    return result;
+  }
+
+  static DateTime? _parseDate(dynamic value) {
+    if (value is DateTime) {
+      return value;
+    }
+    if (value is String && value.isNotEmpty) {
+      return DateTime.tryParse(value);
+    }
+    return null;
   }
 
   FamilyMember copyWith({
