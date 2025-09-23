@@ -1,3 +1,5 @@
+import 'package:family_app_flutter/utils/parsing.dart';
+
 enum MessageType { text, image, file }
 
 enum MessageStatus { sending, sent, delivered, read }
@@ -66,22 +68,6 @@ class Message {
     required String iv,
     required int encVersion,
   }) {
-    DateTime parseDate(dynamic value) {
-      if (value is DateTime) return value;
-      if (value is String && value.isNotEmpty) {
-        return DateTime.tryParse(value) ?? DateTime.now();
-      }
-      return DateTime.now();
-    }
-
-    DateTime? parseNullable(dynamic value) {
-      if (value is DateTime) return value;
-      if (value is String && value.isNotEmpty) {
-        return DateTime.tryParse(value);
-      }
-      return null;
-    }
-
     MessageType parseType(dynamic value) {
       final String name = value?.toString() ?? 'text';
       return MessageType.values.firstWhere(
@@ -98,8 +84,9 @@ class Message {
       );
     }
 
-    DateTime createdAt = parseDate(metadata['createdAt']);
-    final DateTime? legacyCreated = parseNullable(openData['createdAtLocal']);
+    DateTime createdAt = parseDateTimeOrNow(metadata['createdAt']);
+    final DateTime? legacyCreated =
+        parseNullableDateTime(openData['createdAtLocal']);
     if (legacyCreated != null) {
       createdAt = legacyCreated;
     }
@@ -112,7 +99,7 @@ class Message {
       iv: iv,
       encVersion: encVersion,
       createdAt: createdAt,
-      editedAt: parseNullable(metadata['editedAt']),
+      editedAt: parseNullableDateTime(metadata['editedAt']),
       status: parseStatus(metadata['status']),
       openData: openData,
     );
