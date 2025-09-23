@@ -1,3 +1,5 @@
+import 'package:family_app_flutter/utils/parsing.dart';
+
 class ScheduleItem {
   const ScheduleItem({
     required this.id,
@@ -41,41 +43,16 @@ class ScheduleItem {
       };
 
   static ScheduleItem fromDecodableMap(Map<String, dynamic> map) {
-    DateTime _parseDate(dynamic value) {
-      if (value is DateTime) return value;
-      if (value is String && value.isNotEmpty) {
-        return DateTime.tryParse(value) ?? DateTime.now();
-      }
-      return DateTime.now();
-    }
-
-    Duration? _parseDuration(dynamic value) {
-      if (value is int) return Duration(minutes: value);
-      if (value is String && value.isNotEmpty) {
-        final int? minutes = int.tryParse(value);
-        return minutes != null ? Duration(minutes: minutes) : null;
-      }
-      return null;
-    }
-
-    DateTime? _parseNullable(dynamic value) {
-      if (value is DateTime) return value;
-      if (value is String && value.isNotEmpty) {
-        return DateTime.tryParse(value);
-      }
-      return null;
-    }
-
     return ScheduleItem(
       id: (map['id'] ?? '').toString(),
       title: (map['title'] ?? '').toString(),
-      dateTime: _parseDate(map['dateTime']),
-      duration: _parseDuration(map['duration']),
+      dateTime: parseDateTimeOrNow(map['dateTime']),
+      duration: parseDurationFromMinutes(map['duration']),
       location: map['location'] as String?,
       notes: map['notes'] as String?,
       memberId: map['memberId'] as String?,
-      createdAt: _parseNullable(map['createdAt']),
-      updatedAt: _parseNullable(map['updatedAt']),
+      createdAt: parseNullableDateTime(map['createdAt']),
+      updatedAt: parseNullableDateTime(map['updatedAt']),
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'package:family_app_flutter/utils/parsing.dart';
+
 class GalleryItem {
   const GalleryItem({
     required this.id,
@@ -29,21 +31,13 @@ class GalleryItem {
       };
 
   static GalleryItem fromDecodableMap(Map<String, dynamic> map) {
-    DateTime? _parseDate(dynamic value) {
-      if (value is DateTime) return value;
-      if (value is String && value.isNotEmpty) {
-        return DateTime.tryParse(value);
-      }
-      return null;
-    }
-
     return GalleryItem(
       id: (map['id'] ?? '').toString(),
       url: map['url'] as String?,
       storagePath: map['storagePath'] as String?,
       caption: map['caption'] as String?,
-      createdAt: _parseDate(map['createdAt']),
-      updatedAt: _parseDate(map['updatedAt']),
+      createdAt: parseNullableDateTime(map['createdAt']),
+      updatedAt: parseNullableDateTime(map['updatedAt']),
     );
   }
 }

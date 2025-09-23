@@ -1,3 +1,5 @@
+import 'package:family_app_flutter/utils/parsing.dart';
+
 enum TaskStatus { todo, inProgress, done }
 
 class Task {
@@ -40,19 +42,11 @@ class Task {
       };
 
   static Task fromDecodableMap(Map<String, dynamic> map) {
-    DateTime? _parseDate(dynamic value) {
-      if (value is DateTime) return value;
-      if (value is String && value.isNotEmpty) {
-        return DateTime.tryParse(value);
-      }
-      return null;
-    }
-
     return Task(
       id: (map['id'] ?? '').toString(),
       title: (map['title'] ?? '').toString(),
       description: map['description'] as String?,
-      dueDate: _parseDate(map['dueDate']),
+      dueDate: parseNullableDateTime(map['dueDate']),
       status: TaskStatus.values.firstWhere(
         (TaskStatus status) => status.name == map['status'],
         orElse: () => TaskStatus.todo,
@@ -61,8 +55,8 @@ class Task {
       points: map['points'] is int
           ? map['points'] as int
           : int.tryParse('${map['points']}'),
-      createdAt: _parseDate(map['createdAt']),
-      updatedAt: _parseDate(map['updatedAt']),
+      createdAt: parseNullableDateTime(map['createdAt']),
+      updatedAt: parseNullableDateTime(map['updatedAt']),
     );
   }
 

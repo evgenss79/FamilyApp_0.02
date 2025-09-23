@@ -4,7 +4,7 @@ import 'package:hive/hive.dart';
 import '../l10n/app_localizations.dart';
 
 class LanguageProvider extends ChangeNotifier {
-  LanguageProvider({Box<dynamic>? box}) : _box = box {
+  LanguageProvider({Box<Object?>? box}) : _box = box {
     final savedCode = _box?.get(_languageCode) as String?;
     if (savedCode != null && _isSupported(savedCode)) {
       _locale = Locale(savedCode);
@@ -12,7 +12,7 @@ class LanguageProvider extends ChangeNotifier {
   }
 
   static const _languageCode = 'language_code';
-  final Box<dynamic>? _box;
+  final Box<Object?>? _box;
   Locale _locale = const Locale('en');
 
   Locale get locale => _locale;

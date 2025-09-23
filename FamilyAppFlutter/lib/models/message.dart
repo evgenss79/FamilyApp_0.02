@@ -1,3 +1,5 @@
+import 'package:family_app_flutter/utils/parsing.dart';
+
 enum MessageType { text, image, file }
 
 enum MessageStatus { sending, sent, delivered, read }
@@ -66,40 +68,10 @@ class Message {
     required String iv,
     required int encVersion,
   }) {
-    DateTime _parseDate(dynamic value) {
-      if (value is DateTime) return value;
-      if (value is String && value.isNotEmpty) {
-        return DateTime.tryParse(value) ?? DateTime.now();
-      }
-      return DateTime.now();
-    }
 
-    DateTime? _parseNullable(dynamic value) {
-      if (value is DateTime) return value;
-      if (value is String && value.isNotEmpty) {
-        return DateTime.tryParse(value);
-      }
-      return null;
-    }
-
-    MessageType _parseType(dynamic value) {
-      final String name = value?.toString() ?? 'text';
-      return MessageType.values.firstWhere(
-        (MessageType type) => type.name == name,
-        orElse: () => MessageType.text,
-      );
-    }
-
-    MessageStatus _parseStatus(dynamic value) {
-      final String name = value?.toString() ?? 'sent';
-      return MessageStatus.values.firstWhere(
-        (MessageStatus status) => status.name == name,
-        orElse: () => MessageStatus.sent,
-      );
-    }
-
-    DateTime createdAt = _parseDate(metadata['createdAt']);
-    final DateTime? legacyCreated = _parseNullable(openData['createdAtLocal']);
+    DateTime createdAt = parseDateTimeOrNow(metadata['createdAt']);
+    final DateTime? legacyCreated =
+        parseNullableDateTime(openData['createdAtLocal']);
     if (legacyCreated != null) {
       createdAt = legacyCreated;
     }
@@ -112,7 +84,7 @@ class Message {
       iv: iv,
       encVersion: encVersion,
       createdAt: createdAt,
-      editedAt: _parseNullable(metadata['editedAt']),
+      editedAt: parseNullableDateTime(metadata['editedAt']),
       status: _parseStatus(metadata['status']),
       openData: openData,
     );
@@ -136,6 +108,44 @@ class Message {
           ? map['encVersion'] as int
           : int.tryParse('${map['encVersion']}') ?? 0,
     );
+  }
+
+  static MessageType _parseType(dynamic value) {
+    if (value is MessageType) {
+      return value;
+    }
+    final String? rawName = value?.toString();
+    if (rawName != null && rawName.isNotEmpty) {
+      final String normalized = rawName.contains('.')
+          ? rawName.substring(rawName.lastIndexOf('.') + 1)
+          : rawName;
+      final String lowerNormalized = normalized.toLowerCase();
+      for (final MessageType type in MessageType.values) {
+        if (type.name.toLowerCase() == lowerNormalized) {
+          return type;
+        }
+      }
+    }
+    return MessageType.text;
+  }
+
+  static MessageStatus _parseStatus(dynamic value) {
+    if (value is MessageStatus) {
+      return value;
+    }
+    final String? rawName = value?.toString();
+    if (rawName != null && rawName.isNotEmpty) {
+      final String normalized = rawName.contains('.')
+          ? rawName.substring(rawName.lastIndexOf('.') + 1)
+          : rawName;
+      final String lowerNormalized = normalized.toLowerCase();
+      for (final MessageStatus status in MessageStatus.values) {
+        if (status.name.toLowerCase() == lowerNormalized) {
+          return status;
+        }
+      }
+    }
+    return MessageStatus.sent;
   }
 
   Message copyWith({

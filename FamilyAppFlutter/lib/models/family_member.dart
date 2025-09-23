@@ -1,3 +1,5 @@
+import 'package:family_app_flutter/utils/parsing.dart';
+
 class FamilyMember {
   static const Object _sentinel = Object();
 
@@ -61,36 +63,12 @@ class FamilyMember {
       };
 
   static FamilyMember fromDecodableMap(Map<String, dynamic> map) {
-    List<Map<String, String>>? _mapList(dynamic value) {
-      if (value is List) {
-        return value
-            .whereType<Map>()
-            .map((dynamic entry) => entry.map(
-                  (dynamic key, dynamic val) => MapEntry(
-                    key.toString(),
-                    val?.toString() ?? '',
-                  ),
-                ))
-            .toList();
-      }
-      return null;
-    }
-
-    DateTime? _parseDate(dynamic value) {
-      if (value is DateTime) {
-        return value;
-      }
-      if (value is String && value.isNotEmpty) {
-        return DateTime.tryParse(value);
-      }
-      return null;
-    }
 
     return FamilyMember(
       id: (map['id'] ?? '').toString(),
       name: map['name'] as String?,
       relationship: map['relationship'] as String?,
-      birthday: _parseDate(map['birthday']),
+      birthday: parseNullableDateTime(map['birthday']),
       phone: map['phone'] as String?,
       email: map['email'] as String?,
       avatarUrl: map['avatarUrl'] as String?,
@@ -98,11 +76,12 @@ class FamilyMember {
       socialMedia: map['socialMedia'] as String?,
       hobbies: map['hobbies'] as String?,
       documents: map['documents'] as String?,
-      documentsList: _mapList(map['documentsList']),
-      socialNetworks: _mapList(map['socialNetworks']),
-      messengers: _mapList(map['messengers']),
-      createdAt: _parseDate(map['createdAt']),
-      updatedAt: _parseDate(map['updatedAt']),
+      documentsList: parseStringMapList(map['documentsList']),
+      socialNetworks: parseStringMapList(map['socialNetworks']),
+      messengers: parseStringMapList(map['messengers']),
+      createdAt: parseNullableDateTime(map['createdAt']),
+      updatedAt: parseNullableDateTime(map['updatedAt']),
+
     );
   }
 
