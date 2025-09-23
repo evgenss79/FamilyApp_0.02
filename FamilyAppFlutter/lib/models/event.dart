@@ -35,7 +35,7 @@ class Event {
       };
 
   static Event fromDecodableMap(Map<String, dynamic> map) {
-    DateTime parseDate(dynamic value) {
+    DateTime _parseDate(dynamic value) {
       if (value is DateTime) return value;
       if (value is String && value.isNotEmpty) {
         return DateTime.tryParse(value) ?? DateTime.now();
@@ -43,14 +43,14 @@ class Event {
       return DateTime.now();
     }
 
-    List<String> parseList(dynamic value) {
+    List<String> _parseList(dynamic value) {
       if (value is List) {
         return value.map((dynamic e) => e.toString()).toList();
       }
       return const <String>[];
     }
 
-    DateTime? parseNullable(dynamic value) {
+    DateTime? _parseNullable(dynamic value) {
       if (value is DateTime) return value;
       if (value is String && value.isNotEmpty) {
         return DateTime.tryParse(value);
@@ -61,12 +61,12 @@ class Event {
     return Event(
       id: (map['id'] ?? '').toString(),
       title: (map['title'] ?? '').toString(),
-      startDateTime: parseDate(map['startDateTime']),
-      endDateTime: parseDate(map['endDateTime']),
+      startDateTime: _parseDate(map['startDateTime']),
+      endDateTime: _parseDate(map['endDateTime']),
       description: map['description'] as String?,
-      participantIds: parseList(map['participantIds']),
-      createdAt: parseNullable(map['createdAt']),
-      updatedAt: parseNullable(map['updatedAt']),
+      participantIds: _parseList(map['participantIds']),
+      createdAt: _parseNullable(map['createdAt']),
+      updatedAt: _parseNullable(map['updatedAt']),
     );
   }
 }
