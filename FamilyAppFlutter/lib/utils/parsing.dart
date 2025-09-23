@@ -33,3 +33,30 @@ Duration? parseDurationFromMinutes(dynamic value) {
   }
   return null;
 }
+
+List<Map<String, String>>? parseStringMapList(dynamic value) {
+  if (value is! List) {
+    return null;
+  }
+
+  final List<Map<String, String>> result = <Map<String, String>>[];
+  for (final Object? entry in value) {
+    if (entry is! Map<Object?, Object?>) {
+      continue;
+    }
+
+    final Map<String, String> converted = <String, String>{};
+    entry.forEach((Object? key, Object? val) {
+      if (key == null) {
+        return;
+      }
+      converted[key.toString()] = val?.toString() ?? '';
+    });
+
+    if (converted.isNotEmpty) {
+      result.add(converted);
+    }
+  }
+
+  return result;
+}
