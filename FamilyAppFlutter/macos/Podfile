@@ -3,6 +3,33 @@ platform :osx, '10.15'
 # Disable CocoaPods analytics
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
+require 'rubygems/version'
+
+# Удаляем устаревший lock-файл, если в нём зафиксирована старая версия Firebase.
+def ensure_minimum_pod_version(lock_path, pod_name, min_version)
+  return unless File.exist?(lock_path)
+
+  contents = File.read(lock_path)
+  version_match = contents.match(/#{Regexp.escape(pod_name)}[^0-9]*([0-9]+\.[0-9]+\.[0-9]+)/)
+  return unless version_match
+
+  begin
+    current_version = Gem::Version.new(version_match[1])
+    required_version = Gem::Version.new(min_version)
+  rescue ArgumentError
+    return
+  end
+
+  return unless current_version < required_version
+
+  File.delete(lock_path)
+  puts "Removed #{lock_path} to upgrade #{pod_name} from #{current_version} to >= #{required_version}."
+end
+
+firebase_min_version = '12.2.0'
+ensure_minimum_pod_version(File.join(__dir__, 'Podfile.lock'), 'Firebase/Firestore', firebase_min_version)
+ensure_minimum_pod_version(File.join(__dir__, 'Pods', 'Manifest.lock'), 'Firebase/Firestore', firebase_min_version)
+
 project 'Runner', {
   'Debug'   => :debug,
   'Profile' => :release,
