@@ -44,8 +44,10 @@ class Conversation {
       title: openData['title'] as String?,
       avatarUrl: openData['avatarUrl'] as String?,
       lastMessagePreview: openData['lastMessagePreview'] as String?,
+
       createdAt: createdAt ?? parseNullableDateTime(openData['createdAt']),
       updatedAt: updatedAt ?? parseNullableDateTime(openData['updatedAt']),
+
     );
   }
 

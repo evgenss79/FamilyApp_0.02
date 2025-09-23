@@ -37,6 +37,7 @@ class Event {
       };
 
   static Event fromDecodableMap(Map<String, dynamic> map) {
+
     return Event(
       id: (map['id'] ?? '').toString(),
       title: (map['title'] ?? '').toString(),
@@ -46,6 +47,7 @@ class Event {
       participantIds: parseStringList(map['participantIds']),
       createdAt: parseNullableDateTime(map['createdAt']),
       updatedAt: parseNullableDateTime(map['updatedAt']),
+
     );
   }
 }

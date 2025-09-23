@@ -43,6 +43,7 @@ class ScheduleItem {
       };
 
   static ScheduleItem fromDecodableMap(Map<String, dynamic> map) {
+
     return ScheduleItem(
       id: (map['id'] ?? '').toString(),
       title: (map['title'] ?? '').toString(),
@@ -53,6 +54,7 @@ class ScheduleItem {
       memberId: map['memberId'] as String?,
       createdAt: parseNullableDateTime(map['createdAt']),
       updatedAt: parseNullableDateTime(map['updatedAt']),
+
     );
   }
 }

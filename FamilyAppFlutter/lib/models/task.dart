@@ -42,11 +42,14 @@ class Task {
       };
 
   static Task fromDecodableMap(Map<String, dynamic> map) {
+
     return Task(
       id: (map['id'] ?? '').toString(),
       title: (map['title'] ?? '').toString(),
       description: map['description'] as String?,
+
       dueDate: parseNullableDateTime(map['dueDate']),
+
       status: TaskStatus.values.firstWhere(
         (TaskStatus status) => status.name == map['status'],
         orElse: () => TaskStatus.todo,
@@ -55,8 +58,10 @@ class Task {
       points: map['points'] is int
           ? map['points'] as int
           : int.tryParse('${map['points']}'),
+
       createdAt: parseNullableDateTime(map['createdAt']),
       updatedAt: parseNullableDateTime(map['updatedAt']),
+
     );
   }
 

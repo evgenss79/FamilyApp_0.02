@@ -31,13 +31,16 @@ class Friend {
       };
 
   static Friend fromDecodableMap(Map<String, dynamic> map) {
+
     return Friend(
       id: (map['id'] ?? '').toString(),
       name: map['name'] as String?,
       phone: map['phone'] as String?,
       notes: map['notes'] as String?,
+
       createdAt: parseNullableDateTime(map['createdAt']),
       updatedAt: parseNullableDateTime(map['updatedAt']),
+
     );
   }
 }

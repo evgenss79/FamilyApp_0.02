@@ -68,7 +68,9 @@ class Message {
     required String iv,
     required int encVersion,
   }) {
+
     MessageType parseType(dynamic value) {
+
       final String name = value?.toString() ?? 'text';
       return MessageType.values.firstWhere(
         (MessageType type) => type.name == name,
@@ -76,7 +78,7 @@ class Message {
       );
     }
 
-    MessageStatus parseStatus(dynamic value) {
+    MessageStatus _parseStatus(dynamic value) {
       final String name = value?.toString() ?? 'sent';
       return MessageStatus.values.firstWhere(
         (MessageStatus status) => status.name == name,
@@ -84,9 +86,11 @@ class Message {
       );
     }
 
+
     DateTime createdAt = parseDateTimeOrNow(metadata['createdAt']);
     final DateTime? legacyCreated =
         parseNullableDateTime(openData['createdAtLocal']);
+
     if (legacyCreated != null) {
       createdAt = legacyCreated;
     }
@@ -94,13 +98,15 @@ class Message {
       id: id,
       conversationId: conversationId,
       senderId: metadata['senderId']?.toString() ?? '',
-      type: parseType(metadata['type']),
+      type: _parseType(metadata['type']),
       ciphertext: ciphertext,
       iv: iv,
       encVersion: encVersion,
       createdAt: createdAt,
+
       editedAt: parseNullableDateTime(metadata['editedAt']),
       status: parseStatus(metadata['status']),
+
       openData: openData,
     );
   }

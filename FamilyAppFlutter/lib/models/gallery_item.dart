@@ -31,6 +31,7 @@ class GalleryItem {
       };
 
   static GalleryItem fromDecodableMap(Map<String, dynamic> map) {
+
     return GalleryItem(
       id: (map['id'] ?? '').toString(),
       url: map['url'] as String?,
@@ -38,6 +39,7 @@ class GalleryItem {
       caption: map['caption'] as String?,
       createdAt: parseNullableDateTime(map['createdAt']),
       updatedAt: parseNullableDateTime(map['updatedAt']),
+
     );
   }
 }
