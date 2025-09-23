@@ -18,7 +18,7 @@ class FamilyData extends ChangeNotifier {
   final List<Task> tasks = <Task>[];
   final List<Event> events = <Event>[];
 
-  FamilyMember? findMemberById(String? memberId) {
+  FamilyMember? memberById(String? memberId) {
     if (memberId == null) {
       return null;
     }
@@ -29,6 +29,8 @@ class FamilyData extends ChangeNotifier {
     }
     return null;
   }
+
+  FamilyMember? findMemberById(String? memberId) => memberById(memberId);
 
   StreamSubscription<List<FamilyMember>>? _membersSub;
   StreamSubscription<List<Task>>? _tasksSub;
@@ -111,6 +113,35 @@ class FamilyData extends ChangeNotifier {
     await _firestore.updateFamilyMember(familyId, member);
   }
 
+  Future<void> updateMemberDocuments(
+    String memberId, {
+    String? summary,
+    List<Map<String, String>>? documentsList,
+  }) async {
+    final int index = members.indexWhere((FamilyMember m) => m.id == memberId);
+    if (index == -1) {
+      return;
+    }
+    final FamilyMember updated = members[index].copyWith(
+      documents: summary,
+      documentsList: documentsList,
+    );
+    members[index] = updated;
+    notifyListeners();
+    await _firestore.updateFamilyMember(familyId, updated);
+  }
+
+  Future<void> updateMemberHobbies(String memberId, String? hobbies) async {
+    final int index = members.indexWhere((FamilyMember m) => m.id == memberId);
+    if (index == -1) {
+      return;
+    }
+    final FamilyMember updated = members[index].copyWith(hobbies: hobbies);
+    members[index] = updated;
+    notifyListeners();
+    await _firestore.updateFamilyMember(familyId, updated);
+  }
+
   Future<void> removeMember(FamilyMember member) async {
     members.removeWhere((FamilyMember m) => m.id == member.id);
     notifyListeners();
@@ -130,6 +161,20 @@ class FamilyData extends ChangeNotifier {
       notifyListeners();
     }
     await _firestore.updateTask(familyId, task);
+  }
+
+  Future<void> updateTaskStatus(String taskId, TaskStatus status) async {
+    final int index = tasks.indexWhere((Task task) => task.id == taskId);
+    if (index == -1) {
+      return;
+    }
+    final Task updated = tasks[index].copyWith(status: status);
+    tasks[index] = updated;
+    tasks.sort((Task a, Task b) =>
+        (a.dueDate ?? DateTime.fromMillisecondsSinceEpoch(0))
+            .compareTo(b.dueDate ?? DateTime.fromMillisecondsSinceEpoch(0)));
+    notifyListeners();
+    await _firestore.updateTask(familyId, updated);
   }
 
   Future<void> removeTask(String id) async {

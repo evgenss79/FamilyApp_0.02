@@ -20,7 +20,7 @@ class CallScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final familyData = Provider.of<FamilyData>(context, listen: false);
-    final participants = conversation.memberIds
+    final participants = conversation.participantIds
         .map((id) => familyData.members.firstWhere(
               (member) => member.id == id,
               orElse: () => FamilyMember(
