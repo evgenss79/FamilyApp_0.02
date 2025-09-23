@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 
 import '../models/chat.dart';
 import '../models/chat_message.dart';
+import '../models/message_type.dart';
 import '../services/firestore_service.dart';
 import '../services/storage_service.dart';
 
@@ -21,8 +22,8 @@ class ChatProvider extends ChangeNotifier {
   final StorageService _storage;
   final String familyId;
 
-  final List<Chat> _chats = [];
-  final Map<String, List<ChatMessage>> _messages = {};
+  final List<Chat> _chats = <Chat>[];
+  final Map<String, List<ChatMessage>> _messages = <String, List<ChatMessage>>{};
   final Set<String> _loadedChatMessages = <String>{};
   final Set<String> _loadingChatMessages = <String>{};
 
@@ -38,16 +39,18 @@ class ChatProvider extends ChangeNotifier {
   Future<void> init() async => load();
 
   Future<void> load() async {
-    if (_loaded || _isLoading) return;
+    if (_loaded || _isLoading) {
+      return;
+    }
     _isLoading = true;
     notifyListeners();
     try {
-      final fetchedChats = await _firestore.fetchChats(familyId);
+      final List<Chat> fetchedChats = await _firestore.fetchChats(familyId);
       _chats
         ..clear()
         ..addAll(fetchedChats);
       _messages.clear();
-      for (final chat in _chats) {
+      for (final Chat chat in _chats) {
         _messages[chat.id] = <ChatMessage>[];
       }
       _loaded = true;
@@ -62,8 +65,8 @@ class ChatProvider extends ChangeNotifier {
     if (!_loadedChatMessages.contains(chatId) &&
         !_loadingChatMessages.contains(chatId)) {
       _loadingChatMessages.add(chatId);
-      _firestore.fetchChatMessages(familyId, chatId).then((messages) {
-        _messages[chatId] = messages;
+      _firestore.fetchChatMessages(familyId, chatId).then((List<ChatMessage> messages) {
+        _messages[chatId] = List<ChatMessage>.from(messages);
         _loadedChatMessages.add(chatId);
         _loadingChatMessages.remove(chatId);
         notifyListeners();
@@ -71,18 +74,19 @@ class ChatProvider extends ChangeNotifier {
         _loadingChatMessages.remove(chatId);
       });
     }
-    return List.unmodifiable(_messages[chatId] ?? const []);
+    return List.unmodifiable(_messages[chatId] ?? const <ChatMessage>[]);
   }
 
   Future<Chat> createChat({
     required String title,
     required List<String> memberIds,
   }) async {
-    final chat = Chat(
+    final DateTime now = DateTime.now();
+    final Chat chat = Chat(
       id: _uuid.v4(),
       title: title,
       memberIds: memberIds,
-      updatedAt: DateTime.now(),
+      updatedAt: now,
       lastMessagePreview: null,
     );
     await _firestore.upsertChat(familyId, chat);
@@ -95,10 +99,10 @@ class ChatProvider extends ChangeNotifier {
   }
 
   Future<void> deleteChat(String chatId) async {
-    final messages = _loadedChatMessages.contains(chatId)
-        ? List<ChatMessage>.from(_messages[chatId] ?? const [])
+    final List<ChatMessage> messages = _loadedChatMessages.contains(chatId)
+        ? List<ChatMessage>.from(_messages[chatId] ?? const <ChatMessage>[])
         : await _firestore.fetchChatMessages(familyId, chatId);
-    for (final message in messages) {
+    for (final ChatMessage message in messages) {
       if (message.storagePath != null) {
         await _storage.deleteByPath(message.storagePath!);
       }
@@ -107,7 +111,7 @@ class ChatProvider extends ChangeNotifier {
     await _firestore.deleteChat(familyId, chatId);
     _messages.remove(chatId);
     _loadedChatMessages.remove(chatId);
-    _chats.removeWhere((chat) => chat.id == chatId);
+    _chats.removeWhere((Chat chat) => chat.id == chatId);
     notifyListeners();
   }
 
@@ -116,20 +120,18 @@ class ChatProvider extends ChangeNotifier {
     required String senderId,
     required String text,
   }) async {
-    final message = ChatMessage(
+    final DateTime now = DateTime.now();
+    final ChatMessage message = ChatMessage(
       id: _uuid.v4(),
       chatId: chatId,
       senderId: senderId,
       content: text,
-      createdAt: DateTime.now(),
+      createdAt: now,
       type: MessageType.text,
       isRead: false,
     );
     await _firestore.upsertChatMessage(familyId, chatId, message);
-    final chat = _chats.firstWhere((c) => c.id == chatId, orElse: () => throw ArgumentError('Chat not found'));
-    chat.updatedAt = DateTime.now();
-    chat.lastMessagePreview = text;
-    await _firestore.upsertChat(familyId, chat);
+    await _updateChatMetadata(chatId, updatedAt: now, preview: text);
     _messages.putIfAbsent(chatId, () => <ChatMessage>[]).add(message);
     _loadedChatMessages.add(chatId);
     _resortChats();
@@ -146,31 +148,29 @@ class ChatProvider extends ChangeNotifier {
     if (type == MessageType.text) {
       throw ArgumentError('Attachment must be image or file');
     }
-    final file = File(localPath);
+    final File file = File(localPath);
     if (!await file.exists()) {
       throw ArgumentError('File not found: $localPath');
     }
-    final upload = await _storage.uploadChatAttachment(
+    final StorageUploadResult upload = await _storage.uploadChatAttachment(
       familyId: familyId,
       chatId: chatId,
       file: file,
     );
-    final preview = type == MessageType.image ? '📷 Photo' : '📎 File';
-    final message = ChatMessage(
+    final DateTime now = DateTime.now();
+    final String preview = type == MessageType.image ? '📷 Photo' : '📎 File';
+    final ChatMessage message = ChatMessage(
       id: _uuid.v4(),
       chatId: chatId,
       senderId: senderId,
       content: upload.downloadUrl,
-      createdAt: DateTime.now(),
+      createdAt: now,
       type: type,
       isRead: false,
       storagePath: upload.storagePath,
     );
     await _firestore.upsertChatMessage(familyId, chatId, message);
-    final chat = _chats.firstWhere((c) => c.id == chatId, orElse: () => throw ArgumentError('Chat not found'));
-    chat.updatedAt = DateTime.now();
-    chat.lastMessagePreview = preview;
-    await _firestore.upsertChat(familyId, chat);
+    await _updateChatMetadata(chatId, updatedAt: now, preview: preview);
     _messages.putIfAbsent(chatId, () => <ChatMessage>[]).add(message);
     _loadedChatMessages.add(chatId);
     _resortChats();
@@ -179,23 +179,42 @@ class ChatProvider extends ChangeNotifier {
   }
 
   Future<void> markRead(String chatId) async {
-    final messages = await _firestore.fetchChatMessages(familyId, chatId);
+    final List<ChatMessage> messages =
+        await _firestore.fetchChatMessages(familyId, chatId);
     bool changed = false;
-    for (final message in messages) {
-      if (!message.isRead) {
-        message.isRead = true;
-        await _firestore.upsertChatMessage(familyId, chatId, message);
-        changed = true;
+    final List<ChatMessage> updatedMessages = <ChatMessage>[];
+    for (final ChatMessage message in messages) {
+      if (message.isRead) {
+        updatedMessages.add(message);
+        continue;
       }
+      final ChatMessage updated = message.copyWith(isRead: true);
+      await _firestore.upsertChatMessage(familyId, chatId, updated);
+      updatedMessages.add(updated);
+      changed = true;
     }
     if (changed) {
-      _messages[chatId] = messages;
+      _messages[chatId] = updatedMessages;
       _loadedChatMessages.add(chatId);
       notifyListeners();
     }
   }
 
+  Future<void> _updateChatMetadata(String chatId,
+      {required DateTime updatedAt, String? preview}) async {
+    final int index = _chats.indexWhere((Chat chat) => chat.id == chatId);
+    if (index == -1) {
+      return;
+    }
+    final Chat updated = _chats[index].copyWith(
+      updatedAt: updatedAt,
+      lastMessagePreview: preview,
+    );
+    _chats[index] = updated;
+    await _firestore.upsertChat(familyId, updated);
+  }
+
   void _resortChats() {
-    _chats.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    _chats.sort((Chat a, Chat b) => b.updatedAt.compareTo(a.updatedAt));
   }
 }
