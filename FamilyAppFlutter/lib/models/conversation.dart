@@ -36,7 +36,7 @@ class Conversation {
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
-    DateTime? parseDate(dynamic value) {
+    DateTime? _parseDate(dynamic value) {
       if (value is DateTime) return value;
       if (value is String && value.isNotEmpty) {
         return DateTime.tryParse(value);
@@ -50,8 +50,8 @@ class Conversation {
       title: openData['title'] as String?,
       avatarUrl: openData['avatarUrl'] as String?,
       lastMessagePreview: openData['lastMessagePreview'] as String?,
-      createdAt: createdAt ?? parseDate(openData['createdAt']),
-      updatedAt: updatedAt ?? parseDate(openData['updatedAt']),
+      createdAt: createdAt ?? _parseDate(openData['createdAt']),
+      updatedAt: updatedAt ?? _parseDate(openData['updatedAt']),
     );
   }
 

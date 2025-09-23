@@ -18,7 +18,7 @@ class MemberDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<FamilyData>(
       builder: (context, data, _) {
-        final member = data.findMemberById(memberId);
+        final member = data.memberById(memberId);
         if (member == null) {
           return Scaffold(
             appBar: AppBar(title: Text(context.tr('memberTitle'))),
