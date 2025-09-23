@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 
 import '../firebase_options.dart';
 
@@ -30,21 +29,10 @@ class FirebaseService {
     }
 
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
-
-    if (kIsWeb) {
-      try {
-        await firestore.enablePersistence(
-          const PersistenceSettings(synchronizeTabs: true),
-        );
-      } on FirebaseException {
-        // On some browsers persistence may already be enabled or unsupported.
-      }
-    } else {
-      firestore.settings = const Settings(
-        persistenceEnabled: true,
-        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-      );
-    }
+    firestore.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
 
     _initialized = true;
   }
