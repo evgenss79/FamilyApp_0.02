@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isFamilyMember(familyId) {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/families/$(familyId)/memberships/$(request.auth.uid));
+    }
+
+    match /families/{familyId} {
+      allow read, write: if isFamilyMember(familyId);
+
+      match /members/{memberId} {
+        allow read, write: if isFamilyMember(familyId);
+      }
+
+      match /tasks/{taskId} {
+        allow read, write: if isFamilyMember(familyId);
+      }
+
+      match /events/{eventId} {
+        allow read, write: if isFamilyMember(familyId);
+      }
+
+      match /scheduleItems/{itemId} {
+        allow read, write: if isFamilyMember(familyId);
+      }
+
+      match /friends/{friendId} {
+        allow read, write: if isFamilyMember(familyId);
+      }
+
+      match /gallery/{itemId} {
+        allow read, write: if isFamilyMember(familyId);
+      }
+
+      match /conversations/{conversationId} {
+        allow read, create: if isFamilyMember(familyId) &&
+          request.resource.data.keys().hasOnly(['ciphertext', 'iv', 'encVersion', 'participantIds', 'createdAt', 'updatedAt']);
+        allow update: if isFamilyMember(familyId) &&
+          request.resource.data.keys().hasOnly(['ciphertext', 'iv', 'encVersion', 'participantIds', 'createdAt', 'updatedAt']);
+        allow delete: if isFamilyMember(familyId);
+
+        match /messages/{messageId} {
+          allow read: if isFamilyMember(familyId);
+          allow create: if isFamilyMember(familyId) &&
+            request.resource.data.keys().hasOnly([
+              'ciphertext',
+              'iv',
+              'encVersion',
+              'senderId',
+              'type',
+              'status',
+              'createdAt',
+              'updatedAt',
+              'editedAt'
+            ]);
+          allow update: if isFamilyMember(familyId) &&
+            request.resource.data.keys().hasOnly([
+              'ciphertext',
+              'iv',
+              'encVersion',
+              'senderId',
+              'type',
+              'status',
+              'createdAt',
+              'updatedAt',
+              'editedAt'
+            ]);
+          allow delete: if isFamilyMember(familyId);
+        }
+      }
+    }
+  }
+}

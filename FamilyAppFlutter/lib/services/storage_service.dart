@@ -4,8 +4,6 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
 
-/// Result of an upload operation containing both the download URL and the
-/// storage path so files can be removed later.
 class StorageUploadResult {
   final String downloadUrl;
   final String storagePath;
@@ -16,13 +14,10 @@ class StorageUploadResult {
   });
 }
 
-/// Provides a thin wrapper around [FirebaseStorage] for uploading and
-/// deleting files.
 class StorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final Uuid _uuid = const Uuid();
 
-  /// Uploads a file containing a member avatar.
   Future<StorageUploadResult> uploadMemberAvatar({
     required String familyId,
     required File file,
@@ -33,7 +28,6 @@ class StorageService {
     );
   }
 
-  /// Uploads a gallery media file.
   Future<StorageUploadResult> uploadGalleryItem({
     required String familyId,
     required File file,
@@ -44,10 +38,9 @@ class StorageService {
     );
   }
 
-  /// Uploads an attachment that belongs to a chat conversation.
   Future<StorageUploadResult> uploadChatAttachment({
     required String familyId,
-    required String chatId,
+    required String conversationId,
     required File file,
   }) {
     return _uploadFile(
@@ -55,24 +48,22 @@ class StorageService {
       segments: [
         'families',
         familyId,
-        'chats',
-        chatId,
+        'conversations',
+        conversationId,
         _uniqueFileName(file.path),
       ],
     );
   }
 
-  /// Deletes a file by its storage path.
   Future<void> deleteByPath(String storagePath) async {
     if (storagePath.isEmpty) return;
     try {
       await _storage.ref(storagePath).delete();
     } catch (_) {
-      // Ignore errors if the file has already been removed or never existed.
+      // Ignore missing files.
     }
   }
 
-  /// Deletes a file using the download URL.
   Future<void> deleteByUrl(String url) async {
     if (url.isEmpty) return;
     try {

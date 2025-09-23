@@ -1,9 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../models/friend.dart';
 import '../services/firestore_service.dart';
 
-/// Provider for managing a list of friends stored remotely.
 class FriendsData extends ChangeNotifier {
   FriendsData({required FirestoreService firestore, required this.familyId})
       : _firestore = firestore;
@@ -11,38 +12,53 @@ class FriendsData extends ChangeNotifier {
   final FirestoreService _firestore;
   final String familyId;
 
-  final List<Friend> friends = [];
+  final List<Friend> friends = <Friend>[];
 
-  bool _loaded = false;
-  bool _isLoading = false;
+  StreamSubscription<List<Friend>>? _subscription;
+  bool _initialized = false;
+  bool _loading = false;
 
-  bool get isLoading => _isLoading;
+  bool get isLoading => _loading;
 
-  Future<void> load() async {
-    if (_loaded || _isLoading) return;
-    _isLoading = true;
+  Future<void> init() async {
+    if (_initialized) {
+      return;
+    }
+    _loading = true;
     notifyListeners();
-    try {
-      final fetched = await _firestore.fetchFriends(familyId);
+
+    final List<Friend> cached = await _firestore.loadCachedFriends(familyId);
+    friends
+      ..clear()
+      ..addAll(cached);
+
+    _subscription = _firestore.watchFriends(familyId).listen((List<Friend> data) {
       friends
         ..clear()
-        ..addAll(fetched);
-      _loaded = true;
-    } finally {
-      _isLoading = false;
+        ..addAll(data);
       notifyListeners();
-    }
+    });
+
+    _initialized = true;
+    _loading = false;
+    notifyListeners();
   }
 
   Future<void> addFriend(Friend friend) async {
-    await _firestore.upsertFriend(familyId, friend);
     friends.add(friend);
     notifyListeners();
+    await _firestore.upsertFriend(familyId, friend);
   }
 
   Future<void> removeFriend(String id) async {
-    await _firestore.deleteFriend(familyId, id);
-    friends.removeWhere((friend) => friend.id == id);
+    friends.removeWhere((Friend friend) => friend.id == id);
     notifyListeners();
+    await _firestore.deleteFriend(familyId, id);
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 }

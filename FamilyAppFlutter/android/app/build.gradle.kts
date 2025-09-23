@@ -1,47 +1,43 @@
 plugins {
-        id("com.android.application")
-        id("kotlin-android")
-        // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
-        id("dev.flutter.flutter-gradle-plugin")
-        // Apply Google services plugin for Firebase
-        id("com.google.gms.google-services")
+    id("com.android.application")
+    id("kotlin-android")
+    id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
 android {
-        // The application namespace and applicationId must match the package_name in google-services.json
-        namespace = "com.example.family_app"
-        compileSdk = flutter.compileSdkVersion
-        ndkVersion = flutter.ndkVersion
+    namespace = "com.example.family_app"
+    compileSdk = 34
+    ndkVersion = flutter.ndkVersion
 
-        compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_11
-            targetCompatibility = JavaVersion.VERSION_11
-        }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
 
-        kotlinOptions {
-            jvmTarget = JavaVersion.VERSION_11.toString()
-        }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 
-        defaultConfig {
-            // Application ID must match the package_name in google-services.json for Firebase
-            applicationId = "com.example.family_app"
-            // You can update the following values to match your application needs.
-            // For more information, see: https://flutter.dev/to/review-gradle-config.
-            minSdk = flutter.minSdkVersion
-            targetSdk = flutter.targetSdkVersion
-            versionCode = flutter.versionCode
-            versionName = flutter.versionName
-        }
+    defaultConfig {
+        applicationId = "com.example.family_app"
+        minSdk = flutter.minSdkVersion
+        targetSdk = 34
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
+    }
 
-        buildTypes {
-            release {
-                // TODO: Add your own signing config for the release build.
-                // Signing with the debug keys for now, so 'flutter run --release' works.
-                signingConfig = signingConfigs.getByName("debug")
-            }
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.getByName("debug")
         }
+    }
 
-        flutter {
-            source = "../.."
-        }
+    buildFeatures {
+        buildConfig = true
+    }
+
+    flutter {
+        source = "../.."
+    }
 }

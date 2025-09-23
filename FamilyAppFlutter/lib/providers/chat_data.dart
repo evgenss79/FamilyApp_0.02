@@ -1,15 +1,11 @@
 import 'package:flutter/foundation.dart';
 
-import '../models/chat.dart';
+import '../models/conversation.dart';
 
-/// Simple provider that holds a list of chats in memory.  For more
-/// advanced functionality such as persistence, use [ChatProvider]
-/// which interacts with Hive storage.  This class exists to satisfy
-/// dependencies in the simplified UI screens.
 class ChatData extends ChangeNotifier {
-  final List<Chat> chats = [];
+  final List<Conversation> chats = <Conversation>[];
 
-  void addChat(Chat chat) {
+  void addChat(Conversation chat) {
     chats.add(chat);
     notifyListeners();
   }
