@@ -33,7 +33,10 @@ class FriendsScreen extends StatelessWidget {
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline),
                   onPressed: () async {
-                    await context.read<FriendsData>().removeFriend(friend.id);
+                    final id = friend.id;
+                    if (id != null) {
+                      await context.read<FriendsData>().removeFriend(id);
+                    }
                   },
                   tooltip: context.tr('deleteAction'),
                 ),

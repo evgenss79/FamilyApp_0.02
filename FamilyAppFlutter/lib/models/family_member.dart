@@ -61,6 +61,31 @@ class FamilyMember {
       };
 
   static FamilyMember fromDecodableMap(Map<String, dynamic> map) {
+    List<Map<String, String>>? _mapList(dynamic value) {
+      if (value is List) {
+        return value
+            .whereType<Map>()
+            .map((dynamic entry) => entry.map(
+                  (dynamic key, dynamic val) => MapEntry(
+                    key.toString(),
+                    val?.toString() ?? '',
+                  ),
+                ))
+            .toList();
+      }
+      return null;
+    }
+
+    DateTime? _parseDate(dynamic value) {
+      if (value is DateTime) {
+        return value;
+      }
+      if (value is String && value.isNotEmpty) {
+        return DateTime.tryParse(value);
+      }
+      return null;
+    }
+
     return FamilyMember(
       id: (map['id'] ?? '').toString(),
       name: map['name'] as String?,
@@ -79,37 +104,6 @@ class FamilyMember {
       createdAt: _parseDate(map['createdAt']),
       updatedAt: _parseDate(map['updatedAt']),
     );
-  }
-
-  static List<Map<String, String>>? _mapList(dynamic value) {
-    if (value is! List) {
-      return null;
-    }
-    final Iterable<Map<dynamic, dynamic>> entries =
-        value.whereType<Map<dynamic, dynamic>>();
-    if (entries.isEmpty) {
-      return <Map<String, String>>[];
-    }
-    return entries
-        .map(
-          (Map<dynamic, dynamic> entry) => entry.map<String, String>(
-            (dynamic key, dynamic val) => MapEntry<String, String>(
-              key.toString(),
-              val == null ? '' : val.toString(),
-            ),
-          ),
-        )
-        .toList();
-  }
-
-  static DateTime? _parseDate(dynamic value) {
-    if (value is DateTime) {
-      return value;
-    }
-    if (value is String && value.isNotEmpty) {
-      return DateTime.tryParse(value);
-    }
-    return null;
   }
 
   FamilyMember copyWith({
