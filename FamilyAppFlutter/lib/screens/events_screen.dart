@@ -32,7 +32,8 @@ class EventsScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final event = events[index];
               final participants = event.participantIds
-                  .map((id) => data.memberById(id)?.name ?? context.tr('unknownMemberLabel'))
+                  .map((id) => data.findMemberById(id)?.name ??
+                      context.tr('unknownMemberLabel'))
                   .where((name) => name.isNotEmpty)
                   .toList();
               return Card(

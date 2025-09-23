@@ -130,7 +130,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         itemBuilder: (BuildContext context, int index) {
                           final Message message = messages[index];
                           final String senderName = familyData
-                                  .memberById(message.senderId)
+                                  .findMemberById(message.senderId)
                                   ?.name ??
                               context.tr('unknownMemberLabel');
                           return _buildMessageBubble(
