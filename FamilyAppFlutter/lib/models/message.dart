@@ -5,58 +5,26 @@ enum MessageType { text, image, file }
 enum MessageStatus { sending, sent, delivered, read }
 
 class Message {
-  const Message({
-    required this.id,
-    required this.conversationId,
-    required this.senderId,
-    required this.type,
-    required this.ciphertext,
-    required this.iv,
-    required this.encVersion,
-    required this.createdAt,
-    this.editedAt,
-    this.status = MessageStatus.sent,
-    this.openData = const <String, dynamic>{},
-  });
-
   final String id;
   final String conversationId;
   final String senderId;
-  final MessageType type;
-  final String ciphertext;
-  final String iv;
-  final int encVersion;
-  final DateTime createdAt;
-  final DateTime? editedAt;
-  final MessageStatus status;
-  final Map<String, dynamic> openData;
+  final String content;
+  final DateTime timestamp;
 
-  String? get text => openData['text'] as String?;
-  Map<String, dynamic>? get attachments =>
-      openData['attachments'] as Map<String, dynamic>?;
+  Message({
+    required this.id,
+    required this.conversationId,
+    required this.senderId,
+    required this.content,
+    required this.timestamp,
+  });
 
-  Map<String, dynamic> toEncodableMap() => openData;
-
-  Map<String, dynamic> toMetadataMap() => <String, dynamic>{
-        'senderId': senderId,
-        'type': type.name,
-        'status': status.name,
-        'createdAt': createdAt.toIso8601String(),
-        'editedAt': editedAt?.toIso8601String(),
-      };
-
-  Map<String, dynamic> toLocalMap() => <String, dynamic>{
+  Map<String, dynamic> toMap() => {
         'id': id,
         'conversationId': conversationId,
         'senderId': senderId,
-        'type': type.name,
-        'ciphertext': ciphertext,
-        'iv': iv,
-        'encVersion': encVersion,
-        'createdAt': createdAt.toIso8601String(),
-        'editedAt': editedAt?.toIso8601String(),
-        'status': status.name,
-        'openData': openData,
+        'content': content,
+        'timestamp': timestamp.toIso8601String(),
       };
 
   static Message fromDecodableMap(

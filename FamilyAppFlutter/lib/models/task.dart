@@ -3,7 +3,15 @@ import 'package:family_app_flutter/utils/parsing.dart';
 enum TaskStatus { todo, inProgress, done }
 
 class Task {
-  const Task({
+  final String id;
+  String title;
+  String? description;
+  DateTime? dueDate;
+  TaskStatus status;
+  String? assigneeId; // id участника семьи
+  int? points; // баллы для поощрений/штрафов
+
+  Task({
     required this.id,
     required this.title,
     this.description,
@@ -11,8 +19,6 @@ class Task {
     this.status = TaskStatus.todo,
     this.assigneeId,
     this.points,
-    this.createdAt,
-    this.updatedAt,
   });
 
   final String id;
@@ -43,8 +49,8 @@ class Task {
 
   static Task fromDecodableMap(Map<String, dynamic> map) {
     return Task(
-      id: (map['id'] ?? '').toString(),
-      title: (map['title'] ?? '').toString(),
+      id: map['id'] as String,
+      title: map['title'] as String,
       description: map['description'] as String?,
       dueDate: parseNullableDateTime(map['dueDate']),
       status: TaskStatus.values.firstWhere(
@@ -60,26 +66,27 @@ class Task {
     );
   }
 
-  Task copyWith({
-    String? title,
-    String? description,
-    DateTime? dueDate,
-    TaskStatus? status,
-    String? assigneeId,
-    int? points,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
-    return Task(
-      id: id,
-      title: title ?? this.title,
-      description: description ?? this.description,
-      dueDate: dueDate ?? this.dueDate,
-      status: status ?? this.status,
-      assigneeId: assigneeId ?? this.assigneeId,
-      points: points ?? this.points,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-    );
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'dueDate': dueDate?.toIso8601String(),
+      'status': status.name,
+      'assigneeId': assigneeId,
+      'points': points,
+    };
+  }
+
+  static TaskStatus _statusFromString(String? s) {
+    switch (s) {
+      case 'inProgress':
+        return TaskStatus.inProgress;
+      case 'done':
+        return TaskStatus.done;
+      case 'todo':
+      default:
+        return TaskStatus.todo;
+    }
   }
 }

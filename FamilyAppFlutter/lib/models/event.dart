@@ -1,32 +1,33 @@
 import 'package:family_app_flutter/utils/parsing.dart';
 
 class Event {
-  const Event({
-    required this.id,
-    required this.title,
-    required this.startDateTime,
-    required this.endDateTime,
-    this.description,
-    this.participantIds = const <String>[],
-    this.createdAt,
-    this.updatedAt,
-  });
-
   final String id;
   final String title;
   final DateTime startDateTime;
   final DateTime endDateTime;
   final String? description;
   final List<String> participantIds;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
+  final DateTime updatedAt;
 
-  Map<String, dynamic> toEncodableMap() => <String, dynamic>{
+  Event({
+    required this.id,
+    required this.title,
+    required this.startDateTime,
+    required this.endDateTime,
+    this.description,
+    List<String>? participantIds,
+    DateTime? updatedAt,
+  })  : participantIds = participantIds ?? const [],
+        updatedAt = updatedAt ?? DateTime.now();
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
         'title': title,
         'startDateTime': startDateTime.toIso8601String(),
         'endDateTime': endDateTime.toIso8601String(),
         'description': description,
         'participantIds': participantIds,
+        'updatedAt': updatedAt.toIso8601String(),
       };
 
   Map<String, dynamic> toLocalMap() => <String, dynamic>{

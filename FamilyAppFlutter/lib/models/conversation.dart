@@ -1,15 +1,20 @@
 import 'package:family_app_flutter/utils/parsing.dart';
 
 class Conversation {
-  const Conversation({
+  final String id;
+  final String title;
+  final List<String> memberIds;
+  final DateTime? createdAt;
+  final DateTime? lastMessageTime;
+
+  Conversation({
     required this.id,
-    required this.participantIds,
-    this.title,
-    this.avatarUrl,
-    this.lastMessagePreview,
+    required this.title,
+    required this.memberIds,
     this.createdAt,
-    this.updatedAt,
+    this.lastMessageTime,
   });
+
 
   final String id;
   final List<String> participantIds;
@@ -23,14 +28,9 @@ class Conversation {
 
   Map<String, dynamic> toEncodableMap() => <String, dynamic>{
         'title': title,
-        'avatarUrl': avatarUrl,
-        'lastMessagePreview': lastMessagePreview,
-      };
-
-  Map<String, dynamic> toMetadataMap() => <String, dynamic>{
-        'participantIds': participantIds,
+        'memberIds': memberIds,
         'createdAt': createdAt?.toIso8601String(),
-        'updatedAt': updatedAt?.toIso8601String(),
+        'lastMessageTime': lastMessageTime?.toIso8601String(),
       };
 
   static Conversation fromDecodableMap(
@@ -71,4 +71,5 @@ class Conversation {
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+
 }

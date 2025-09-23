@@ -1,18 +1,6 @@
 import 'package:family_app_flutter/utils/parsing.dart';
 
 class ScheduleItem {
-  const ScheduleItem({
-    required this.id,
-    required this.title,
-    required this.dateTime,
-    this.duration,
-    this.location,
-    this.notes,
-    this.memberId,
-    this.createdAt,
-    this.updatedAt,
-  });
-
   final String id;
   final String title;
   final DateTime dateTime;
@@ -20,8 +8,16 @@ class ScheduleItem {
   final String? location;
   final String? notes;
   final String? memberId;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
+
+  ScheduleItem({
+    required this.id,
+    required this.title,
+    required this.dateTime,
+    this.duration,
+    this.location,
+    this.notes,
+    this.memberId,
+  });
 
   DateTime get endDateTime =>
       duration == null ? dateTime : dateTime.add(duration!);
@@ -54,5 +50,17 @@ class ScheduleItem {
       createdAt: parseNullableDateTime(map['createdAt']),
       updatedAt: parseNullableDateTime(map['updatedAt']),
     );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'dateTime': dateTime.toIso8601String(),
+      'duration': duration?.inMinutes,
+      'location': location,
+      'notes': notes,
+      'memberId': memberId,
+    };
   }
 }

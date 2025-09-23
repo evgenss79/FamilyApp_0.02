@@ -1,26 +1,7 @@
 import 'package:family_app_flutter/utils/parsing.dart';
 
 class FamilyMember {
-  static const Object _sentinel = Object();
-
-  const FamilyMember({
-    required this.id,
-    this.name,
-    this.relationship,
-    this.birthday,
-    this.phone,
-    this.email,
-    this.avatarUrl,
-    this.avatarStoragePath,
-    this.socialMedia,
-    this.hobbies,
-    this.documents,
-    this.documentsList,
-    this.socialNetworks,
-    this.messengers,
-    this.createdAt,
-    this.updatedAt,
-  });
+  static const _sentinel = Object();
 
   final String id;
   final String? name;
@@ -36,10 +17,26 @@ class FamilyMember {
   final List<Map<String, String>>? documentsList;
   final List<Map<String, String>>? socialNetworks;
   final List<Map<String, String>>? messengers;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
 
-  Map<String, dynamic> toEncodableMap() => <String, dynamic>{
+  FamilyMember({
+    required this.id,
+    this.name,
+    this.relationship,
+    this.birthday,
+    this.phone,
+    this.email,
+    this.avatarUrl,
+    this.avatarStoragePath,
+    this.socialMedia,
+    this.hobbies,
+    this.documents,
+    this.documentsList,
+    this.socialNetworks,
+    this.messengers,
+  });
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
         'name': name,
         'relationship': relationship,
         'birthday': birthday?.toIso8601String(),
@@ -99,8 +96,6 @@ class FamilyMember {
     Object? documentsList = _sentinel,
     Object? socialNetworks = _sentinel,
     Object? messengers = _sentinel,
-    Object? createdAt = _sentinel,
-    Object? updatedAt = _sentinel,
   }) {
     return FamilyMember(
       id: id,
@@ -110,7 +105,8 @@ class FamilyMember {
       birthday: birthday == _sentinel ? this.birthday : birthday as DateTime?,
       phone: phone == _sentinel ? this.phone : phone as String?,
       email: email == _sentinel ? this.email : email as String?,
-      avatarUrl: avatarUrl == _sentinel ? this.avatarUrl : avatarUrl as String?,
+      avatarUrl:
+          avatarUrl == _sentinel ? this.avatarUrl : avatarUrl as String?,
       avatarStoragePath: avatarStoragePath == _sentinel
           ? this.avatarStoragePath
           : avatarStoragePath as String?,
@@ -128,8 +124,6 @@ class FamilyMember {
       messengers: messengers == _sentinel
           ? this.messengers
           : messengers as List<Map<String, String>>?,
-      createdAt: createdAt == _sentinel ? this.createdAt : createdAt as DateTime?,
-      updatedAt: updatedAt == _sentinel ? this.updatedAt : updatedAt as DateTime?,
     );
   }
 }

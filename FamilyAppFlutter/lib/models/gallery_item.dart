@@ -1,34 +1,18 @@
 import 'package:family_app_flutter/utils/parsing.dart';
 
 class GalleryItem {
-  const GalleryItem({
-    required this.id,
-    this.url,
-    this.storagePath,
-    this.caption,
-    this.createdAt,
-    this.updatedAt,
-  });
-
-  final String id;
+  final String? id;
   final String? url;
   final String? storagePath;
-  final String? caption;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
 
-  Map<String, dynamic> toEncodableMap() => <String, dynamic>{
+  GalleryItem({this.id, this.url, this.storagePath});
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
         'url': url,
         'storagePath': storagePath,
-        'caption': caption,
       };
 
-  Map<String, dynamic> toLocalMap() => <String, dynamic>{
-        'id': id,
-        ...toEncodableMap(),
-        'createdAt': createdAt?.toIso8601String(),
-        'updatedAt': updatedAt?.toIso8601String(),
-      };
 
   static GalleryItem fromDecodableMap(Map<String, dynamic> map) {
     return GalleryItem(
@@ -41,3 +25,4 @@ class GalleryItem {
     );
   }
 }
+
