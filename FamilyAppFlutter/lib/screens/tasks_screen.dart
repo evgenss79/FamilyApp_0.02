@@ -32,7 +32,7 @@ class TasksScreen extends StatelessWidget {
               final task = tasks[index];
               final assigneeName = task.assigneeId == null
                   ? null
-                  : data.findMemberById(task.assigneeId!)?.name;
+                  : data.memberById(task.assigneeId!)?.name;
               return Card(
                 child: ListTile(
                   leading: Icon(

@@ -18,6 +18,7 @@ class FamilyData extends ChangeNotifier {
   final List<Task> tasks = <Task>[];
   final List<Event> events = <Event>[];
 
+
   FamilyMember? memberById(String? memberId) {
     if (memberId == null) {
       return null;
@@ -31,6 +32,7 @@ class FamilyData extends ChangeNotifier {
   }
 
   FamilyMember? findMemberById(String? memberId) => memberById(memberId);
+
 
   StreamSubscription<List<FamilyMember>>? _membersSub;
   StreamSubscription<List<Task>>? _tasksSub;

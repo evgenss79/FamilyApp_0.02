@@ -32,7 +32,7 @@ class ScheduleScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final ScheduleItem item = items[index];
               final memberName =
-                  familyData.findMemberById(item.memberId ?? '')?.name ?? '';
+                  familyData.memberById(item.memberId ?? '')?.name ?? '';
               return Card(
                 child: ListTile(
                   leading: const Icon(Icons.calendar_today),
