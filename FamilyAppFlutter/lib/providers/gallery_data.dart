@@ -1,11 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 
 import '../models/gallery_item.dart';
 import '../services/firestore_service.dart';
 import '../services/storage_service.dart';
 
+/// Provider that manages photo gallery items with remote persistence.
 class GalleryData extends ChangeNotifier {
   GalleryData({
     required FirestoreService firestore,
@@ -18,67 +17,48 @@ class GalleryData extends ChangeNotifier {
   final StorageService _storage;
   final String familyId;
 
-  final List<GalleryItem> items = <GalleryItem>[];
+  final List<GalleryItem> items = [];
 
-  StreamSubscription<List<GalleryItem>>? _subscription;
-  bool _initialized = false;
-  bool _loading = false;
+  bool _loaded = false;
+  bool _isLoading = false;
 
-  bool get isLoading => _loading;
+  bool get isLoading => _isLoading;
 
-  Future<void> init() async {
-    if (_initialized) {
-      return;
-    }
-    _loading = true;
+  Future<void> load() async {
+    if (_loaded || _isLoading) return;
+    _isLoading = true;
     notifyListeners();
-
-    final List<GalleryItem> cached =
-        await _firestore.loadCachedGallery(familyId);
-    items
-      ..clear()
-      ..addAll(cached);
-
-    _subscription = _firestore.watchGallery(familyId).listen((List<GalleryItem> data) {
+    try {
+      final fetched = await _firestore.fetchGalleryItems(familyId);
       items
         ..clear()
-        ..addAll(data);
+        ..addAll(fetched);
+      _loaded = true;
+    } finally {
+      _isLoading = false;
       notifyListeners();
-    });
-
-    _initialized = true;
-    _loading = false;
-    notifyListeners();
+    }
   }
 
   Future<void> addItem(GalleryItem item) async {
+    await _firestore.upsertGalleryItem(familyId, item);
     items.add(item);
     notifyListeners();
-    await _firestore.upsertGalleryItem(familyId, item);
   }
 
   Future<void> removeItem(String idOrUrl) async {
-    final int index = items.indexWhere(
-      (GalleryItem item) => item.id == idOrUrl || item.url == idOrUrl,
+    final index = items.indexWhere(
+      (item) => item.id == idOrUrl || item.url == idOrUrl,
     );
-    if (index == -1) {
-      return;
-    }
-    final GalleryItem item = items[index];
-    items.removeAt(index);
-    notifyListeners();
-
-    await _firestore.deleteGalleryItem(familyId, item.id);
-    if (item.storagePath != null && item.storagePath!.isNotEmpty) {
+    if (index == -1) return;
+    final item = items[index];
+    await _firestore.deleteGalleryItem(familyId, item.id ?? idOrUrl);
+    if (item.storagePath != null) {
       await _storage.deleteByPath(item.storagePath!);
-    } else if (item.url != null && item.url!.isNotEmpty) {
+    } else if (item.url != null) {
       await _storage.deleteByUrl(item.url!);
     }
-  }
-
-  @override
-  void dispose() {
-    _subscription?.cancel();
-    super.dispose();
+    items.removeAt(index);
+    notifyListeners();
   }
 }

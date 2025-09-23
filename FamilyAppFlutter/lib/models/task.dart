@@ -1,7 +1,15 @@
 enum TaskStatus { todo, inProgress, done }
 
 class Task {
-  const Task({
+  final String id;
+  String title;
+  String? description;
+  DateTime? dueDate;
+  TaskStatus status;
+  String? assigneeId; // id участника семьи
+  int? points; // баллы для поощрений/штрафов
+
+  Task({
     required this.id,
     required this.title,
     this.description,
@@ -9,83 +17,41 @@ class Task {
     this.status = TaskStatus.todo,
     this.assigneeId,
     this.points,
-    this.createdAt,
-    this.updatedAt,
   });
 
-  final String id;
-  final String title;
-  final String? description;
-  final DateTime? dueDate;
-  final TaskStatus status;
-  final String? assigneeId;
-  final int? points;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
-
-  Map<String, dynamic> toEncodableMap() => <String, dynamic>{
-        'title': title,
-        'description': description,
-        'dueDate': dueDate?.toIso8601String(),
-        'status': status.name,
-        'assigneeId': assigneeId,
-        'points': points,
-      };
-
-  Map<String, dynamic> toLocalMap() => <String, dynamic>{
-        'id': id,
-        ...toEncodableMap(),
-        'createdAt': createdAt?.toIso8601String(),
-        'updatedAt': updatedAt?.toIso8601String(),
-      };
-
-  static Task fromDecodableMap(Map<String, dynamic> map) {
-    DateTime? _parseDate(dynamic value) {
-      if (value is DateTime) return value;
-      if (value is String && value.isNotEmpty) {
-        return DateTime.tryParse(value);
-      }
-      return null;
-    }
-
+  factory Task.fromMap(Map<String, dynamic> map) {
     return Task(
-      id: (map['id'] ?? '').toString(),
-      title: (map['title'] ?? '').toString(),
+      id: map['id'] as String,
+      title: map['title'] as String,
       description: map['description'] as String?,
-      dueDate: _parseDate(map['dueDate']),
-      status: TaskStatus.values.firstWhere(
-        (TaskStatus status) => status.name == map['status'],
-        orElse: () => TaskStatus.todo,
-      ),
+      dueDate: map['dueDate'] != null ? DateTime.parse(map['dueDate']) : null,
+      status: _statusFromString(map['status'] as String?),
       assigneeId: map['assigneeId'] as String?,
-      points: map['points'] is int
-          ? map['points'] as int
-          : int.tryParse('${map['points']}'),
-      createdAt: _parseDate(map['createdAt']),
-      updatedAt: _parseDate(map['updatedAt']),
+      points: map['points'] as int?,
     );
   }
 
-  Task copyWith({
-    String? title,
-    String? description,
-    DateTime? dueDate,
-    TaskStatus? status,
-    String? assigneeId,
-    int? points,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
-    return Task(
-      id: id,
-      title: title ?? this.title,
-      description: description ?? this.description,
-      dueDate: dueDate ?? this.dueDate,
-      status: status ?? this.status,
-      assigneeId: assigneeId ?? this.assigneeId,
-      points: points ?? this.points,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-    );
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'dueDate': dueDate?.toIso8601String(),
+      'status': status.name,
+      'assigneeId': assigneeId,
+      'points': points,
+    };
+  }
+
+  static TaskStatus _statusFromString(String? s) {
+    switch (s) {
+      case 'inProgress':
+        return TaskStatus.inProgress;
+      case 'done':
+        return TaskStatus.done;
+      case 'todo':
+      default:
+        return TaskStatus.todo;
+    }
   }
 }
