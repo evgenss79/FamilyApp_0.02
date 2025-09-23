@@ -1,3 +1,5 @@
+import 'package:family_app_flutter/utils/parsing.dart';
+
 class ScheduleItem {
   final String id;
   final String title;
@@ -20,16 +22,33 @@ class ScheduleItem {
   DateTime get endDateTime =>
       duration == null ? dateTime : dateTime.add(duration!);
 
-  factory ScheduleItem.fromMap(Map<String, dynamic> map) {
+  Map<String, dynamic> toEncodableMap() => <String, dynamic>{
+        'title': title,
+        'dateTime': dateTime.toIso8601String(),
+        'duration': duration?.inMinutes,
+        'location': location,
+        'notes': notes,
+        'memberId': memberId,
+      };
+
+  Map<String, dynamic> toLocalMap() => <String, dynamic>{
+        'id': id,
+        ...toEncodableMap(),
+        'createdAt': createdAt?.toIso8601String(),
+        'updatedAt': updatedAt?.toIso8601String(),
+      };
+
+  static ScheduleItem fromDecodableMap(Map<String, dynamic> map) {
     return ScheduleItem(
-      id: map['id'] as String,
-      title: map['title'] as String,
-      dateTime: DateTime.parse(map['dateTime'] as String),
-      duration:
-          map['duration'] != null ? Duration(minutes: map['duration']) : null,
+      id: (map['id'] ?? '').toString(),
+      title: (map['title'] ?? '').toString(),
+      dateTime: parseDateTimeOrNow(map['dateTime']),
+      duration: parseDurationFromMinutes(map['duration']),
       location: map['location'] as String?,
       notes: map['notes'] as String?,
       memberId: map['memberId'] as String?,
+      createdAt: parseNullableDateTime(map['createdAt']),
+      updatedAt: parseNullableDateTime(map['updatedAt']),
     );
   }
 

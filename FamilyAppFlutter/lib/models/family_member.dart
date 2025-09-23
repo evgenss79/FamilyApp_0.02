@@ -1,3 +1,5 @@
+import 'package:family_app_flutter/utils/parsing.dart';
+
 class FamilyMember {
   static const _sentinel = Object();
 
@@ -50,33 +52,35 @@ class FamilyMember {
         'messengers': messengers,
       };
 
-  static FamilyMember fromMap(Map<String, dynamic> m) => FamilyMember(
-        id: (m['id'] ?? '').toString(),
-        name: m['name'] as String?,
-        relationship: m['relationship'] as String?,
-        birthday: (m['birthday'] is String && (m['birthday'] as String).isNotEmpty)
-            ? DateTime.tryParse(m['birthday'] as String)
-            : null,
-        phone: m['phone'] as String?,
-        email: m['email'] as String?,
-        avatarUrl: m['avatarUrl'] as String?,
-        avatarStoragePath: m['avatarStoragePath'] as String?,
-        socialMedia: m['socialMedia'] as String?,
-        hobbies: m['hobbies'] as String?,
-        documents: m['documents'] as String?,
-        documentsList: (m['documentsList'] as List?)
-            ?.whereType<Map>()
-            .map((e) => e.map((k, v) => MapEntry(k.toString(), v?.toString() ?? '')))
-            .toList(),
-        socialNetworks: (m['socialNetworks'] as List?)
-            ?.whereType<Map>()
-            .map((e) => e.map((k, v) => MapEntry(k.toString(), v?.toString() ?? '')))
-            .toList(),
-        messengers: (m['messengers'] as List?)
-            ?.whereType<Map>()
-            .map((e) => e.map((k, v) => MapEntry(k.toString(), v?.toString() ?? '')))
-            .toList(),
-      );
+  Map<String, dynamic> toLocalMap() => <String, dynamic>{
+        'id': id,
+        ...toEncodableMap(),
+        'createdAt': createdAt?.toIso8601String(),
+        'updatedAt': updatedAt?.toIso8601String(),
+      };
+
+  static FamilyMember fromDecodableMap(Map<String, dynamic> map) {
+
+    return FamilyMember(
+      id: (map['id'] ?? '').toString(),
+      name: map['name'] as String?,
+      relationship: map['relationship'] as String?,
+      birthday: parseNullableDateTime(map['birthday']),
+      phone: map['phone'] as String?,
+      email: map['email'] as String?,
+      avatarUrl: map['avatarUrl'] as String?,
+      avatarStoragePath: map['avatarStoragePath'] as String?,
+      socialMedia: map['socialMedia'] as String?,
+      hobbies: map['hobbies'] as String?,
+      documents: map['documents'] as String?,
+      documentsList: parseStringMapList(map['documentsList']),
+      socialNetworks: parseStringMapList(map['socialNetworks']),
+      messengers: parseStringMapList(map['messengers']),
+      createdAt: parseNullableDateTime(map['createdAt']),
+      updatedAt: parseNullableDateTime(map['updatedAt']),
+
+    );
+  }
 
   FamilyMember copyWith({
     Object? name = _sentinel,

@@ -1,4 +1,3 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
@@ -33,9 +32,11 @@ Future<void> main() async {
 
   final settingsBox = await Hive.openBox('settings');
 
-  final firestore = FirestoreService();
-  final storage = StorageService();
-  final languageProvider = LanguageProvider(box: settingsBox);
+
+  final StorageService storageService = StorageService();
+  final Box<Object?> settingsBox = await Hive.openBox<Object?>('settings');
+  final LanguageProvider languageProvider = LanguageProvider(box: settingsBox);
+
 
   runApp(
     MyApp(

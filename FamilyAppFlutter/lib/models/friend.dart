@@ -1,6 +1,5 @@
-/// Represents a person who is a friend of the user.  This model is
-/// intentionally simple and may be expanded as needed.  It is not
-/// persisted via Hive in this example.
+import 'package:family_app_flutter/utils/parsing.dart';
+
 class Friend {
   /// Unique identifier for the friend.
   final String? id;
@@ -15,8 +14,15 @@ class Friend {
         'name': name,
       };
 
-  static Friend fromMap(Map<String, dynamic> map) => Friend(
-        id: (map['id'] ?? '').toString(),
-        name: map['name'] as String?,
-      );
+  static Friend fromDecodableMap(Map<String, dynamic> map) {
+    return Friend(
+      id: (map['id'] ?? '').toString(),
+      name: map['name'] as String?,
+      phone: map['phone'] as String?,
+      notes: map['notes'] as String?,
+      createdAt: parseNullableDateTime(map['createdAt']),
+      updatedAt: parseNullableDateTime(map['updatedAt']),
+    );
+  }
 }
+

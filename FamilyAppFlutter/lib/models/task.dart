@@ -1,3 +1,5 @@
+import 'package:family_app_flutter/utils/parsing.dart';
+
 enum TaskStatus { todo, inProgress, done }
 
 class Task {
@@ -19,15 +21,48 @@ class Task {
     this.points,
   });
 
-  factory Task.fromMap(Map<String, dynamic> map) {
+  final String id;
+  final String title;
+  final String? description;
+  final DateTime? dueDate;
+  final TaskStatus status;
+  final String? assigneeId;
+  final int? points;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  Map<String, dynamic> toEncodableMap() => <String, dynamic>{
+        'title': title,
+        'description': description,
+        'dueDate': dueDate?.toIso8601String(),
+        'status': status.name,
+        'assigneeId': assigneeId,
+        'points': points,
+      };
+
+  Map<String, dynamic> toLocalMap() => <String, dynamic>{
+        'id': id,
+        ...toEncodableMap(),
+        'createdAt': createdAt?.toIso8601String(),
+        'updatedAt': updatedAt?.toIso8601String(),
+      };
+
+  static Task fromDecodableMap(Map<String, dynamic> map) {
     return Task(
       id: map['id'] as String,
       title: map['title'] as String,
       description: map['description'] as String?,
-      dueDate: map['dueDate'] != null ? DateTime.parse(map['dueDate']) : null,
-      status: _statusFromString(map['status'] as String?),
+      dueDate: parseNullableDateTime(map['dueDate']),
+      status: TaskStatus.values.firstWhere(
+        (TaskStatus status) => status.name == map['status'],
+        orElse: () => TaskStatus.todo,
+      ),
       assigneeId: map['assigneeId'] as String?,
-      points: map['points'] as int?,
+      points: map['points'] is int
+          ? map['points'] as int
+          : int.tryParse('${map['points']}'),
+      createdAt: parseNullableDateTime(map['createdAt']),
+      updatedAt: parseNullableDateTime(map['updatedAt']),
     );
   }
 

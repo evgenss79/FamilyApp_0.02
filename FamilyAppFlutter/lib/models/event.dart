@@ -1,3 +1,5 @@
+import 'package:family_app_flutter/utils/parsing.dart';
+
 class Event {
   final String id;
   final String title;
@@ -28,17 +30,24 @@ class Event {
         'updatedAt': updatedAt.toIso8601String(),
       };
 
-  static Event fromMap(Map<String, dynamic> m) {
-    final start = m['startDateTime'] is String ? DateTime.tryParse(m['startDateTime']) : null;
-    final end = m['endDateTime'] is String ? DateTime.tryParse(m['endDateTime']) : null;
+  Map<String, dynamic> toLocalMap() => <String, dynamic>{
+        'id': id,
+        ...toEncodableMap(),
+        'createdAt': createdAt?.toIso8601String(),
+        'updatedAt': updatedAt?.toIso8601String(),
+      };
+
+  static Event fromDecodableMap(Map<String, dynamic> map) {
     return Event(
-      id: (m['id'] ?? '').toString(),
-      title: (m['title'] ?? '').toString(),
-      startDateTime: start ?? DateTime.now(),
-      endDateTime: end ?? (start ?? DateTime.now()),
-      description: m['description'] as String?,
-      participantIds: (m['participantIds'] as List?)?.map((e) => e.toString()).toList() ?? const [],
-      updatedAt: m['updatedAt'] is String ? DateTime.tryParse(m['updatedAt']) ?? DateTime.now() : DateTime.now(),
+      id: (map['id'] ?? '').toString(),
+      title: (map['title'] ?? '').toString(),
+      startDateTime: parseDateTimeOrNow(map['startDateTime']),
+      endDateTime: parseDateTimeOrNow(map['endDateTime']),
+      description: map['description'] as String?,
+      participantIds: parseStringList(map['participantIds']),
+      createdAt: parseNullableDateTime(map['createdAt']),
+      updatedAt: parseNullableDateTime(map['updatedAt']),
+
     );
   }
 }
