@@ -2,36 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
-import '../models/chat.dart';
-import '../models/chat_message.dart';
+import '../models/conversation.dart';
+import '../models/message.dart';
 import '../providers/chat_provider.dart';
 import '../providers/family_data.dart';
 
-/// Displays a single chat conversation with the ability to send
-/// messages via [ChatProvider].
 class ChatScreen extends StatefulWidget {
-  final Chat chat;
+  const ChatScreen({super.key, required this.conversation});
 
-  const ChatScreen({super.key, required this.chat});
+  final Conversation conversation;
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final _messageController = TextEditingController();
+  final TextEditingController _messageController = TextEditingController();
   String? _selectedSenderId;
 
   @override
   void initState() {
     super.initState();
-    final memberIds = widget.chat.memberIds.map((id) => id.toString()).toList();
-    if (memberIds.isNotEmpty) {
-      _selectedSenderId = memberIds.first;
+    if (widget.conversation.participantIds.isNotEmpty) {
+      _selectedSenderId = widget.conversation.participantIds.first;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.read<ChatProvider>().markRead(widget.chat.id);
+      context
+          .read<ChatProvider>()
+          .markConversationRead(widget.conversation.id);
     });
   }
 
@@ -42,26 +41,78 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _sendMessage() async {
-    final text = _messageController.text.trim();
-    final senderId = _selectedSenderId;
-    if (text.isEmpty || senderId == null) return;
-    await context
-        .read<ChatProvider>()
-        .sendText(chatId: widget.chat.id, senderId: senderId, text: text);
+    final String text = _messageController.text.trim();
+    final String? senderId = _selectedSenderId;
+    if (text.isEmpty || senderId == null) {
+      return;
+    }
+    await context.read<ChatProvider>().sendText(
+          conversationId: widget.conversation.id,
+          senderId: senderId,
+          text: text,
+        );
     _messageController.clear();
+  }
+
+  Widget _buildMessageBubble(
+    BuildContext context,
+    Message message,
+    String senderName,
+  ) {
+    final ThemeData theme = Theme.of(context);
+    final String content = message.text ??
+        (message.type == MessageType.image
+            ? '📷 Image'
+            : '📎 Attachment');
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              senderName,
+              style: theme.textTheme.labelMedium,
+            ),
+            const SizedBox(height: 4),
+            Text(content),
+            if (message.openData['attachments'] != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Attachment',
+                style: theme.textTheme.labelSmall,
+              ),
+            ],
+            const SizedBox(height: 4),
+            Text(
+              context.loc.formatDate(message.createdAt, withTime: true),
+              style: theme.textTheme.labelSmall
+                  ?.copyWith(color: theme.hintColor),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.chat.title)),
+      appBar: AppBar(title: Text(widget.conversation.title ?? context.tr('appTitle'))),
       body: Consumer2<ChatProvider, FamilyData>(
-        builder: (context, chatProvider, familyData, _) {
-          final messages = chatProvider.messagesByChat(widget.chat.id);
+        builder: (BuildContext context, ChatProvider chatProvider,
+            FamilyData familyData, _) {
+          final List<Message> messages =
+              chatProvider.messagesFor(widget.conversation.id);
           final members = familyData.members;
           if (_selectedSenderId == null) {
-            if (widget.chat.memberIds.isNotEmpty) {
-              _selectedSenderId = widget.chat.memberIds.first.toString();
+            if (widget.conversation.participantIds.isNotEmpty) {
+              _selectedSenderId = widget.conversation.participantIds.first;
             } else if (members.isNotEmpty) {
               _selectedSenderId = members.first.id;
             }
@@ -76,45 +127,16 @@ class _ChatScreenState extends State<ChatScreen> {
                         padding: const EdgeInsets.all(16),
                         itemCount: messages.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 8),
-                        itemBuilder: (context, index) {
-                          final ChatMessage message = messages[index];
-                          final senderName =
-                              familyData.memberById(message.senderId)?.name ??
-                                  context.tr('unknownMemberLabel');
-                          return Align(
-                            alignment: Alignment.centerLeft,
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primary
-                                    .withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    senderName,
-                                    style: Theme.of(context).textTheme.labelMedium,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(message.content),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    context.loc.formatDate(
-                                      message.createdAt,
-                                      withTime: true,
-                                    ),
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall
-                                        ?.copyWith(color: Theme.of(context).hintColor),
-                                  ),
-                                ],
-                              ),
-                            ),
+                        itemBuilder: (BuildContext context, int index) {
+                          final Message message = messages[index];
+                          final String senderName = familyData
+                                  .memberById(message.senderId)
+                                  ?.name ??
+                              context.tr('unknownMemberLabel');
+                          return _buildMessageBubble(
+                            context,
+                            message,
+                            senderName,
                           );
                         },
                       ),
@@ -130,10 +152,11 @@ class _ChatScreenState extends State<ChatScreen> {
                         for (final member in members)
                           DropdownMenuItem<String>(
                             value: member.id,
-                            child: Text(member.name ?? context.tr('noNameLabel')),
+                            child:
+                                Text(member.name ?? context.tr('noNameLabel')),
                           ),
                       ],
-                      onChanged: (value) {
+                      onChanged: (String? value) {
                         setState(() => _selectedSenderId = value);
                       },
                     ),

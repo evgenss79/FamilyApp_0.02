@@ -1,14 +1,14 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
-import '../models/chat.dart';
-import '../models/chat_message.dart';
+import '../models/conversation.dart';
+import '../models/message.dart';
 import '../services/firestore_service.dart';
 import '../services/storage_service.dart';
 
-/// Provider that manages chats and chat messages backed by Firestore.
 class ChatProvider extends ChangeNotifier {
   ChatProvider({
     required FirestoreService firestore,
@@ -21,181 +21,294 @@ class ChatProvider extends ChangeNotifier {
   final StorageService _storage;
   final String familyId;
 
-  final List<Chat> _chats = [];
-  final Map<String, List<ChatMessage>> _messages = {};
-  final Set<String> _loadedChatMessages = <String>{};
-  final Set<String> _loadingChatMessages = <String>{};
+  final List<Conversation> _conversations = <Conversation>[];
+  final Map<String, List<Message>> _messages = <String, List<Message>>{};
+  final Map<String, bool> _messagesInitialized = <String, bool>{};
+
+  StreamSubscription<List<Conversation>>? _conversationsSub;
+  final Map<String, StreamSubscription<List<Message>>> _messageSubs =
+      <String, StreamSubscription<List<Message>>>{};
 
   final Uuid _uuid = const Uuid();
 
-  bool _loaded = false;
-  bool _isLoading = false;
+  bool _initialized = false;
+  bool _loading = false;
 
-  bool get isLoading => _isLoading;
+  bool get isLoading => _loading;
 
-  List<Chat> get chats => List.unmodifiable(_chats);
+  List<Conversation> get conversations => List.unmodifiable(_conversations);
 
-  Future<void> init() async => load();
+  List<Conversation> get chats => conversations;
 
-  Future<void> load() async {
-    if (_loaded || _isLoading) return;
-    _isLoading = true;
+
+  List<Message> messagesFor(String conversationId) {
+    _ensureMessagesSubscription(conversationId);
+    return List.unmodifiable(_messages[conversationId] ?? const <Message>[]);
+  }
+
+  Future<void> init() async {
+    if (_initialized) {
+      return;
+    }
+    _loading = true;
     notifyListeners();
-    try {
-      final fetchedChats = await _firestore.fetchChats(familyId);
-      _chats
+
+    final List<Conversation> cached =
+        await _firestore.loadCachedConversations(familyId);
+    _conversations
+      ..clear()
+      ..addAll(cached);
+
+    _conversationsSub = _firestore
+        .watchConversations(familyId)
+        .listen((List<Conversation> data) {
+      _conversations
         ..clear()
-        ..addAll(fetchedChats);
-      _messages.clear();
-      for (final chat in _chats) {
-        _messages[chat.id] = <ChatMessage>[];
-      }
-      _loaded = true;
-      _resortChats();
-    } finally {
-      _isLoading = false;
+        ..addAll(data)
+        ..sort((Conversation a, Conversation b) {
+          final DateTime aTime = a.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final DateTime bTime = b.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          return bTime.compareTo(aTime);
+        });
       notifyListeners();
-    }
+    });
+
+    _initialized = true;
+    _loading = false;
+    notifyListeners();
   }
 
-  List<ChatMessage> messagesByChat(String chatId) {
-    if (!_loadedChatMessages.contains(chatId) &&
-        !_loadingChatMessages.contains(chatId)) {
-      _loadingChatMessages.add(chatId);
-      _firestore.fetchChatMessages(familyId, chatId).then((messages) {
-        _messages[chatId] = messages;
-        _loadedChatMessages.add(chatId);
-        _loadingChatMessages.remove(chatId);
-        notifyListeners();
-      }).catchError((_) {
-        _loadingChatMessages.remove(chatId);
-      });
-    }
-    return List.unmodifiable(_messages[chatId] ?? const []);
-  }
-
-  Future<Chat> createChat({
+  Future<Conversation> createChat({
     required String title,
     required List<String> memberIds,
+  }) =>
+      createConversation(participantIds: memberIds, title: title);
+
+  Future<void> deleteChat(String chatId) => deleteConversation(chatId);
+  Future<Conversation> createConversation({
+    required List<String> participantIds,
+    String? title,
+    String? avatarUrl,
   }) async {
-    final chat = Chat(
+    final Conversation conversation = Conversation(
       id: _uuid.v4(),
+      participantIds: participantIds,
       title: title,
-      memberIds: memberIds,
-      updatedAt: DateTime.now(),
+      avatarUrl: avatarUrl,
       lastMessagePreview: null,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
     );
-    await _firestore.upsertChat(familyId, chat);
-    _chats.add(chat);
-    _messages[chat.id] = <ChatMessage>[];
-    _loadedChatMessages.add(chat.id);
-    _resortChats();
+    _conversations.insert(0, conversation);
     notifyListeners();
-    return chat;
+    await _firestore.createConversation(
+      familyId: familyId,
+      conversation: conversation,
+    );
+    return conversation;
   }
 
-  Future<void> deleteChat(String chatId) async {
-    final messages = _loadedChatMessages.contains(chatId)
-        ? List<ChatMessage>.from(_messages[chatId] ?? const [])
-        : await _firestore.fetchChatMessages(familyId, chatId);
-    for (final message in messages) {
-      if (message.storagePath != null) {
-        await _storage.deleteByPath(message.storagePath!);
-      }
-    }
-    await _firestore.deleteChatMessages(familyId, chatId);
-    await _firestore.deleteChat(familyId, chatId);
-    _messages.remove(chatId);
-    _loadedChatMessages.remove(chatId);
-    _chats.removeWhere((chat) => chat.id == chatId);
-    notifyListeners();
-  }
-
-  Future<ChatMessage> sendText({
-    required String chatId,
+  Future<Message> sendText({
+    required String conversationId,
     required String senderId,
     required String text,
   }) async {
-    final message = ChatMessage(
+    final Message draft = Message(
       id: _uuid.v4(),
-      chatId: chatId,
+      conversationId: conversationId,
       senderId: senderId,
-      content: text,
-      createdAt: DateTime.now(),
       type: MessageType.text,
-      isRead: false,
+      ciphertext: '',
+      iv: '',
+      encVersion: 0,
+      createdAt: DateTime.now(),
+      status: MessageStatus.sending,
+      openData: <String, dynamic>{'text': text},
     );
-    await _firestore.upsertChatMessage(familyId, chatId, message);
-    final chat = _chats.firstWhere((c) => c.id == chatId, orElse: () => throw ArgumentError('Chat not found'));
-    chat.updatedAt = DateTime.now();
-    chat.lastMessagePreview = text;
-    await _firestore.upsertChat(familyId, chat);
-    _messages.putIfAbsent(chatId, () => <ChatMessage>[]).add(message);
-    _loadedChatMessages.add(chatId);
-    _resortChats();
-    notifyListeners();
-    return message;
+    _addOptimisticMessage(conversationId, draft);
+    try {
+      final Message stored = await _firestore.sendMessage(
+        familyId: familyId,
+        conversationId: conversationId,
+        draft: draft,
+      );
+      _replaceOptimisticMessage(
+        conversationId,
+        draft.id,
+        stored.copyWith(status: MessageStatus.sent),
+      );
+      notifyListeners();
+      return stored;
+    } catch (error) {
+      _removeOptimisticMessage(conversationId, draft.id);
+      notifyListeners();
+      rethrow;
+    }
   }
 
-  Future<ChatMessage> sendAttachment({
-    required String chatId,
+  Future<Message> sendAttachment({
+    required String conversationId,
     required String senderId,
     required String localPath,
     required MessageType type,
   }) async {
     if (type == MessageType.text) {
-      throw ArgumentError('Attachment must be image or file');
+      throw ArgumentError('Attachment must be an image or file message');
     }
-    final file = File(localPath);
+    final File file = File(localPath);
     if (!await file.exists()) {
       throw ArgumentError('File not found: $localPath');
     }
-    final upload = await _storage.uploadChatAttachment(
+    final StorageUploadResult upload = await _storage.uploadChatAttachment(
       familyId: familyId,
-      chatId: chatId,
+      conversationId: conversationId,
       file: file,
     );
-    final preview = type == MessageType.image ? '📷 Photo' : '📎 File';
-    final message = ChatMessage(
+    final String preview =
+        type == MessageType.image ? '📷 Image' : '📎 Attachment';
+    final Message draft = Message(
       id: _uuid.v4(),
-      chatId: chatId,
+      conversationId: conversationId,
       senderId: senderId,
-      content: upload.downloadUrl,
-      createdAt: DateTime.now(),
       type: type,
-      isRead: false,
-      storagePath: upload.storagePath,
+      ciphertext: '',
+      iv: '',
+      encVersion: 0,
+      createdAt: DateTime.now(),
+      status: MessageStatus.sending,
+      openData: <String, dynamic>{
+        'text': preview,
+        'attachments': <String, dynamic>{
+          'url': upload.downloadUrl,
+          'storagePath': upload.storagePath,
+          'type': type.name,
+        },
+      },
     );
-    await _firestore.upsertChatMessage(familyId, chatId, message);
-    final chat = _chats.firstWhere((c) => c.id == chatId, orElse: () => throw ArgumentError('Chat not found'));
-    chat.updatedAt = DateTime.now();
-    chat.lastMessagePreview = preview;
-    await _firestore.upsertChat(familyId, chat);
-    _messages.putIfAbsent(chatId, () => <ChatMessage>[]).add(message);
-    _loadedChatMessages.add(chatId);
-    _resortChats();
-    notifyListeners();
-    return message;
+    _addOptimisticMessage(conversationId, draft);
+    try {
+      final Message stored = await _firestore.sendMessage(
+        familyId: familyId,
+        conversationId: conversationId,
+        draft: draft,
+      );
+      _replaceOptimisticMessage(
+        conversationId,
+        draft.id,
+        stored.copyWith(status: MessageStatus.sent),
+      );
+      notifyListeners();
+      return stored;
+    } catch (error) {
+      _removeOptimisticMessage(conversationId, draft.id);
+      notifyListeners();
+      rethrow;
+    }
   }
 
-  Future<void> markRead(String chatId) async {
-    final messages = await _firestore.fetchChatMessages(familyId, chatId);
-    bool changed = false;
-    for (final message in messages) {
-      if (!message.isRead) {
-        message.isRead = true;
-        await _firestore.upsertChatMessage(familyId, chatId, message);
-        changed = true;
+  Future<void> markConversationRead(String conversationId) async {
+    final List<Message> list = List<Message>.from(_messages[conversationId] ?? const <Message>[]);
+    for (final Message message in list) {
+      if (message.status != MessageStatus.read) {
+        await _firestore.updateMessageStatus(
+          familyId: familyId,
+          conversationId: conversationId,
+          message: message,
+          status: MessageStatus.read,
+        );
       }
     }
-    if (changed) {
-      _messages[chatId] = messages;
-      _loadedChatMessages.add(chatId);
+  }
+
+  Future<void> deleteConversation(String conversationId) async {
+    _conversations.removeWhere((Conversation c) => c.id == conversationId);
+    final List<Message>? existing = _messages.remove(conversationId);
+    notifyListeners();
+    if (existing != null) {
+      for (final Message message in existing) {
+        final Map<String, dynamic>? attachments =
+            message.openData['attachments'] as Map<String, dynamic>?;
+        final String? storagePath = attachments?['storagePath'] as String?;
+        if (storagePath != null && storagePath.isNotEmpty) {
+          await _storage.deleteByPath(storagePath);
+        }
+      }
+    }
+    _messageSubs.remove(conversationId)?.cancel();
+    _messagesInitialized.remove(conversationId);
+    await _firestore.deleteConversation(familyId, conversationId);
+  }
+
+  void _ensureMessagesSubscription(String conversationId) {
+    if (_messagesInitialized[conversationId] == true) {
+      return;
+    }
+    _messagesInitialized[conversationId] = true;
+    _loadCachedMessages(conversationId);
+    final StreamSubscription<List<Message>> sub = _firestore
+        .watchMessages(
+          familyId: familyId,
+          conversationId: conversationId,
+        )
+        .listen((List<Message> data) async {
+      _messages[conversationId] = data;
+      notifyListeners();
+      for (final Message message in data) {
+        if (message.status == MessageStatus.sent) {
+          unawaited(_firestore.updateMessageStatus(
+            familyId: familyId,
+            conversationId: conversationId,
+            message: message,
+            status: MessageStatus.delivered,
+          ));
+        }
+      }
+    });
+    _messageSubs[conversationId] = sub;
+  }
+
+  Future<void> _loadCachedMessages(String conversationId) async {
+    final List<Message> cached =
+        await _firestore.loadCachedMessages(familyId, conversationId);
+    if (cached.isNotEmpty) {
+      _messages[conversationId] = cached;
       notifyListeners();
     }
   }
 
-  void _resortChats() {
-    _chats.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+  void _addOptimisticMessage(String conversationId, Message message) {
+    final List<Message> list =
+        _messages.putIfAbsent(conversationId, () => <Message>[]);
+    list.add(message);
+    notifyListeners();
+  }
+
+  void _replaceOptimisticMessage(
+    String conversationId,
+    String tempId,
+    Message replacement,
+  ) {
+    final List<Message>? list = _messages[conversationId];
+    if (list == null) {
+      return;
+    }
+    final int index = list.indexWhere((Message m) => m.id == tempId);
+    if (index != -1) {
+      list[index] = replacement;
+    }
+  }
+
+  void _removeOptimisticMessage(String conversationId, String messageId) {
+    final List<Message>? list = _messages[conversationId];
+    list?.removeWhere((Message m) => m.id == messageId);
+  }
+
+  @override
+  void dispose() {
+    _conversationsSub?.cancel();
+    for (final StreamSubscription<List<Message>> sub in _messageSubs.values) {
+      sub.cancel();
+    }
+    super.dispose();
   }
 }

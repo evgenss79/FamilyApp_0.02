@@ -1,44 +1,72 @@
 class Event {
+  const Event({
+    required this.id,
+    required this.title,
+    required this.startDateTime,
+    required this.endDateTime,
+    this.description,
+    this.participantIds = const <String>[],
+    this.createdAt,
+    this.updatedAt,
+  });
+
   final String id;
   final String title;
   final DateTime startDateTime;
   final DateTime endDateTime;
   final String? description;
   final List<String> participantIds;
-  final DateTime updatedAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
-  Event({
-    required this.id,
-    required this.title,
-    required this.startDateTime,
-    required this.endDateTime,
-    this.description,
-    List<String>? participantIds,
-    DateTime? updatedAt,
-  })  : participantIds = participantIds ?? const [],
-        updatedAt = updatedAt ?? DateTime.now();
-
-  Map<String, dynamic> toMap() => {
-        'id': id,
+  Map<String, dynamic> toEncodableMap() => <String, dynamic>{
         'title': title,
         'startDateTime': startDateTime.toIso8601String(),
         'endDateTime': endDateTime.toIso8601String(),
         'description': description,
         'participantIds': participantIds,
-        'updatedAt': updatedAt.toIso8601String(),
       };
 
-  static Event fromMap(Map<String, dynamic> m) {
-    final start = m['startDateTime'] is String ? DateTime.tryParse(m['startDateTime']) : null;
-    final end = m['endDateTime'] is String ? DateTime.tryParse(m['endDateTime']) : null;
+  Map<String, dynamic> toLocalMap() => <String, dynamic>{
+        'id': id,
+        ...toEncodableMap(),
+        'createdAt': createdAt?.toIso8601String(),
+        'updatedAt': updatedAt?.toIso8601String(),
+      };
+
+  static Event fromDecodableMap(Map<String, dynamic> map) {
+    DateTime _parseDate(dynamic value) {
+      if (value is DateTime) return value;
+      if (value is String && value.isNotEmpty) {
+        return DateTime.tryParse(value) ?? DateTime.now();
+      }
+      return DateTime.now();
+    }
+
+    List<String> _parseList(dynamic value) {
+      if (value is List) {
+        return value.map((dynamic e) => e.toString()).toList();
+      }
+      return const <String>[];
+    }
+
+    DateTime? _parseNullable(dynamic value) {
+      if (value is DateTime) return value;
+      if (value is String && value.isNotEmpty) {
+        return DateTime.tryParse(value);
+      }
+      return null;
+    }
+
     return Event(
-      id: (m['id'] ?? '').toString(),
-      title: (m['title'] ?? '').toString(),
-      startDateTime: start ?? DateTime.now(),
-      endDateTime: end ?? (start ?? DateTime.now()),
-      description: m['description'] as String?,
-      participantIds: (m['participantIds'] as List?)?.map((e) => e.toString()).toList() ?? const [],
-      updatedAt: m['updatedAt'] is String ? DateTime.tryParse(m['updatedAt']) ?? DateTime.now() : DateTime.now(),
+      id: (map['id'] ?? '').toString(),
+      title: (map['title'] ?? '').toString(),
+      startDateTime: _parseDate(map['startDateTime']),
+      endDateTime: _parseDate(map['endDateTime']),
+      description: map['description'] as String?,
+      participantIds: _parseList(map['participantIds']),
+      createdAt: _parseNullable(map['createdAt']),
+      updatedAt: _parseNullable(map['updatedAt']),
     );
   }
 }
