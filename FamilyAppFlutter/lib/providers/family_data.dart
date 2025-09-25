@@ -1,19 +1,36 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../models/event.dart';
 import '../models/family_member.dart';
 import '../models/task.dart';
-import '../services/firestore_service.dart';
+import '../repositories/events_repository.dart';
+import '../repositories/members_repository.dart';
+import '../repositories/tasks_repository.dart';
+import '../services/sync_service.dart';
 
-/// Holds shared state for family members, tasks and events. This provider
-/// orchestrates persistence through [FirestoreService] and keeps local lists
-/// updated for the UI.
+/// Holds shared state for family members, tasks and events. The provider reads
+/// from the encrypted Hive caches maintained by the repositories and requests
+/// the [SyncService] to push pending changes to Firestore when necessary.
 class FamilyData extends ChangeNotifier {
-  FamilyData({required FirestoreService firestore, required this.familyId})
-      : _firestore = firestore;
+  FamilyData({
+    required this.familyId,
+    required MembersRepository membersRepository,
+    required TasksRepository tasksRepository,
+    required EventsRepository eventsRepository,
+    required SyncService syncService,
+  })  : _membersRepository = membersRepository,
+        _tasksRepository = tasksRepository,
+        _eventsRepository = eventsRepository,
+        _syncService = syncService;
 
-  final FirestoreService _firestore;
   final String familyId;
+
+  final MembersRepository _membersRepository;
+  final TasksRepository _tasksRepository;
+  final EventsRepository _eventsRepository;
+  final SyncService _syncService;
 
   final List<FamilyMember> members = <FamilyMember>[];
   final List<Task> tasks = <Task>[];
@@ -21,6 +38,10 @@ class FamilyData extends ChangeNotifier {
 
   bool _loaded = false;
   bool _isLoading = false;
+
+  StreamSubscription<List<FamilyMember>>? _membersSubscription;
+  StreamSubscription<List<Task>>? _tasksSubscription;
+  StreamSubscription<List<Event>>? _eventsSubscription;
 
   bool get isLoading => _isLoading;
 
@@ -31,21 +52,44 @@ class FamilyData extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      final List<FamilyMember> fetchedMembers =
-          await _firestore.fetchFamilyMembers(familyId);
-      final List<Task> fetchedTasks = await _firestore.fetchTasks(familyId);
-      final List<Event> fetchedEvents = await _firestore.fetchEvents(familyId);
       members
         ..clear()
-        ..addAll(fetchedMembers);
+        ..addAll(await _membersRepository.loadLocal(familyId));
       tasks
         ..clear()
-        ..addAll(fetchedTasks);
+        ..addAll(await _tasksRepository.loadLocal(familyId));
       _sortTasks();
       events
         ..clear()
-        ..addAll(fetchedEvents);
+        ..addAll(await _eventsRepository.loadLocal(familyId));
+
+      _membersSubscription = _membersRepository.watchLocal(familyId).listen(
+        (List<FamilyMember> updatedMembers) {
+          members
+            ..clear()
+            ..addAll(updatedMembers);
+          notifyListeners();
+        },
+      );
+      _tasksSubscription = _tasksRepository.watchLocal(familyId).listen(
+        (List<Task> updatedTasks) {
+          tasks
+            ..clear()
+            ..addAll(updatedTasks);
+          _sortTasks();
+          notifyListeners();
+        },
+      );
+      _eventsSubscription = _eventsRepository.watchLocal(familyId).listen(
+        (List<Event> updatedEvents) {
+          events
+            ..clear()
+            ..addAll(updatedEvents);
+          notifyListeners();
+        },
+      );
       _loaded = true;
+      await _syncService.flush();
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -64,18 +108,13 @@ class FamilyData extends ChangeNotifier {
   }
 
   Future<void> addMember(FamilyMember member) async {
-    await _firestore.upsertFamilyMember(familyId, member);
-    members.add(member);
-    notifyListeners();
+    await _membersRepository.saveLocal(familyId, member);
+    await _syncService.flush();
   }
 
   Future<void> updateMember(FamilyMember member) async {
-    await _firestore.upsertFamilyMember(familyId, member);
-    final int index = members.indexWhere((FamilyMember m) => m.id == member.id);
-    if (index != -1) {
-      members[index] = member;
-      notifyListeners();
-    }
+    await _membersRepository.saveLocal(familyId, member);
+    await _syncService.flush();
   }
 
   Future<void> updateMemberDocuments(
@@ -91,9 +130,8 @@ class FamilyData extends ChangeNotifier {
       documents: summary,
       documentsList: documentsList,
     );
-    members[index] = updated;
-    notifyListeners();
-    await _firestore.updateFamilyMember(familyId, updated);
+    await _membersRepository.saveLocal(familyId, updated);
+    await _syncService.flush();
   }
 
   Future<void> updateMemberNetworks({
@@ -111,9 +149,8 @@ class FamilyData extends ChangeNotifier {
       messengers: messengers,
       socialMedia: socialSummary,
     );
-    members[index] = updated;
-    notifyListeners();
-    await _firestore.updateFamilyMember(familyId, updated);
+    await _membersRepository.saveLocal(familyId, updated);
+    await _syncService.flush();
   }
 
   Future<void> updateMemberHobbies(String memberId, String? hobbies) async {
@@ -122,21 +159,18 @@ class FamilyData extends ChangeNotifier {
       return;
     }
     final FamilyMember updated = members[index].copyWith(hobbies: hobbies);
-    members[index] = updated;
-    notifyListeners();
-    await _firestore.updateFamilyMember(familyId, updated);
+    await _membersRepository.saveLocal(familyId, updated);
+    await _syncService.flush();
   }
 
   Future<void> removeMember(FamilyMember member) async {
-    await _firestore.deleteFamilyMember(familyId, member.id);
-    members.removeWhere((FamilyMember m) => m.id == member.id);
-    notifyListeners();
+    await _membersRepository.markDeleted(familyId, member.id);
+    await _syncService.flush();
   }
 
   Future<void> removeMemberById(String id) async {
-    await _firestore.deleteFamilyMember(familyId, id);
-    members.removeWhere((FamilyMember member) => member.id == id);
-    notifyListeners();
+    await _membersRepository.markDeleted(familyId, id);
+    await _syncService.flush();
   }
 
   Task? taskById(String id) {
@@ -148,20 +182,13 @@ class FamilyData extends ChangeNotifier {
   }
 
   Future<void> addTask(Task task) async {
-    await _firestore.upsertTask(familyId, task);
-    tasks.add(task);
-    _sortTasks();
-    notifyListeners();
+    await _tasksRepository.saveLocal(familyId, task);
+    await _syncService.flush();
   }
 
   Future<void> updateTask(Task task) async {
-    await _firestore.upsertTask(familyId, task);
-    final int index = tasks.indexWhere((Task t) => t.id == task.id);
-    if (index != -1) {
-      tasks[index] = task;
-      _sortTasks();
-      notifyListeners();
-    }
+    await _tasksRepository.saveLocal(familyId, task);
+    await _syncService.flush();
   }
 
   Future<void> updateTaskStatus(String taskId, TaskStatus status) async {
@@ -173,10 +200,8 @@ class FamilyData extends ChangeNotifier {
       status: status,
       updatedAt: DateTime.now(),
     );
-    tasks[index] = updated;
-    _sortTasks();
-    notifyListeners();
-    await _firestore.updateTask(familyId, updated);
+    await _tasksRepository.saveLocal(familyId, updated);
+    await _syncService.flush();
   }
 
   Future<void> assignTask(String id, String? assigneeId) async {
@@ -185,15 +210,13 @@ class FamilyData extends ChangeNotifier {
       return;
     }
     final Task updated = tasks[index].copyWith(assigneeId: assigneeId);
-    tasks[index] = updated;
-    notifyListeners();
-    await _firestore.updateTask(familyId, updated);
+    await _tasksRepository.saveLocal(familyId, updated);
+    await _syncService.flush();
   }
 
   Future<void> removeTask(String id) async {
-    await _firestore.deleteTask(familyId, id);
-    tasks.removeWhere((Task task) => task.id == id);
-    notifyListeners();
+    await _tasksRepository.markDeleted(familyId, id);
+    await _syncService.flush();
   }
 
   Event? eventById(String id) {
@@ -205,24 +228,26 @@ class FamilyData extends ChangeNotifier {
   }
 
   Future<void> addEvent(Event event) async {
-    await _firestore.upsertEvent(familyId, event);
-    events.add(event);
-    notifyListeners();
+    await _eventsRepository.saveLocal(familyId, event);
+    await _syncService.flush();
   }
 
   Future<void> updateEvent(Event event) async {
-    await _firestore.upsertEvent(familyId, event);
-    final int index = events.indexWhere((Event e) => e.id == event.id);
-    if (index != -1) {
-      events[index] = event;
-      notifyListeners();
-    }
+    await _eventsRepository.saveLocal(familyId, event);
+    await _syncService.flush();
   }
 
   Future<void> removeEvent(String id) async {
-    await _firestore.deleteEvent(familyId, id);
-    events.removeWhere((Event event) => event.id == id);
-    notifyListeners();
+    await _eventsRepository.markDeleted(familyId, id);
+    await _syncService.flush();
+  }
+
+  @override
+  void dispose() {
+    _membersSubscription?.cancel();
+    _tasksSubscription?.cancel();
+    _eventsSubscription?.cancel();
+    super.dispose();
   }
 
   void _sortTasks() {

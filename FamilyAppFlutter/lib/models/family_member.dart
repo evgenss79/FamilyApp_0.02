@@ -7,6 +7,8 @@ class FamilyMember {
 
   const FamilyMember({
     required this.id,
+    this.familyId,
+    this.userId,
     this.name,
     this.relationship,
     this.birthday,
@@ -20,11 +22,15 @@ class FamilyMember {
     this.documentsList,
     this.socialNetworks,
     this.messengers,
+    this.fcmTokens,
+    this.isAdmin = false,
     this.createdAt,
     this.updatedAt,
   });
 
   final String id;
+  final String? familyId;
+  final String? userId;
   final String? name;
   final String? relationship;
   final DateTime? birthday;
@@ -38,12 +44,16 @@ class FamilyMember {
   final List<Map<String, String>>? documentsList;
   final List<Map<String, String>>? socialNetworks;
   final List<Map<String, String>>? messengers;
+  final List<String>? fcmTokens;
+  final bool isAdmin;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
   factory FamilyMember.fromMap(Map<String, dynamic> map) {
     return FamilyMember(
       id: (map['id'] ?? '').toString(),
+      familyId: map['familyId'] as String?,
+      userId: map['userId'] as String?,
       name: map['name'] as String?,
       relationship: map['relationship'] as String?,
       birthday: parseNullableDateTime(map['birthday']),
@@ -57,6 +67,10 @@ class FamilyMember {
       documentsList: parseStringMapList(map['documentsList']),
       socialNetworks: parseStringMapList(map['socialNetworks']),
       messengers: parseStringMapList(map['messengers']),
+      fcmTokens: (map['fcmTokens'] as List?)
+          ?.whereType<String>()
+          .toList(growable: false),
+      isAdmin: map['isAdmin'] as bool? ?? false,
       createdAt: parseNullableDateTime(map['createdAt']),
       updatedAt: parseNullableDateTime(map['updatedAt']),
     );
@@ -64,6 +78,8 @@ class FamilyMember {
 
   Map<String, dynamic> toMap() => <String, dynamic>{
         'id': id,
+        'familyId': familyId,
+        'userId': userId,
         'name': name,
         'relationship': relationship,
         'birthday': birthday?.toIso8601String(),
@@ -77,11 +93,15 @@ class FamilyMember {
         'documentsList': documentsList,
         'socialNetworks': socialNetworks,
         'messengers': messengers,
+        'fcmTokens': fcmTokens,
+        'isAdmin': isAdmin,
         'createdAt': createdAt?.toIso8601String(),
         'updatedAt': updatedAt?.toIso8601String(),
       };
 
   FamilyMember copyWith({
+    Object? familyId = _sentinel,
+    Object? userId = _sentinel,
     Object? name = _sentinel,
     Object? relationship = _sentinel,
     Object? birthday = _sentinel,
@@ -95,11 +115,15 @@ class FamilyMember {
     Object? documentsList = _sentinel,
     Object? socialNetworks = _sentinel,
     Object? messengers = _sentinel,
+    Object? fcmTokens = _sentinel,
+    Object? isAdmin = _sentinel,
     Object? createdAt = _sentinel,
     Object? updatedAt = _sentinel,
   }) {
     return FamilyMember(
       id: id,
+      familyId: familyId == _sentinel ? this.familyId : familyId as String?,
+      userId: userId == _sentinel ? this.userId : userId as String?,
       name: name == _sentinel ? this.name : name as String?,
       relationship: relationship == _sentinel
           ? this.relationship
@@ -124,6 +148,9 @@ class FamilyMember {
       messengers: messengers == _sentinel
           ? this.messengers
           : messengers as List<Map<String, String>>?,
+      fcmTokens:
+          fcmTokens == _sentinel ? this.fcmTokens : fcmTokens as List<String>?,
+      isAdmin: isAdmin == _sentinel ? this.isAdmin : isAdmin as bool,
       createdAt:
           createdAt == _sentinel ? this.createdAt : createdAt as DateTime?,
       updatedAt:
