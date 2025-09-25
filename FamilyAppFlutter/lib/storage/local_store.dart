@@ -1,8 +1,13 @@
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../models/chat.dart';
+import '../models/chat_message.dart';
 import '../security/secure_key_service.dart';
 
+/// Centralized entry point for all Hive operations. Guarantees that every box
+/// is encrypted with the AES key stored in the Android Keystore and that all
+/// adapters are registered prior to usage.
 class LocalStore {
   LocalStore._();
 
@@ -14,16 +19,16 @@ class LocalStore {
     if (_initialized) {
       return;
     }
+
     await Hive.initFlutter();
-    // ANDROID-ONLY FIX: use the shared secure key for encrypted Hive boxes.
-    // SECURITY: all local boxes are encrypted with the derived AES cipher.
+    _registerAdapters();
+
     final List<int> keyBytes = await SecureKeyService.getKeyBytes();
+    // ANDROID-ONLY FIX: construct the Hive cipher from the Keystore-backed key.
+    // SECURITY: all local data is sealed with the AES cipher derived below.
     _cipher = HiveAesCipher(keyBytes);
-    final HiveAesCipher cipher = _cipher!;
-    _boxes['settings'] = await Hive.openBox<Object?>(
-      'settings',
-      encryptionCipher: cipher,
-    );
+
+    await _openEncryptedBox<Object?>('settings');
     _initialized = true;
   }
 
@@ -32,21 +37,36 @@ class LocalStore {
     if (box is Box<Object?>) {
       return box;
     }
-    throw StateError('LocalStore.init() must be called before accessing boxes');
+
+    throw StateError('LocalStore.init() must run before accessing Hive boxes');
   }
 
   static Future<Box<T>> openBox<T>(String name) async {
     if (!_initialized) {
       throw StateError('LocalStore.init() must be called before opening boxes');
     }
+
+
+
     final Box<dynamic>? cached = _boxes[name];
     if (cached is Box<T>) {
       return cached;
     }
+
+    return _openEncryptedBox<T>(name);
+  }
+
+  static Future<void> saveFcmToken(String token) async {
+    await settingsBox.put('fcmToken', token);
+  }
+
+  static Future<Box<T>> _openEncryptedBox<T>(String name) async {
     final HiveAesCipher? cipher = _cipher;
     if (cipher == null) {
-      throw StateError('Encryption cipher not available');
+      throw StateError('Encryption cipher not initialized');
     }
+
+
     final Box<T> box = await Hive.openBox<T>(
       name,
       encryptionCipher: cipher,
@@ -55,7 +75,16 @@ class LocalStore {
     return box;
   }
 
-  static Future<void> saveFcmToken(String token) async {
-    await settingsBox.put('fcmToken', token);
+
+  static void _registerAdapters() {
+    if (!Hive.isAdapterRegistered(ChatAdapter().typeId)) {
+      Hive.registerAdapter(ChatAdapter());
+    }
+    if (!Hive.isAdapterRegistered(MessageTypeAdapter().typeId)) {
+      Hive.registerAdapter(MessageTypeAdapter());
+    }
+    if (!Hive.isAdapterRegistered(ChatMessageAdapter().typeId)) {
+      Hive.registerAdapter(ChatMessageAdapter());
+    }
   }
 }
