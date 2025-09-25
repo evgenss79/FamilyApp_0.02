@@ -3,8 +3,7 @@ name: Dart Analysis
 on:
   push:
     branches:
-
-      - codex_android
+      - main
 
 
 jobs:
