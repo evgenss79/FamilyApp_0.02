@@ -1,20 +1,26 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../models/gallery_item.dart';
-import '../services/firestore_service.dart';
+import '../repositories/gallery_repository.dart';
 import '../services/storage_service.dart';
+import '../services/sync_service.dart';
 
-/// Provider that manages photo gallery items with remote persistence.
+/// Provider that manages photo gallery items through the encrypted sync stack.
 class GalleryData extends ChangeNotifier {
   GalleryData({
-    required FirestoreService firestore,
+    required GalleryRepository repository,
     required StorageService storage,
+    required SyncService syncService,
     required this.familyId,
-  })  : _firestore = firestore,
-        _storage = storage;
+  })  : _repository = repository,
+        _storage = storage,
+        _syncService = syncService;
 
-  final FirestoreService _firestore;
+  final GalleryRepository _repository;
   final StorageService _storage;
+  final SyncService _syncService;
   final String familyId;
 
   final List<GalleryItem> items = [];
@@ -24,16 +30,26 @@ class GalleryData extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
 
+  StreamSubscription<List<GalleryItem>>? _subscription;
+
   Future<void> load() async {
     if (_loaded || _isLoading) return;
     _isLoading = true;
     notifyListeners();
     try {
-      final fetched = await _firestore.fetchGalleryItems(familyId);
       items
         ..clear()
-        ..addAll(fetched);
+        ..addAll(await _repository.loadLocal(familyId));
+      _subscription = _repository.watchLocal(familyId).listen(
+        (List<GalleryItem> updated) {
+          items
+            ..clear()
+            ..addAll(updated);
+          notifyListeners();
+        },
+      );
       _loaded = true;
+      await _syncService.flush();
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -41,9 +57,8 @@ class GalleryData extends ChangeNotifier {
   }
 
   Future<void> addItem(GalleryItem item) async {
-    await _firestore.upsertGalleryItem(familyId, item);
-    items.add(item);
-    notifyListeners();
+    await _repository.saveLocal(familyId, item);
+    await _syncService.flush();
   }
 
   Future<void> removeItem(String idOrUrl) async {
@@ -52,13 +67,18 @@ class GalleryData extends ChangeNotifier {
     );
     if (index == -1) return;
     final item = items[index];
-    await _firestore.deleteGalleryItem(familyId, item.id);
+    await _repository.markDeleted(familyId, item.id);
+    await _syncService.flush();
     if (item.storagePath != null) {
       await _storage.deleteByPath(item.storagePath!);
     } else if (item.url != null) {
       await _storage.deleteByUrl(item.url!);
     }
-    items.removeAt(index);
-    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 }
