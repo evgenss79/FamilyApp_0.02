@@ -59,11 +59,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _pickAvatar() async {
     final AuthProvider auth = context.read<AuthProvider>();
-    final StorageService storage = context.read<StorageService>();
     final String? familyId = auth.familyId;
     if (familyId == null) return;
     final XFile? file = await _picker.pickImage(source: ImageSource.gallery);
-    if (file == null || !mounted) return;
+    if (file == null) return;
+    final StorageService storage = context.read<StorageService>();
     setState(() {
       _uploadingAvatar = true;
     });
@@ -76,11 +76,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // ANDROID-ONLY FIX: clean up the previous Android avatar blob to avoid leaks.
         await storage.deleteByPath(_avatarStoragePath!);
       }
-
-      if (!mounted) {
-        return;
-      }
-
       setState(() {
         _avatarUrl = result.downloadUrl;
         _avatarStoragePath = result.storagePath;
