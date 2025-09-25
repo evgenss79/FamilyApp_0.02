@@ -36,7 +36,7 @@ class LocalStore {
     if (box is Box<Object?>) {
       return box;
     }
-
+    
     throw StateError('LocalStore.init() must run before accessing Hive boxes');
   }
 
@@ -56,6 +56,24 @@ class LocalStore {
   static Future<void> saveFcmToken(String token) async {
     await settingsBox.put('fcmToken', token);
   }
+
+
+  static String? getFcmToken() {
+    // ANDROID-ONLY FIX: expose the Android-registered FCM token for profile syncs.
+    final Object? value = settingsBox.get('fcmToken');
+    return value is String ? value : null;
+  }
+
+  static bool isOnboardingTipsDismissed() {
+    final Object? value = settingsBox.get('onboardingTipsDismissed');
+    return value is bool ? value : false;
+  }
+
+  static Future<void> setOnboardingTipsDismissed(bool dismissed) async {
+    // ANDROID-ONLY FIX: persist the Android onboarding banner preference inside the encrypted box.
+    await settingsBox.put('onboardingTipsDismissed', dismissed);
+  }
+
 
   static Future<Box<T>> _openEncryptedBox<T>(String name) async {
     final HiveAesCipher? cipher = _cipher;

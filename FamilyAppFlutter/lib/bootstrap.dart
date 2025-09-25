@@ -4,6 +4,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'security/secure_key_service.dart';
 import 'services/notifications_service.dart';
+import 'services/remote_config_service.dart';
+
 import 'storage/local_store.dart';
 
 Future<void> bootstrap() async {
@@ -16,6 +18,9 @@ Future<void> bootstrap() async {
   await SecureKeyService.ensureKey();
   await LocalStore.init();
   await NotificationsService.instance.init();
+
+  // ANDROID-ONLY FIX: hydrate Remote Config before rendering Android UI gates.
+  await RemoteConfigService.instance.init();
 }
 
 Future<void> _ensureFirebaseInitialized() async {
