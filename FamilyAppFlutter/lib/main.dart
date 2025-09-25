@@ -22,7 +22,9 @@ import 'repositories/schedule_repository.dart';
 import 'repositories/tasks_repository.dart';
 import 'screens/home_screen.dart';
 import 'services/storage_service.dart';
+
 import 'services/sync_service.dart';
+
 import 'storage/local_store.dart';
 
 /// Entry point for the Family App. Initializes Firebase, Hive and all
@@ -62,6 +64,7 @@ Future<void> main() async {
   );
   await syncService.start();
   await syncService.flush();
+
 
   runApp(
     MyApp(

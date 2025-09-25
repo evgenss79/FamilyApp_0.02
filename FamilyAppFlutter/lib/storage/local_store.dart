@@ -37,6 +37,7 @@ class LocalStore {
     if (box is Box<Object?>) {
       return box;
     }
+
     throw StateError('LocalStore.init() must run before accessing Hive boxes');
   }
 
