@@ -58,17 +58,18 @@ class EncryptedFirestoreService {
     return raw;
   }
 
-
-  /// Шифрует и возвращает Map, пригодный для set/WriteBatch.
-  Future<Map<String, dynamic>> encryptPayload(
-      Map<String, dynamic> data) async {
-    // Гарантируем наличие ключа перед шифрованием.
+  /// Шифрует и сохраняет Map в поле "enc".
+  Future<void> setEncrypted({
+    required DocumentReference<Map<String, dynamic>> ref,
+    required Map<String, dynamic> data,
+  }) async {
+    // Гарантируем наличие ключа
     await SecureKeyService.ensureKey();
 
     final keyBytes = Uint8List.fromList(await SecureKeyService.getKeyBytes());
     final key = KeyParameter(keyBytes);
 
-    // SECURITY: используем независимый IV для каждой записи.
+    // 12-байтный IV для GCM
     final iv = _randomBytes(12);
 
     final gcm = GCMBlockCipher(AESEngine());
@@ -85,16 +86,7 @@ class EncryptedFirestoreService {
       'ct': base64Encode(cipher),
     };
 
-    return <String, dynamic>{'enc': json.encode(bundle)};
-  }
-
-  /// Шифрует и сохраняет Map в поле "enc".
-  Future<void> setEncrypted({
-    required DocumentReference<Map<String, dynamic>> ref,
-    required Map<String, dynamic> data,
-  }) async {
-    final Map<String, dynamic> payload = await encryptPayload(data);
-    await ref.set(payload, SetOptions(merge: true));
+    await ref.set({'enc': json.encode(bundle)}, SetOptions(merge: true));
   }
 
   Uint8List _randomBytes(int n) {

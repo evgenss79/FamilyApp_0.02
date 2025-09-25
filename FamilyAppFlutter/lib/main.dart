@@ -10,21 +10,9 @@ import 'providers/friends_data.dart';
 import 'providers/gallery_data.dart';
 import 'providers/language_provider.dart';
 import 'providers/schedule_data.dart';
-import 'repositories/call_messages_repository.dart';
-import 'repositories/calls_repository.dart';
-import 'repositories/chat_messages_repository.dart';
-import 'repositories/chats_repository.dart';
-import 'repositories/events_repository.dart';
-import 'repositories/friends_repository.dart';
-import 'repositories/gallery_repository.dart';
-import 'repositories/members_repository.dart';
-import 'repositories/schedule_repository.dart';
-import 'repositories/tasks_repository.dart';
 import 'screens/home_screen.dart';
+import 'services/firestore_service.dart';
 import 'services/storage_service.dart';
-
-import 'services/sync_service.dart';
-
 import 'storage/local_store.dart';
 
 /// Entry point for the Family App. Initializes Firebase, Hive and all
@@ -33,52 +21,16 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await bootstrap(); // ANDROID-ONLY FIX: serialized Android bootstrap flow.
 
+  final FirestoreService firestore = FirestoreService();
   final StorageService storage = StorageService();
-  final MembersRepository membersRepository = MembersRepository();
-  final TasksRepository tasksRepository = TasksRepository();
-  final EventsRepository eventsRepository = EventsRepository();
-  final FriendsRepository friendsRepository = FriendsRepository();
-  final GalleryRepository galleryRepository = GalleryRepository();
-  final ScheduleRepository scheduleRepository = ScheduleRepository();
-  final ChatsRepository chatsRepository = ChatsRepository();
-  final ChatMessagesRepository chatMessagesRepository =
-      ChatMessagesRepository();
-  final CallsRepository callsRepository = CallsRepository();
-  final CallMessagesRepository callMessagesRepository =
-      CallMessagesRepository();
   final LanguageProvider languageProvider =
       LanguageProvider(box: LocalStore.settingsBox);
 
-  final SyncService syncService = SyncService(
-    familyId: AppConfig.familyId,
-    membersRepository: membersRepository,
-    tasksRepository: tasksRepository,
-    eventsRepository: eventsRepository,
-    friendsRepository: friendsRepository,
-    galleryRepository: galleryRepository,
-    scheduleRepository: scheduleRepository,
-    chatsRepository: chatsRepository,
-    chatMessagesRepository: chatMessagesRepository,
-    callsRepository: callsRepository,
-    callMessagesRepository: callMessagesRepository,
-  );
-  await syncService.start();
-  await syncService.flush();
-
-
   runApp(
     MyApp(
+      firestore: firestore,
       storage: storage,
       languageProvider: languageProvider,
-      membersRepository: membersRepository,
-      tasksRepository: tasksRepository,
-      eventsRepository: eventsRepository,
-      friendsRepository: friendsRepository,
-      galleryRepository: galleryRepository,
-      scheduleRepository: scheduleRepository,
-      chatsRepository: chatsRepository,
-      chatMessagesRepository: chatMessagesRepository,
-      syncService: syncService,
     ),
   );
 }
@@ -86,77 +38,53 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   const MyApp({
     super.key,
+    required this.firestore,
     required this.storage,
     required this.languageProvider,
-    required this.membersRepository,
-    required this.tasksRepository,
-    required this.eventsRepository,
-    required this.friendsRepository,
-    required this.galleryRepository,
-    required this.scheduleRepository,
-    required this.chatsRepository,
-    required this.chatMessagesRepository,
-    required this.syncService,
   });
 
+  final FirestoreService firestore;
   final StorageService storage;
   final LanguageProvider languageProvider;
-  final MembersRepository membersRepository;
-  final TasksRepository tasksRepository;
-  final EventsRepository eventsRepository;
-  final FriendsRepository friendsRepository;
-  final GalleryRepository galleryRepository;
-  final ScheduleRepository scheduleRepository;
-  final ChatsRepository chatsRepository;
-  final ChatMessagesRepository chatMessagesRepository;
-  final SyncService syncService;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        Provider<FirestoreService>.value(value: firestore),
         Provider<StorageService>.value(value: storage),
-        Provider<SyncService>.value(value: syncService),
         ChangeNotifierProvider<LanguageProvider>.value(
           value: languageProvider,
         ),
         ChangeNotifierProvider<ChatProvider>(
           create: (_) => ChatProvider(
-            chatsRepository: chatsRepository,
-            messagesRepository: chatMessagesRepository,
+            firestore: firestore,
             storage: storage,
-            syncService: syncService,
             familyId: AppConfig.familyId,
           )..init(),
         ),
         ChangeNotifierProvider<FamilyData>(
           create: (_) => FamilyData(
+            firestore: firestore,
             familyId: AppConfig.familyId,
-            membersRepository: membersRepository,
-            tasksRepository: tasksRepository,
-            eventsRepository: eventsRepository,
-            syncService: syncService,
           )..load(),
         ),
         ChangeNotifierProvider<FriendsData>(
           create: (_) => FriendsData(
-            repository: friendsRepository,
-            syncService: syncService,
+            firestore: firestore,
             familyId: AppConfig.familyId,
           )..load(),
         ),
         ChangeNotifierProvider<GalleryData>(
           create: (_) => GalleryData(
-            repository: galleryRepository,
+            firestore: firestore,
             storage: storage,
-            syncService: syncService,
             familyId: AppConfig.familyId,
           )..load(),
         ),
         ChangeNotifierProvider<ScheduleData>(
           create: (_) => ScheduleData(
-            repository: scheduleRepository,
-            syncService: syncService,
+            firestore: firestore,
             familyId: AppConfig.familyId,
           )..load(),
         ),
