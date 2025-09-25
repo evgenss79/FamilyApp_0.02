@@ -24,80 +24,80 @@ import 'tasks_screen.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
-  static final List<_Feature> features = [
-    _Feature(
+  static final List<HomeFeature> features = [
+    HomeFeature(
       titleKey: 'members',
       descriptionKey: 'membersDescription',
       icon: Icons.group,
       builder: (_) => const MembersScreen(),
     ),
-    _Feature(
+    HomeFeature(
       titleKey: 'tasks',
       descriptionKey: 'tasksDescription',
       icon: Icons.checklist,
       builder: (_) => const TasksScreen(),
     ),
-    _Feature(
+    HomeFeature(
       titleKey: 'events',
       descriptionKey: 'eventsDescription',
       icon: Icons.event,
       builder: (_) => const EventsScreen(),
     ),
-    _Feature(
+    HomeFeature(
       titleKey: 'calendar',
       descriptionKey: 'calendarDescription',
       icon: Icons.calendar_today,
       builder: (_) => const CalendarScreen(),
     ),
-    _Feature(
+    HomeFeature(
       titleKey: 'schedule',
       descriptionKey: 'scheduleDescription',
       icon: Icons.schedule,
       builder: (_) => const ScheduleScreen(),
     ),
-    _Feature(
+    HomeFeature(
       titleKey: 'scoreboard',
       descriptionKey: 'scoreboardDescription',
       icon: Icons.leaderboard,
       builder: (_) => const ScoreboardScreen(),
     ),
-    _Feature(
+    HomeFeature(
       titleKey: 'gallery',
       descriptionKey: 'galleryDescription',
       icon: Icons.photo_library,
       builder: (_) => const GalleryScreen(),
     ),
-    _Feature(
+    HomeFeature(
       titleKey: 'friends',
       descriptionKey: 'friendsDescription',
       icon: Icons.people_alt,
       builder: (_) => const FriendsScreen(),
     ),
-    _Feature(
+    HomeFeature(
       titleKey: 'chats',
       descriptionKey: 'chatsDescription',
       icon: Icons.chat_bubble_outline,
       builder: (_) => const ChatListScreen(),
     ),
-    _Feature(
+    HomeFeature(
       titleKey: 'aiSuggestions',
       descriptionKey: 'aiSuggestionsDescription',
       icon: Icons.auto_awesome,
       builder: (_) => const AiSuggestionsScreen(),
     ),
-    _Feature(
+    HomeFeature(
       titleKey: 'calendarFeed',
       descriptionKey: 'calendarFeedDescription',
       icon: Icons.rss_feed,
       builder: (_) => const CalendarFeedScreen(),
     ),
-    _Feature(
+    HomeFeature(
       titleKey: 'startCall',
       descriptionKey: 'startCallDescription',
       icon: Icons.call,
       builder: (_) => const CallSetupScreen(),
     ),
-    _Feature(
+    HomeFeature(
       titleKey: 'cloudCall',
       descriptionKey: 'cloudCallDescription',
       icon: Icons.cloud,
@@ -134,7 +134,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final RemoteConfigService remoteConfig =
         context.watch<RemoteConfigService>();
     final AuthProvider auth = context.watch<AuthProvider>();
-    final List<_Feature> features = HomeScreen.features.where((_Feature feature) {
+
+    final List<HomeFeature> features =
+        HomeScreen.features.where((HomeFeature feature) {
       if (!remoteConfig.aiSuggestionsEnabled &&
           feature.titleKey == 'aiSuggestions') {
         return false;
@@ -267,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _FeatureCard extends StatelessWidget {
-  final _Feature feature;
+  final HomeFeature feature;
 
   const _FeatureCard({required this.feature});
 
@@ -310,13 +312,13 @@ class _FeatureCard extends StatelessWidget {
   }
 }
 
-class _Feature {
+class HomeFeature {
   final String titleKey;
   final String descriptionKey;
   final IconData icon;
   final WidgetBuilder builder;
 
-  const _Feature({
+  const HomeFeature({
     required this.titleKey,
     required this.descriptionKey,
     required this.icon,
@@ -373,10 +375,10 @@ class _OnboardingBanner extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            Wrap(
+            const Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: const [
+              children: [
                 _OnboardingTag(labelKey: 'aiSuggestions'),
                 _OnboardingTag(labelKey: 'chats'),
                 _OnboardingTag(labelKey: 'startCall'),
