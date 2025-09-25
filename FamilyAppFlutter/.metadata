@@ -18,12 +18,7 @@ migration:
     - platform: android
       create_revision: 05db9689081f091050f01aed79f04dce0c750154
       base_revision: 05db9689081f091050f01aed79f04dce0c750154
-    - platform: ios
-      create_revision: 05db9689081f091050f01aed79f04dce0c750154
-      base_revision: 05db9689081f091050f01aed79f04dce0c750154
-    - platform: macos
-      create_revision: 05db9689081f091050f01aed79f04dce0c750154
-      base_revision: 05db9689081f091050f01aed79f04dce0c750154
+    # ANDROID-ONLY FIX: Removed non-Android platforms from migration metadata.
 
   # User provided section
 
@@ -33,4 +28,3 @@ migration:
   # Files that are not part of the templates will be ignored by default.
   unmanaged_files:
     - 'lib/main.dart'
-    - 'ios/Runner.xcodeproj/project.pbxproj'
