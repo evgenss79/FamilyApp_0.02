@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-
 // ANDROID-ONLY FIX: centralized bootstrap injects Firebase/config without direct AppConfig wiring.
 import 'bootstrap.dart';
 import 'l10n/app_localizations.dart';
@@ -14,6 +13,9 @@ import 'providers/friends_data.dart';
 import 'providers/gallery_data.dart';
 import 'providers/language_provider.dart';
 import 'providers/schedule_data.dart';
+
+import 'models/chat.dart';
+
 import 'repositories/call_messages_repository.dart';
 import 'repositories/calls_repository.dart';
 import 'repositories/chat_messages_repository.dart';
@@ -26,6 +28,9 @@ import 'repositories/schedule_repository.dart';
 import 'repositories/tasks_repository.dart';
 import 'screens/auth/complete_profile_screen.dart';
 import 'screens/auth/sign_in_screen.dart';
+
+import 'screens/chat_screen.dart';
+
 import 'screens/home_screen.dart';
 import 'services/auth_service.dart';
 import 'services/notifications_service.dart';
@@ -147,14 +152,19 @@ class _AuthenticatedScopeState extends State<_AuthenticatedScope> {
   final CallsRepository _callsRepository = CallsRepository();
   final CallMessagesRepository _callMessagesRepository =
       CallMessagesRepository();
+  final NotificationsService _notifications = NotificationsService.instance;
 
   SyncService? _syncService;
   bool _initializing = true;
   String? _activeFamilyId;
+  StreamSubscription<String>? _notificationSubscription;
+  String? _pendingNotificationPayload;
 
   @override
   void initState() {
     super.initState();
+    _notificationSubscription =
+        _notifications.payloadStream.listen(_handleNotificationPayload);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _startSync();
     });
@@ -199,6 +209,17 @@ class _AuthenticatedScopeState extends State<_AuthenticatedScope> {
       _initializing = false;
       _activeFamilyId = familyId;
     });
+    final String? pendingPayload = _pendingNotificationPayload;
+    if (pendingPayload != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+        final String payload = pendingPayload;
+        _pendingNotificationPayload = null;
+        unawaited(_openChatFromPayload(payload));
+      });
+    }
   }
 
   @override
@@ -207,6 +228,7 @@ class _AuthenticatedScopeState extends State<_AuthenticatedScope> {
     if (disposeFuture != null) {
       unawaited(disposeFuture);
     }
+    _notificationSubscription?.cancel();
     super.dispose();
   }
 
@@ -238,6 +260,7 @@ class _AuthenticatedScopeState extends State<_AuthenticatedScope> {
             messagesRepository: _chatMessagesRepository,
             storage: widget.storage,
             syncService: syncService,
+            notificationsService: _notifications,
             familyId: familyId,
           )..init(),
         ),
@@ -279,5 +302,58 @@ class _AuthenticatedScopeState extends State<_AuthenticatedScope> {
       ],
       child: const HomeScreen(),
     );
+  }
+
+  void _handleNotificationPayload(String payload) {
+    if (!mounted || _initializing || _syncService == null) {
+      _pendingNotificationPayload = payload;
+      return;
+    }
+    _pendingNotificationPayload = null;
+    unawaited(_openChatFromPayload(payload));
+  }
+
+  Future<void> _openChatFromPayload(String payload) async {
+    if (!mounted) {
+      _pendingNotificationPayload = payload;
+      return;
+    }
+    if (!payload.startsWith('chat:')) {
+      return;
+    }
+    final String chatId = payload.substring('chat:'.length);
+    ChatProvider chatProvider;
+    try {
+      chatProvider = context.read<ChatProvider>();
+    } catch (_) {
+      _pendingNotificationPayload = payload;
+      return;
+    }
+    Chat? chat;
+    try {
+      chat = chatProvider.chats.firstWhere((Chat item) => item.id == chatId);
+    } catch (_) {
+      chat = null;
+    }
+    if (chat == null) {
+      await chatProvider.load();
+      try {
+        chat = chatProvider.chats.firstWhere((Chat item) => item.id == chatId);
+      } catch (_) {
+        chat = null;
+      }
+    }
+    if (chat == null || !mounted) {
+      return;
+    }
+    final Chat target = chat;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => ChatScreen(chat: target)),
+      );
+    });
   }
 }

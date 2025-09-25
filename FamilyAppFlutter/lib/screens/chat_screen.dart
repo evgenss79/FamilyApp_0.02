@@ -1,9 +1,13 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/chat.dart';
 import '../models/chat_message.dart';
+import '../models/message_type.dart';
 import '../providers/chat_provider.dart';
 import '../providers/family_data.dart';
 
@@ -21,6 +25,8 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final _messageController = TextEditingController();
   String? _selectedSenderId;
+  final ImagePicker _imagePicker = ImagePicker();
+  bool _sendingAttachment = false;
 
   @override
   void initState() {
@@ -49,6 +55,113 @@ class _ChatScreenState extends State<ChatScreen> {
         .read<ChatProvider>()
         .sendText(chatId: widget.chat.id, senderId: senderId, text: text);
     _messageController.clear();
+  }
+
+  Future<void> _pickImage() async {
+    final XFile? picked = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+    final String? senderId = _selectedSenderId;
+    if (picked == null || senderId == null) {
+      return;
+    }
+    await _sendAttachment(picked.path, MessageType.image);
+  }
+
+  Future<void> _pickFile() async {
+    final FilePickerResult? result = await FilePicker.platform.pickFiles();
+    final String? path = result?.files.single.path;
+    final String? senderId = _selectedSenderId;
+    if (path == null || senderId == null) {
+      return;
+    }
+    await _sendAttachment(path, MessageType.file);
+  }
+
+  Future<void> _sendAttachment(String path, MessageType type) async {
+    final String? senderId = _selectedSenderId;
+    if (senderId == null) {
+      return;
+    }
+    setState(() {
+      _sendingAttachment = true;
+    });
+    try {
+      await context.read<ChatProvider>().sendAttachment(
+            chatId: widget.chat.id,
+            senderId: senderId,
+            localPath: path,
+            type: type,
+          );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.tr('attachmentSendError'))),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _sendingAttachment = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _openAttachment(String url) async {
+    if (url.isEmpty) {
+      return;
+    }
+    final Uri uri = Uri.parse(url);
+    final bool launched = await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
+    if (!launched && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr('attachmentOpenError'))),
+      );
+    }
+  }
+
+  Widget _buildMessageContent(BuildContext context, ChatMessage message) {
+    switch (message.type) {
+      case MessageType.text:
+        return Text(message.content);
+      case MessageType.image:
+        return GestureDetector(
+          onTap: () => _openAttachment(message.content),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              message.content,
+              width: 200,
+              height: 200,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Text(
+                context.tr('attachmentOpenError'),
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
+            ),
+          ),
+        );
+      case MessageType.file:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextButton.icon(
+              onPressed: () => _openAttachment(message.content),
+              icon: const Icon(Icons.open_in_new),
+              label: Text(context.tr('openAttachmentAction')),
+            ),
+            SelectableText(
+              message.content,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        );
+    }
   }
 
   @override
@@ -100,7 +213,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                     style: Theme.of(context).textTheme.labelMedium,
                                   ),
                                   const SizedBox(height: 4),
-                                  Text(message.content),
+                                  _buildMessageContent(context, message),
                                   const SizedBox(height: 4),
                                   Text(
                                     context.loc.formatDate(
@@ -119,6 +232,21 @@ class _ChatScreenState extends State<ChatScreen> {
                         },
                       ),
               ),
+              if (_sendingAttachment)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(context.tr('uploadingAttachmentLabel')),
+                    ],
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsets.all(8),
                 child: Row(
@@ -138,6 +266,17 @@ class _ChatScreenState extends State<ChatScreen> {
                       },
                     ),
                     const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.photo),
+                      tooltip: context.tr('attachImageAction'),
+                      onPressed: _sendingAttachment ? null : _pickImage,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.attach_file),
+                      tooltip: context.tr('attachFileAction'),
+                      onPressed: _sendingAttachment ? null : _pickFile,
+                    ),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: TextField(
                         controller: _messageController,
@@ -152,7 +291,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     IconButton(
                       icon: const Icon(Icons.send),
                       tooltip: context.tr('sendAction'),
-                      onPressed: _sendMessage,
+                      onPressed: _sendingAttachment ? null : _sendMessage,
                     ),
                   ],
                 ),

@@ -9,6 +9,7 @@ import '../models/chat_message.dart';
 import '../models/message_type.dart';
 import '../repositories/chat_messages_repository.dart';
 import '../repositories/chats_repository.dart';
+import '../services/notifications_service.dart';
 import '../services/storage_service.dart';
 import '../services/sync_service.dart';
 
@@ -20,18 +21,20 @@ class ChatProvider extends ChangeNotifier {
     required ChatMessagesRepository messagesRepository,
     required StorageService storage,
     required SyncService syncService,
+    required NotificationsService notificationsService,
     required this.familyId,
   })  : _chatsRepository = chatsRepository,
         _messagesRepository = messagesRepository,
         _storage = storage,
-        _syncService = syncService;
+        _syncService = syncService,
+        _notifications = notificationsService;
 
   final ChatsRepository _chatsRepository;
   final ChatMessagesRepository _messagesRepository;
   final StorageService _storage;
   final SyncService _syncService;
+  final NotificationsService _notifications;
   final String familyId;
-
   final List<Chat> _chats = <Chat>[];
   final Map<String, List<ChatMessage>> _messages = <String, List<ChatMessage>>{};
 
@@ -39,6 +42,7 @@ class ChatProvider extends ChangeNotifier {
   final Map<String, StreamSubscription<List<ChatMessage>>> _messageSubscriptions =
       <String, StreamSubscription<List<ChatMessage>>>{};
 
+  final Set<String> _subscribedChatIds = <String>{};
   final Uuid _uuid = const Uuid();
 
   bool _loaded = false;
@@ -63,9 +67,40 @@ class ChatProvider extends ChangeNotifier {
       _messages.clear();
       for (final Chat chat in _chats) {
         _messages[chat.id] = await _messagesRepository.loadLocal(familyId, chat.id);
+
+        if (_subscribedChatIds.add(chat.id)) {
+          await _notifications.subscribeToChatTopic(
+            familyId: familyId,
+            chatId: chat.id,
+          );
+        }
       }
       _chatsSubscription = _chatsRepository.watchLocal(familyId).listen(
         (List<Chat> updated) {
+          final Set<String> updatedIds =
+              updated.map((Chat chat) => chat.id).toSet();
+          for (final Chat chat in updated) {
+            if (_subscribedChatIds.add(chat.id)) {
+              unawaited(
+                _notifications.subscribeToChatTopic(
+                  familyId: familyId,
+                  chatId: chat.id,
+                ),
+              );
+            }
+          }
+          for (final String existing in _subscribedChatIds.toList()) {
+            if (!updatedIds.contains(existing)) {
+              _subscribedChatIds.remove(existing);
+              unawaited(
+                _notifications.unsubscribeFromChatTopic(
+                  familyId: familyId,
+                  chatId: existing,
+                ),
+              );
+            }
+          }
+
           _chats
             ..clear()
             ..addAll(updated);
@@ -114,6 +149,14 @@ class ChatProvider extends ChangeNotifier {
     );
     await _chatsRepository.saveLocal(familyId, chat);
     _messages[chat.id] = <ChatMessage>[];
+
+    if (_subscribedChatIds.add(chat.id)) {
+      await _notifications.subscribeToChatTopic(
+        familyId: familyId,
+        chatId: chat.id,
+      );
+    }
+
     await _syncService.flush();
     _resortChats();
     notifyListeners();
@@ -133,6 +176,13 @@ class ChatProvider extends ChangeNotifier {
     await _syncService.flush();
     _messages.remove(chatId);
     await _messageSubscriptions.remove(chatId)?.cancel();
+    if (_subscribedChatIds.remove(chatId)) {
+      await _notifications.unsubscribeFromChatTopic(
+        familyId: familyId,
+        chatId: chatId,
+      );
+    }
+
     notifyListeners();
   }
 
@@ -245,6 +295,18 @@ class ChatProvider extends ChangeNotifier {
       sub.cancel();
     }
     _messageSubscriptions.clear();
+
+    for (final String chatId in _subscribedChatIds) {
+      // ANDROID-ONLY FIX: release Android topic subscriptions when provider leaves scope.
+      unawaited(
+        _notifications.unsubscribeFromChatTopic(
+          familyId: familyId,
+          chatId: chatId,
+        ),
+      );
+    }
+    _subscribedChatIds.clear();
+
     super.dispose();
   }
 }
