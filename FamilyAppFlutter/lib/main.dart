@@ -13,7 +13,9 @@ import 'providers/friends_data.dart';
 import 'providers/gallery_data.dart';
 import 'providers/language_provider.dart';
 import 'providers/schedule_data.dart';
+
 import 'models/chat.dart';
+
 import 'repositories/call_messages_repository.dart';
 import 'repositories/calls_repository.dart';
 import 'repositories/chat_messages_repository.dart';
@@ -26,7 +28,9 @@ import 'repositories/schedule_repository.dart';
 import 'repositories/tasks_repository.dart';
 import 'screens/auth/complete_profile_screen.dart';
 import 'screens/auth/sign_in_screen.dart';
+
 import 'screens/chat_screen.dart';
+
 import 'screens/home_screen.dart';
 import 'services/auth_service.dart';
 import 'services/notifications_service.dart';
