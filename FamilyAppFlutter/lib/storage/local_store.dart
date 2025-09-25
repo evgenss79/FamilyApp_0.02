@@ -37,6 +37,7 @@ class LocalStore {
     if (box is Box<Object?>) {
       return box;
     }
+
     throw StateError('LocalStore.init() must run before accessing Hive boxes');
   }
 
@@ -44,6 +45,8 @@ class LocalStore {
     if (!_initialized) {
       throw StateError('LocalStore.init() must be called before opening boxes');
     }
+
+
 
     final Box<dynamic>? cached = _boxes[name];
     if (cached is Box<T>) {
@@ -63,6 +66,7 @@ class LocalStore {
       throw StateError('Encryption cipher not initialized');
     }
 
+
     final Box<T> box = await Hive.openBox<T>(
       name,
       encryptionCipher: cipher,
@@ -70,6 +74,7 @@ class LocalStore {
     _boxes[name] = box;
     return box;
   }
+
 
   static void _registerAdapters() {
     if (!Hive.isAdapterRegistered(ChatAdapter().typeId)) {
