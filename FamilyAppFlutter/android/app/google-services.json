@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "308896699883",
-    "project_id": "familyandfriends-space",
-    "storage_bucket": "familyandfriends-space.firebasestorage.app"
+    "project_number": "000000000000",
+    "project_id": "replace-with-your-firebase-project-id",
+    "storage_bucket": "replace-with-your-firebase-storage-bucket"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:308896699883:android:f02227fe07d50fbcb275ae",
+        "mobilesdk_app_id": "1:000000000000:android:placeholderappid000000",
         "android_client_info": {
-          "package_name": "com.example.family_app"
+          "package_name": "com.familyapp.android"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCq2Jp7JlGINY9v4J-nFixYPW0ohNDXbME"
+          "current_key": "replace-with-your-api-key"
         }
       ],
       "services": {
