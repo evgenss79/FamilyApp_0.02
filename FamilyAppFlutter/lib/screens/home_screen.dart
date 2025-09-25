@@ -134,6 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final RemoteConfigService remoteConfig =
         context.watch<RemoteConfigService>();
     final AuthProvider auth = context.watch<AuthProvider>();
+
     final List<HomeFeature> features =
         HomeScreen.features.where((HomeFeature feature) {
       if (!remoteConfig.aiSuggestionsEnabled &&
