@@ -2,8 +2,9 @@ import '../utils/parsing.dart';
 
 /// Calendar event shared between family members.
 class Event {
-  static final Object _sentinel = Object();
-  const Event({
+  static const Object _sentinel = Object();
+
+  Event({
     required this.id,
     required this.title,
     required this.startDateTime,
@@ -13,6 +14,7 @@ class Event {
     this.createdAt,
     this.updatedAt,
   }) : participantIds = List.unmodifiable(participantIds ?? <String>[]);
+
   final String id;
   final String title;
   final DateTime startDateTime;
@@ -56,6 +58,7 @@ class Event {
     Object? updatedAt = _sentinel,
   }) {
     return Event(
+
       id: id,
       title: title == _sentinel ? this.title : title as String,
       startDateTime: startDateTime == _sentinel
@@ -66,7 +69,9 @@ class Event {
       description: description == _sentinel
           ? this.description
           : description as String?,
-      participantIds: participantIds ?? this.participantIds,
+      participantIds: participantIds == null
+          ? this.participantIds
+          : List.unmodifiable(participantIds),
       createdAt:
           createdAt == _sentinel ? this.createdAt : createdAt as DateTime?,
       updatedAt:
