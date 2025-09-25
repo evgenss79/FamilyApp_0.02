@@ -1,5 +1,5 @@
 import 'dart:developer' as developer;
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -40,6 +40,36 @@ class NotificationsService {
     _messaging.onTokenRefresh.listen((String token) async {
       await LocalStore.saveFcmToken(token);
     });
+  }
+
+  Future<void> syncTokenToMember({
+    required String familyId,
+    required String memberId,
+  }) async {
+    final String? token = LocalStore.getFcmToken();
+    if (token == null || token.isEmpty) {
+      return;
+    }
+    final DocumentReference<Map<String, dynamic>> memberRef = FirebaseFirestore
+        .instance
+        .collection('families')
+        .doc(familyId)
+        .collection('members')
+        .doc(memberId);
+    try {
+      // ANDROID-ONLY FIX: mirror the Android device token in the encrypted profile.
+      await memberRef.set(<String, dynamic>{
+        'fcmTokens': FieldValue.arrayUnion(<String>[token]),
+        'updatedAt': DateTime.now().toUtc().toIso8601String(),
+      }, SetOptions(merge: true));
+    } catch (error, stackTrace) {
+      developer.log(
+        'Unable to sync FCM token',
+        name: 'NotificationsService',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   Future<void> _initializeLocalNotifications() async {

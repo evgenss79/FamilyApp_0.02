@@ -31,6 +31,33 @@ flutter run
 - Подписки на `snapshots()` Firestore обновляют локальный кеш и автоматически подтягивают новые сообщения чатов, задачи, события, друзей и медиа.
 
 
+### Аутентификация и профили
+
+- Экран входа (`lib/screens/auth/sign_in_screen.dart`) поддерживает email/пароль и Google Sign-In. При первой регистрации автоматически создаётся документ `families/{familyId}` и профиль участника в `members/` c зашифрованными полями.
+- Если Google-аккаунт входит впервые, пользователь перенаправляется на экран завершения профиля для указания имени и названия семьи.
+- После успешного входа FCM-токен устройства синхронизируется с профилем участника (поле `fcmTokens`) через `NotificationsService.syncTokenToMember(...)`, чтобы push-уведомления корректно адресовались.
+- Раздел «Профиль» доступен из бокового меню и позволяет обновить имя, контактные данные, хобби и аватар. Файлы загружаются в Firebase Storage, а прежние аватары удаляются, чтобы не захламлять хранилище.
+
+### Remote Config
+
+- Значения Remote Config подгружаются при старте (`RemoteConfigService`) и управляют видимостью отдельных модулей (AI-подсказки, звонки). Это позволяет включать/отключать функции без обновления приложения в Google Play.
+- Ключ `feature_onboarding_tips` дополнительно управляет Android-баннером быстрых подсказок на домашнем экране; состояние скрытия сохраняется в зашифрованном боксе Hive.
+- Ключи: `feature_ai_suggestions`, `feature_webrtc_enabled`, `feature_onboarding_tips`. Значения по умолчанию — `true`.
+
+### Google Sign-In
+
+1. Добавьте SHA-1/ SHA-256 отпечатки debug/release keystore в консоли Firebase.
+2. Включите Google Sign-In в разделе Authentication → Sign-in method.
+3. Скачайте обновлённый `google-services.json` и замените файл в `android/app/`.
+4. Убедитесь, что `com.google.android.gms:play-services-auth` подтягивается transitively (идёт в составе `google_sign_in`).
+
+### Профиль участника
+
+- Данные хранятся в коллекции `families/{familyId}/members/{memberId}` и шифруются через `EncryptedFirestoreService` (AES-GCM, ключ в Android Keystore).
+- Поля: `name`, `relationship`, `phone`, `email`, `avatarUrl`, `avatarStoragePath`, `hobbies`, `fcmTokens`, `isAdmin`, временные метки `createdAt/updatedAt`.
+- Кнопка «Сохранить изменения» обновляет локальный Hive-кеш и мгновенно пушит изменения в Firestore (через `FamilyData.updateMember` + `SyncService.flush()`).
+
+
 ## Firebase конфигурация для Android
 
 1. Получите файл `google-services.json` в консоли Firebase для приложения с пакетом `com.familyapp.android`.
@@ -53,8 +80,6 @@ flutter run
 
 - `lib/main.dart` – точка входа приложения и навигация по основным экранам.
 - `lib/models/` – простые модели данных.
-- `lib/screens/` – базовые экраны для членов семьи, задач и событий.
+- `lib/screens/` – экраны аутентификации, домашний хаб и разделы семьи/задач/событий.
 - `pubspec.yaml` – описание зависимостей проекта.
-
-На текущем этапе экраны не используют реальные данные; они будут
-подключены к модели данных и облачному хранилищу на следующих этапах разработки.
+На текущем этапе приложение работает только на Android и требует реального проекта Firebase для авторизации, синхронизации и уведомлений.
