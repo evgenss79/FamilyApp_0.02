@@ -1,42 +1,53 @@
+import '../utils/parsing.dart';
 import 'package:hive/hive.dart';
 
 part 'chat.g.dart';
 
-/// A conversation between two or more family members.  Chats hold
-/// metadata such as the title, participating member identifiers, last
-/// updated timestamp and a preview of the most recent message.  The
-/// contents of the messages themselves are stored separately.
+/// A conversation between two or more family members stored locally for quick
+/// access. The encrypted payload lives in Firestore, while this model keeps
+/// metadata such as the title and last message preview.
 @HiveType(typeId: 11)
-class Chat extends HiveObject {
-  /// Unique identifier for this chat.
-  @HiveField(0)
-  String id;
-
-  /// User-provided title of the chat (e.g. "Family group").
-  @HiveField(1)
-  String title;
-
-  /// List of member identifiers participating in this chat.
-  @HiveField(2)
-  List<String> memberIds;
-
-  /// Timestamp of the last activity in this chat.
-  @HiveField(3)
-  DateTime updatedAt;
-
-  /// Optional preview of the most recent message sent in this chat.
-  @HiveField(4)
-  String? lastMessagePreview;
-
+class Chat {
   Chat({
     required this.id,
     required this.title,
-    required this.memberIds,
+    required List<String> memberIds,
     required this.updatedAt,
     this.lastMessagePreview,
-  });
+  }) : memberIds = List.unmodifiable(memberIds);
 
-  Map<String, dynamic> toMap() => {
+  /// Unique identifier for this chat.
+  @HiveField(0)
+  final String id;
+
+  /// Human friendly title for the chat.
+  @HiveField(1)
+  final String title;
+
+  /// Participants of the chat.
+  @HiveField(2)
+  final List<String> memberIds;
+
+  /// Timestamp of the most recent message or metadata change.
+  @HiveField(3)
+  final DateTime updatedAt;
+
+  /// Optional preview text for the last message.
+  @HiveField(4)
+  final String? lastMessagePreview;
+
+  factory Chat.fromMap(Map<String, dynamic> map) => Chat(
+        id: (map['id'] ?? '').toString(),
+        title: (map['title'] ?? '').toString(),
+        memberIds: (map['memberIds'] as List?)
+                ?.map((dynamic e) => e.toString())
+                .toList() ??
+            const <String>[],
+        updatedAt: parseDateTimeOrNow(map['updatedAt']),
+        lastMessagePreview: map['lastMessagePreview'] as String?,
+      );
+
+  Map<String, dynamic> toMap() => <String, dynamic>{
         'id': id,
         'title': title,
         'memberIds': memberIds,
@@ -44,16 +55,18 @@ class Chat extends HiveObject {
         'lastMessagePreview': lastMessagePreview,
       };
 
-  static Chat fromMap(Map<String, dynamic> map) => Chat(
-        id: (map['id'] ?? '').toString(),
-        title: (map['title'] ?? '').toString(),
-        memberIds: (map['memberIds'] as List?)
-                ?.map((dynamic e) => e.toString())
-                .toList() ??
-            <String>[],
-        updatedAt: map['updatedAt'] is String
-            ? DateTime.tryParse(map['updatedAt']) ?? DateTime.now()
-            : DateTime.now(),
-        lastMessagePreview: map['lastMessagePreview'] as String?,
-      );
+  Chat copyWith({
+    String? title,
+    List<String>? memberIds,
+    DateTime? updatedAt,
+    String? lastMessagePreview,
+  }) {
+    return Chat(
+      id: id,
+      title: title ?? this.title,
+      memberIds: memberIds ?? this.memberIds,
+      updatedAt: updatedAt ?? this.updatedAt,
+      lastMessagePreview: lastMessagePreview ?? this.lastMessagePreview,
+    );
+  }
 }
