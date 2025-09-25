@@ -23,7 +23,6 @@ import 'tasks_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
-
   static final List<HomeFeature> features = [
     HomeFeature(
       titleKey: 'members',

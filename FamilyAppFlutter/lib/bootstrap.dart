@@ -17,6 +17,7 @@ Future<void> bootstrap() async {
   await SecureKeyService.ensureKey();
   await LocalStore.init();
   await NotificationsService.instance.init();
+  
   // ANDROID-ONLY FIX: hydrate Remote Config before rendering Android UI gates.
   await RemoteConfigService.instance.init();
 }
