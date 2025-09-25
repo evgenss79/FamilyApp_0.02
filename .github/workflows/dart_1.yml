@@ -3,7 +3,9 @@ name: Dart Analysis
 on:
   push:
     branches:
+
       - codex_main
+
 
 jobs:
   analyze:

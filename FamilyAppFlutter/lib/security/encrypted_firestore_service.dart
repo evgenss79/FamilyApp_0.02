@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pointycastle/export.dart';
 
-import '../storage/hive_secure.dart';
+import 'secure_key_service.dart';
 
 /// Хранит в поле "enc" JSON-строку с пакетом:
 /// { "v":1, "alg":"AES-GCM", "iv":"base64", "ct":"base64" }
@@ -37,7 +37,7 @@ class EncryptedFirestoreService {
             final iv = base64Decode(ivB64);
             final cipherBytes = base64Decode(ctB64);
 
-            final keyBytes = Uint8List.fromList(await HiveSecure.getDek());
+            final keyBytes = Uint8List.fromList(await SecureKeyService.getKeyBytes());
             final key = KeyParameter(keyBytes);
 
             final gcm = GCMBlockCipher(AESEngine());
@@ -64,9 +64,9 @@ class EncryptedFirestoreService {
     required Map<String, dynamic> data,
   }) async {
     // Гарантируем наличие ключа
-    await HiveSecure.ensureDek();
+    await SecureKeyService.ensureKey();
 
-    final keyBytes = Uint8List.fromList(await HiveSecure.getDek());
+    final keyBytes = Uint8List.fromList(await SecureKeyService.getKeyBytes());
     final key = KeyParameter(keyBytes);
 
     // 12-байтный IV для GCM
