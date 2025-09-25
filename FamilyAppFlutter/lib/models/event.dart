@@ -58,6 +58,7 @@ class Event {
     Object? updatedAt = _sentinel,
   }) {
     return Event(
+
       id: id,
       title: title == _sentinel ? this.title : title as String,
       startDateTime: startDateTime == _sentinel
