@@ -76,11 +76,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // ANDROID-ONLY FIX: clean up the previous Android avatar blob to avoid leaks.
         await storage.deleteByPath(_avatarStoragePath!);
       }
-
       if (!mounted) {
         return;
       }
-
       setState(() {
         _avatarUrl = result.downloadUrl;
         _avatarStoragePath = result.storagePath;

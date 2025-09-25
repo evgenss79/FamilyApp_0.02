@@ -161,6 +161,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> _handleAuthState(User? user) async {
     if (user == null) {
+      await _notificationsService.clearFamilyContext();
       _familyId = null;
       _currentMember = null;
       _status = AuthStatus.unauthenticated;
@@ -183,6 +184,8 @@ class AuthProvider extends ChangeNotifier {
     _currentMember = context.member;
     _status = AuthStatus.authenticated;
     _errorMessage = null;
+    
+    await _notificationsService.setActiveFamily(context.familyId);
     if (notify) {
       notifyListeners();
     }

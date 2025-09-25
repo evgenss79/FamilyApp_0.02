@@ -39,6 +39,8 @@ dependencies:
   mime: ^1.0.6
   # For picking images from the gallery and camera
   image_picker: ^1.0.7
+  url_launcher: ^6.3.0
+
 
 
 dev_dependencies:
