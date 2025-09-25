@@ -2085,15 +2085,6 @@ class AppLocalizations {
     return value;
   }
 
-  /// Legacy helper retained for older widgets that still invoke `tr(...)` on
-  /// the localization object instead of the newer [t] shorthand.  Keeping the
-  /// wrapper avoids scattered refactors while we finish migrating the UI.
-  String tr(String key) => translate(key);
-
-  /// Legacy helper that mirrors [translateWithParams] for `tr` callers.
-  String trParams(String key, Map<String, String> params) =>
-      translateWithParams(key, params);
-
 
   String t(String key, {Map<String, String>? params}) {
     if (params == null || params.isEmpty) {
