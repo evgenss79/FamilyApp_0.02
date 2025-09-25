@@ -58,6 +58,7 @@ class EncryptedFirestoreService {
     return raw;
   }
 
+
   /// Шифрует и возвращает Map, пригодный для set/WriteBatch.
   Future<Map<String, dynamic>> encryptPayload(
       Map<String, dynamic> data) async {
