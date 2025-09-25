@@ -1,10 +1,8 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 
+import 'bootstrap.dart';
 import 'config/app_config.dart';
-import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/chat_provider.dart';
 import 'providers/family_data.dart';
@@ -15,20 +13,18 @@ import 'providers/schedule_data.dart';
 import 'screens/home_screen.dart';
 import 'services/firestore_service.dart';
 import 'services/storage_service.dart';
-import 'storage/hive_secure.dart';
+import 'storage/local_store.dart';
 
 /// Entry point for the Family App. Initializes Firebase, Hive and all
 /// services required by the application.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await _initFirebase();
-  await Hive.initFlutter();
-  await HiveSecure.ensureDek();
-  final Box<Object?> settingsBox = await Hive.openBox<Object?>('settings');
+  await bootstrap(); // ANDROID-ONLY FIX: serialized Android bootstrap flow.
 
   final FirestoreService firestore = FirestoreService();
   final StorageService storage = StorageService();
-  final LanguageProvider languageProvider = LanguageProvider(box: settingsBox);
+  final LanguageProvider languageProvider =
+      LanguageProvider(box: LocalStore.settingsBox);
 
   runApp(
     MyApp(
@@ -37,16 +33,6 @@ Future<void> main() async {
       languageProvider: languageProvider,
     ),
   );
-}
-
-Future<void> _initFirebase() async {
-  if (Firebase.apps.isEmpty) {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  } else {
-    Firebase.app();
-  }
 }
 
 class MyApp extends StatelessWidget {
