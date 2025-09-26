@@ -47,6 +47,14 @@ class ChatProvider extends ChangeNotifier {
   final Set<String> _activeTopicChatIds = <String>{};
 
 
+  // ANDROID-ONLY FIX: canonical subscription trackers for analyzer compliance.
+  StreamSubscription<List<Chat>>? _chatsStreamSub;
+  final Map<String, StreamSubscription<List<ChatMessage>>> _messageStreamSubs =
+      <String, StreamSubscription<List<ChatMessage>>>{};
+  final Set<String> _subscribedChatIds = <String>{};
+  final Set<String> _activeTopicChatIds = <String>{};
+
+
 
   // ANDROID-ONLY FIX: keep watcher handles uniquely named to avoid analyzer collisions.
   StreamSubscription<List<Chat>>? _chatsLocalWatcher;
@@ -124,6 +132,7 @@ class ChatProvider extends ChangeNotifier {
         }
       }
 
+      await _unsubscribeFromChats();
       _chatsStreamSub = _chatsRepository.watchLocal(familyId).listen(
 
         (List<Chat> updated) {
@@ -157,13 +166,7 @@ class ChatProvider extends ChangeNotifier {
 
           for (final String chatId in _messageStreamSubs.keys.toList()) {
             if (!updatedIds.contains(chatId)) {
-              final StreamSubscription<List<ChatMessage>>? sub =
-                  _messageStreamSubs.remove(chatId);
-              if (sub != null) {
-                unawaited(sub.cancel());
-              }
-              _subscribedChatIds.remove(chatId);
-              _messages.remove(chatId);
+              unawaited(_unsubscribeFromMessages(chatId));
             }
           }
 
@@ -251,12 +254,7 @@ class ChatProvider extends ChangeNotifier {
     await _syncService.flush();
     _messages.remove(chatId);
 
-    final StreamSubscription<List<ChatMessage>>? messageSub =
-        _messageStreamSubs.remove(chatId);
-    if (messageSub != null) {
-      await messageSub.cancel();
-    }
-    _subscribedChatIds.remove(chatId);
+    await _unsubscribeFromMessages(chatId);
     if (_activeTopicChatIds.remove(chatId)) {
 
       await _notifications.unsubscribeFromChatTopic(
@@ -372,13 +370,8 @@ class ChatProvider extends ChangeNotifier {
   @override
   void dispose() {
 
-    _chatsStreamSub?.cancel();
-    for (final StreamSubscription<List<ChatMessage>> sub
-        in _messageStreamSubs.values) {
-      sub.cancel();
-    }
-    _messageStreamSubs.clear();
-    _subscribedChatIds.clear();
+    unawaited(_unsubscribeFromChats());
+    _unsubscribeFromAllMessages();
     for (final String chatId in _activeTopicChatIds) {
 
       // ANDROID-ONLY FIX: release Android topic subscriptions when provider leaves scope.
@@ -391,7 +384,31 @@ class ChatProvider extends ChangeNotifier {
     }
 
     _activeTopicChatIds.clear();
-
     super.dispose();
+  }
+
+  Future<void> _unsubscribeFromChats() async {
+    await _chatsStreamSub?.cancel();
+    _chatsStreamSub = null;
+  }
+
+  Future<void> _unsubscribeFromMessages(String chatId) async {
+    final StreamSubscription<List<ChatMessage>>? subscription =
+        _messageStreamSubs.remove(chatId);
+    if (subscription != null) {
+      await subscription.cancel();
+    }
+    _subscribedChatIds.remove(chatId);
+    _messages.remove(chatId);
+  }
+
+  void _unsubscribeFromAllMessages() {
+    for (final StreamSubscription<List<ChatMessage>> subscription
+        in _messageStreamSubs.values) {
+      subscription.cancel();
+    }
+    _messageStreamSubs.clear();
+    _subscribedChatIds.clear();
+
   }
 }
