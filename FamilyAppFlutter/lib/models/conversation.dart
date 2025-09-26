@@ -13,6 +13,10 @@ class Conversation {
     this.lastMessageTime,
     this.avatarUrl,
     this.lastMessagePreview,
+    this.status,
+    this.type,
+    this.createdBy,
+    this.endedAt,
   }) : participantIds = List.unmodifiable(participantIds);
 
   /// Unique identifier of the conversation document in Firestore.
@@ -39,6 +43,18 @@ class Conversation {
   /// Preview text of the last message used in lists.
   final String? lastMessagePreview;
 
+  /// Lifecycle status of the conversation (e.g. ringing, connected, ended).
+  final String? status;
+
+  /// Distinguishes audio vs. video calls for call conversations.
+  final String? type;
+
+  /// Identifier of the member who created the conversation/call.
+  final String? createdBy;
+
+  /// When the call ended if it has completed.
+  final DateTime? endedAt;
+
   /// Creates a [Conversation] from a Firestore map. Non existing optional
   /// fields gracefully fall back to sensible defaults.
   factory Conversation.fromMap(Map<String, dynamic> map) {
@@ -51,6 +67,10 @@ class Conversation {
       lastMessageTime: parseNullableDateTime(map['lastMessageTime']),
       avatarUrl: map['avatarUrl'] as String?,
       lastMessagePreview: map['lastMessagePreview'] as String?,
+      status: map['status'] as String?,
+      type: map['type'] as String?,
+      createdBy: map['createdBy'] as String?,
+      endedAt: parseNullableDateTime(map['endedAt']),
     );
   }
 
@@ -64,6 +84,10 @@ class Conversation {
         'lastMessageTime': lastMessageTime?.toIso8601String(),
         'avatarUrl': avatarUrl,
         'lastMessagePreview': lastMessagePreview,
+        'status': status,
+        'type': type,
+        'createdBy': createdBy,
+        'endedAt': endedAt?.toIso8601String(),
       };
 
   /// Returns a copy of this conversation with the provided fields replaced.
@@ -75,6 +99,10 @@ class Conversation {
     DateTime? lastMessageTime,
     String? avatarUrl,
     String? lastMessagePreview,
+    String? status,
+    String? type,
+    String? createdBy,
+    DateTime? endedAt,
   }) {
     return Conversation(
       id: id,
@@ -85,6 +113,10 @@ class Conversation {
       lastMessageTime: lastMessageTime ?? this.lastMessageTime,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       lastMessagePreview: lastMessagePreview ?? this.lastMessagePreview,
+      status: status ?? this.status,
+      type: type ?? this.type,
+      createdBy: createdBy ?? this.createdBy,
+      endedAt: endedAt ?? this.endedAt,
     );
   }
 }

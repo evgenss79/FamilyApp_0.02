@@ -1,14 +1,22 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../models/schedule_item.dart';
-import '../services/firestore_service.dart';
+import '../repositories/schedule_repository.dart';
+import '../services/sync_service.dart';
 
-/// Provider for managing schedule items backed by Firestore.
+/// Provider for managing schedule items backed by the sync-aware repositories.
 class ScheduleData extends ChangeNotifier {
-  ScheduleData({required FirestoreService firestore, required this.familyId})
-      : _firestore = firestore;
+  ScheduleData({
+    required ScheduleRepository repository,
+    required SyncService syncService,
+    required this.familyId,
+  })  : _repository = repository,
+        _syncService = syncService;
 
-  final FirestoreService _firestore;
+  final ScheduleRepository _repository;
+  final SyncService _syncService;
   final String familyId;
 
   final List<ScheduleItem> items = [];
@@ -18,16 +26,26 @@ class ScheduleData extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
 
+  StreamSubscription<List<ScheduleItem>>? _subscription;
+
   Future<void> load() async {
     if (_loaded || _isLoading) return;
     _isLoading = true;
     notifyListeners();
     try {
-      final fetched = await _firestore.fetchScheduleItems(familyId);
       items
         ..clear()
-        ..addAll(fetched);
+        ..addAll(await _repository.loadLocal(familyId));
+      _subscription = _repository.watchLocal(familyId).listen(
+        (List<ScheduleItem> updated) {
+          items
+            ..clear()
+            ..addAll(updated);
+          notifyListeners();
+        },
+      );
       _loaded = true;
+      await _syncService.flush();
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -35,14 +53,18 @@ class ScheduleData extends ChangeNotifier {
   }
 
   Future<void> addItem(ScheduleItem item) async {
-    await _firestore.upsertScheduleItem(familyId, item);
-    items.add(item);
-    notifyListeners();
+    await _repository.saveLocal(familyId, item);
+    await _syncService.flush();
   }
 
   Future<void> removeItem(String id) async {
-    await _firestore.deleteScheduleItem(familyId, id);
-    items.removeWhere((item) => item.id == id);
-    notifyListeners();
+    await _repository.markDeleted(familyId, id);
+    await _syncService.flush();
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 }
