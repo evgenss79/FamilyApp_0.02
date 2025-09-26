@@ -51,12 +51,14 @@ class _CallSetupScreenState extends State<CallSetupScreen> {
       title: title,
       participantIds: selected,
       createdAt: DateTime.now(),
+      type: _callType,
     );
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => CallScreen(
           conversation: conversation,
           callType: _callType,
+          isCaller: true,
         ),
       ),
     );
