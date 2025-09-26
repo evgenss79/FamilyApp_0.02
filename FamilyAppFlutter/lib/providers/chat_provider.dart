@@ -35,15 +35,21 @@ class ChatProvider extends ChangeNotifier {
   final SyncService _syncService;
   final NotificationsService _notifications;
   final String familyId;
-
   final List<Chat> _chats = <Chat>[];
   final Map<String, List<ChatMessage>> _messages = <String, List<ChatMessage>>{};
+
 
   StreamSubscription<List<Chat>>? _chatsSubscription;
   final Map<String, StreamSubscription<List<ChatMessage>>> _messageSubscriptions =
       <String, StreamSubscription<List<ChatMessage>>>{};
   final Set<String> _subscribedChatIds = <String>{};
 
+
+  StreamSubscription<List<Chat>>? _chatsSubscription;
+  final Map<String, StreamSubscription<List<ChatMessage>>> _messageSubscriptions =
+      <String, StreamSubscription<List<ChatMessage>>>{};
+
+  final Set<String> _subscribedChatIds = <String>{};
   final Uuid _uuid = const Uuid();
 
   bool _loaded = false;
@@ -100,6 +106,7 @@ class ChatProvider extends ChangeNotifier {
               );
             }
           }
+
           _chats
             ..clear()
             ..addAll(updated);
@@ -154,6 +161,7 @@ class ChatProvider extends ChangeNotifier {
         chatId: chat.id,
       );
     }
+
     await _syncService.flush();
     _resortChats();
     notifyListeners();
@@ -179,6 +187,7 @@ class ChatProvider extends ChangeNotifier {
         chatId: chatId,
       );
     }
+
     notifyListeners();
   }
 
@@ -291,6 +300,7 @@ class ChatProvider extends ChangeNotifier {
       sub.cancel();
     }
     _messageSubscriptions.clear();
+
     for (final String chatId in _subscribedChatIds) {
       // ANDROID-ONLY FIX: release Android topic subscriptions when provider leaves scope.
       unawaited(

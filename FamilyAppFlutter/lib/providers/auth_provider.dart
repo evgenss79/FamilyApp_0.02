@@ -184,6 +184,7 @@ class AuthProvider extends ChangeNotifier {
     _currentMember = context.member;
     _status = AuthStatus.authenticated;
     _errorMessage = null;
+
     await _notificationsService.setActiveFamily(context.familyId);
     if (notify) {
       notifyListeners();
