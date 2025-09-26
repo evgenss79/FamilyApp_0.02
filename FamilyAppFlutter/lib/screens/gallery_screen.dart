@@ -137,6 +137,8 @@ class GalleryScreen extends StatelessWidget {
                                 ),
                               ),
                             ),
+                          ),
+
                           if (canDelete)
                             Positioned(
                               top: 4,
