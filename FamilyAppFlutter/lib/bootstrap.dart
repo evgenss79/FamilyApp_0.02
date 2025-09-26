@@ -20,6 +20,7 @@ Future<void> bootstrap() async {
   await NotificationsService.instance.init();
   await GeoRemindersService.instance
       .init(NotificationsService.instance); // ANDROID-ONLY FIX: boot geo reminders.
+
   // ANDROID-ONLY FIX: hydrate Remote Config before rendering Android UI gates.
   await RemoteConfigService.instance.init();
 }
