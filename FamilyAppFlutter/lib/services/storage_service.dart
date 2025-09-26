@@ -9,11 +9,48 @@ import 'package:uuid/uuid.dart';
 class StorageUploadResult {
   final String downloadUrl;
   final String storagePath;
+  final int bytes;
+  final String? mimeType;
 
   const StorageUploadResult({
     required this.downloadUrl,
     required this.storagePath,
+    this.bytes = 0,
+    this.mimeType,
   });
+}
+
+/// Controller around a [UploadTask] providing download URL resolution and
+/// progress tracking.
+class StorageUploadTask {
+  StorageUploadTask(this._task, this._ref);
+
+  final UploadTask _task;
+  final Reference _ref;
+
+  Stream<double> get progress async* {
+    await for (final TaskSnapshot snapshot in _task.snapshotEvents) {
+      final int total = snapshot.totalBytes;
+      if (total <= 0) {
+        yield 0;
+        continue;
+      }
+      yield snapshot.bytesTransferred / total;
+    }
+  }
+
+  Future<void> cancel() => _task.cancel();
+
+  Future<StorageUploadResult> whenComplete() async {
+    final TaskSnapshot snapshot = await _task;
+    final String url = await _ref.getDownloadURL();
+    return StorageUploadResult(
+      downloadUrl: url,
+      storagePath: _ref.fullPath,
+      bytes: snapshot.bytesTransferred,
+      mimeType: snapshot.metadata?.contentType,
+    );
+  }
 }
 
 /// Provides a thin wrapper around [FirebaseStorage] for uploading and
@@ -38,7 +75,20 @@ class StorageService {
     required String familyId,
     required File file,
   }) {
-    return _uploadFile(
+    return startGalleryUpload(
+      familyId: familyId,
+      file: file,
+    ).whenComplete();
+  }
+
+  /// Starts a gallery upload and returns a controller that exposes progress
+  /// updates. The caller must await [StorageUploadTask.whenComplete] to finish
+  /// the upload and obtain the resulting URL/path pair.
+  StorageUploadTask startGalleryUpload({
+    required String familyId,
+    required File file,
+  }) {
+    return _startUpload(
       file: file,
       segments: ['families', familyId, 'gallery', _uniqueFileName(file.path)],
     );
@@ -83,17 +133,23 @@ class StorageService {
     }
   }
 
-  Future<StorageUploadResult> _uploadFile({
+  StorageUploadTask _startUpload({
     required File file,
     required List<String> segments,
-  }) async {
+  }) {
     final Reference ref = _storage.ref().child(segments.join('/'));
     final SettableMetadata metadata = SettableMetadata(
       contentType: lookupMimeType(file.path),
     );
-    await ref.putFile(file, metadata);
-    final String url = await ref.getDownloadURL();
-    return StorageUploadResult(downloadUrl: url, storagePath: ref.fullPath);
+    final UploadTask task = ref.putFile(file, metadata);
+    return StorageUploadTask(task, ref);
+  }
+
+  Future<StorageUploadResult> _uploadFile({
+    required File file,
+    required List<String> segments,
+  }) {
+    return _startUpload(file: file, segments: segments).whenComplete();
   }
 
   String _uniqueFileName(String path) {
