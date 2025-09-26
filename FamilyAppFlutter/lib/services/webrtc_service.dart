@@ -273,6 +273,7 @@ class WebRtcSession extends ChangeNotifier {
           state ==
               RTCPeerConnectionState.RTCPeerConnectionStateDisconnected) {
         if (!_closed) {
+          _setRemoteEnded();
           _updateStatus(CallStatus.ended);
         }
       }
@@ -473,6 +474,14 @@ class WebRtcSession extends ChangeNotifier {
   void _setRemoteStatus(String status) {
     unawaited(_callDoc.set(<String, Object?>{
       'status': status,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true)));
+  }
+
+  void _setRemoteEnded() {
+    unawaited(_callDoc.set(<String, Object?>{
+      'status': 'ended',
+      'endedAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true)));
   }
