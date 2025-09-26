@@ -39,6 +39,14 @@ class ChatProvider extends ChangeNotifier {
   final Map<String, List<ChatMessage>> _messages = <String, List<ChatMessage>>{};
 
 
+  // ANDROID-ONLY FIX: keep watcher handles uniquely named to avoid analyzer collisions.
+  StreamSubscription<List<Chat>>? _chatsLocalWatcher;
+  final Map<String, StreamSubscription<List<ChatMessage>>> _messageLocalWatchers =
+      <String, StreamSubscription<List<ChatMessage>>>{};
+  final Set<String> _topicSubscriptionChatIds = <String>{};
+
+
+
   StreamSubscription<List<Chat>>? _chatsStreamSub;
   final Map<String, StreamSubscription<List<ChatMessage>>> _messageStreamSubs =
       <String, StreamSubscription<List<ChatMessage>>>{};
@@ -98,7 +106,7 @@ class ChatProvider extends ChangeNotifier {
       for (final Chat chat in _chats) {
         _messages[chat.id] = await _messagesRepository.loadLocal(familyId, chat.id);
 
-        if (_activeTopicChatIds.add(chat.id)) {
+        if (_topicSubscriptionChatIds.add(chat.id)) {
 
           await _notifications.subscribeToChatTopic(
             familyId: familyId,
@@ -107,14 +115,14 @@ class ChatProvider extends ChangeNotifier {
         }
       }
 
-      _chatsStreamSub = _chatsRepository.watchLocal(familyId).listen(
+      _chatsLocalWatcher = _chatsRepository.watchLocal(familyId).listen(
 
         (List<Chat> updated) {
           final Set<String> updatedIds =
               updated.map((Chat chat) => chat.id).toSet();
           for (final Chat chat in updated) {
 
-            if (_activeTopicChatIds.add(chat.id)) {
+            if (_topicSubscriptionChatIds.add(chat.id)) {
 
               unawaited(
                 _notifications.subscribeToChatTopic(
@@ -125,9 +133,9 @@ class ChatProvider extends ChangeNotifier {
             }
           }
 
-          for (final String existing in _activeTopicChatIds.toList()) {
+          for (final String existing in _topicSubscriptionChatIds.toList()) {
             if (!updatedIds.contains(existing)) {
-              _activeTopicChatIds.remove(existing);
+              _topicSubscriptionChatIds.remove(existing);
 
               unawaited(
                 _notifications.unsubscribeFromChatTopic(
@@ -157,8 +165,8 @@ class ChatProvider extends ChangeNotifier {
   List<ChatMessage> messagesByChat(String chatId) {
     _messages.putIfAbsent(chatId, () => <ChatMessage>[]);
 
-    if (!_messageStreamSubs.containsKey(chatId)) {
-      _messageStreamSubs[chatId] =
+    if (!_messageLocalWatchers.containsKey(chatId)) {
+      _messageLocalWatchers[chatId] =
 
           _messagesRepository.watchLocal(familyId, chatId).listen(
         (List<ChatMessage> updated) {
@@ -189,7 +197,7 @@ class ChatProvider extends ChangeNotifier {
     await _chatsRepository.saveLocal(familyId, chat);
     _messages[chat.id] = <ChatMessage>[];
 
-    if (_activeTopicChatIds.add(chat.id)) {
+    if (_topicSubscriptionChatIds.add(chat.id)) {
 
       await _notifications.subscribeToChatTopic(
         familyId: familyId,
@@ -216,8 +224,8 @@ class ChatProvider extends ChangeNotifier {
     await _syncService.flush();
     _messages.remove(chatId);
 
-    await _messageStreamSubs.remove(chatId)?.cancel();
-    if (_activeTopicChatIds.remove(chatId)) {
+    await _messageLocalWatchers.remove(chatId)?.cancel();
+    if (_topicSubscriptionChatIds.remove(chatId)) {
 
       await _notifications.unsubscribeFromChatTopic(
         familyId: familyId,
@@ -332,13 +340,13 @@ class ChatProvider extends ChangeNotifier {
   @override
   void dispose() {
 
-    _chatsStreamSub?.cancel();
+    _chatsLocalWatcher?.cancel();
     for (final StreamSubscription<List<ChatMessage>> sub
-        in _messageStreamSubs.values) {
+        in _messageLocalWatchers.values) {
       sub.cancel();
     }
-    _messageStreamSubs.clear();
-    for (final String chatId in _activeTopicChatIds) {
+    _messageLocalWatchers.clear();
+    for (final String chatId in _topicSubscriptionChatIds) {
 
       // ANDROID-ONLY FIX: release Android topic subscriptions when provider leaves scope.
       unawaited(
@@ -349,7 +357,7 @@ class ChatProvider extends ChangeNotifier {
       );
     }
 
-    _activeTopicChatIds.clear();
+    _topicSubscriptionChatIds.clear();
 
     super.dispose();
   }
