@@ -15,6 +15,7 @@ class NotificationsService {
   NotificationsService._();
 
   static final NotificationsService instance = NotificationsService._();
+
   static const String _generalChannelId = 'familyapp_general';
   static const String _geoChannelId = 'familyapp_geo';
 
@@ -407,7 +408,9 @@ class NotificationsService {
         plugin.resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
     await androidPlugin?.createNotificationChannel(
-      AndroidNotificationChannel(
+
+      const AndroidNotificationChannel(
+
         NotificationsService._geoChannelId,
         'Geo reminders',
         description: 'Notifications that trigger near saved locations.',
@@ -449,7 +452,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       plugin.resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>();
   await androidPlugin?.createNotificationChannel(
-    AndroidNotificationChannel(
+
+    const AndroidNotificationChannel(
+
       NotificationsService._generalChannelId,
       'Family updates',
       description: 'Family task, chat and calendar reminders.',

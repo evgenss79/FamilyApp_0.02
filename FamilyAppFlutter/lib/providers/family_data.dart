@@ -39,6 +39,7 @@ class FamilyData extends ChangeNotifier {
   final SyncService _syncService;
   final NotificationsService _notifications;
   final GeoRemindersService _geoReminders;
+
   final List<FamilyMember> members = <FamilyMember>[];
   final List<Task> tasks = <Task>[];
   final List<Event> events = <Event>[];
