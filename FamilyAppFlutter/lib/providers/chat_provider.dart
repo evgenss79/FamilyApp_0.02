@@ -38,6 +38,13 @@ class ChatProvider extends ChangeNotifier {
   final List<Chat> _chats = <Chat>[];
   final Map<String, List<ChatMessage>> _messages = <String, List<ChatMessage>>{};
 
+
+  StreamSubscription<List<Chat>>? _chatsWatcher;
+  final Map<String, StreamSubscription<List<ChatMessage>>> _messageWatchers =
+      <String, StreamSubscription<List<ChatMessage>>>{};
+  final Set<String> _chatTopicSubscriptions = <String>{};
+
+
   StreamSubscription<List<Chat>>? _chatsWatcher;
   final Map<String, StreamSubscription<List<ChatMessage>>> _messageWatchers =
       <String, StreamSubscription<List<ChatMessage>>>{};
@@ -98,7 +105,7 @@ class ChatProvider extends ChangeNotifier {
               );
             }
           }
-          
+
           for (final String existing in _chatTopicSubscriptions.toList()) {
             if (!updatedIds.contains(existing)) {
               _chatTopicSubscriptions.remove(existing);
@@ -184,7 +191,6 @@ class ChatProvider extends ChangeNotifier {
     await _chatsRepository.markDeleted(familyId, chatId);
     await _syncService.flush();
     _messages.remove(chatId);
-
     await _messageWatchers.remove(chatId)?.cancel();
     if (_chatTopicSubscriptions.remove(chatId)) {
       await _notifications.unsubscribeFromChatTopic(

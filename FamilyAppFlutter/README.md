@@ -85,7 +85,6 @@ flutter run
 - Поля: `name`, `relationship`, `phone`, `email`, `avatarUrl`, `avatarStoragePath`, `hobbies`, `fcmTokens`, `isAdmin`, временные метки `createdAt/updatedAt`.
 - Кнопка «Сохранить изменения» обновляет локальный Hive-кеш и мгновенно пушит изменения в Firestore (через `FamilyData.updateMember` + `SyncService.flush()`).
 
-
 ## Firebase конфигурация для Android
 
 1. Получите файл `google-services.json` в консоли Firebase для приложения с пакетом `com.familyapp.android`.
