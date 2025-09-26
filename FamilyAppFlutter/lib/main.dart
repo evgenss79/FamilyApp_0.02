@@ -154,6 +154,7 @@ class _AuthenticatedScopeState extends State<_AuthenticatedScope> {
     callsRepository: _callsRepository,
   );
 
+
   SyncService? _syncService;
   bool _initializing = true;
   String? _activeFamilyId;
@@ -228,6 +229,7 @@ class _AuthenticatedScopeState extends State<_AuthenticatedScope> {
     if (disposeFuture != null) {
       unawaited(disposeFuture);
     }
+
     unawaited(_callService.dispose());
     _notificationSubscription?.cancel();
     super.dispose();
