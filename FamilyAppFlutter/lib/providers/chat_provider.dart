@@ -23,7 +23,7 @@ class ChatProvider extends ChangeNotifier {
     required SyncService syncService,
     required NotificationsService notificationsService,
     required this.familyId,
-  })  : _chatsRepository = chatsRepository,
+  }) : _chatsRepository = chatsRepository,
         _messagesRepository = messagesRepository,
         _storage = storage,
         _syncService = syncService,
@@ -37,11 +37,11 @@ class ChatProvider extends ChangeNotifier {
   final String familyId;
   final List<Chat> _chats = <Chat>[];
   final Map<String, List<ChatMessage>> _messages = <String, List<ChatMessage>>{};
-
-  StreamSubscription<List<Chat>>? _chatsSubscription;
-  final Map<String, StreamSubscription<List<ChatMessage>>> _messageSubscriptions =
+  StreamSubscription<List<Chat>>? _chatsStreamSub;
+  final Map<String, StreamSubscription<List<ChatMessage>>> _messageStreamSubs =
       <String, StreamSubscription<List<ChatMessage>>>{};
   final Set<String> _subscribedChatIds = <String>{};
+  final Set<String> _activeTopicChatIds = <String>{};
   final Uuid _uuid = const Uuid();
 
   bool _loaded = false;
@@ -65,10 +65,9 @@ class ChatProvider extends ChangeNotifier {
         ..addAll(await _chatsRepository.loadLocal(familyId));
       _messages.clear();
       for (final Chat chat in _chats) {
-        _messages[chat.id] = await _messagesRepository.loadLocal(familyId, chat.id);
-
-        if (_subscribedChatIds.add(chat.id)) {
-
+        _messages[chat.id] =
+            await _messagesRepository.loadLocal(familyId, chat.id);
+        if (_activeTopicChatIds.add(chat.id)) {
           await _notifications.subscribeToChatTopic(
             familyId: familyId,
             chatId: chat.id,
@@ -76,12 +75,13 @@ class ChatProvider extends ChangeNotifier {
         }
       }
 
-      _chatsSubscription = _chatsRepository.watchLocal(familyId).listen(
+      await _unsubscribeFromChats();
+      _chatsStreamSub = _chatsRepository.watchLocal(familyId).listen(
         (List<Chat> updated) {
           final Set<String> updatedIds =
               updated.map((Chat chat) => chat.id).toSet();
           for (final Chat chat in updated) {
-            if (_subscribedChatIds.add(chat.id)) {
+            if (_activeTopicChatIds.add(chat.id)) {
               unawaited(
                 _notifications.subscribeToChatTopic(
                   familyId: familyId,
@@ -91,15 +91,21 @@ class ChatProvider extends ChangeNotifier {
             }
           }
 
-          for (final String existing in _subscribedChatIds.toList()) {
+          for (final String existing in _activeTopicChatIds.toList()) {
             if (!updatedIds.contains(existing)) {
-              _subscribedChatIds.remove(existing);
+              _activeTopicChatIds.remove(existing);
               unawaited(
                 _notifications.unsubscribeFromChatTopic(
                   familyId: familyId,
                   chatId: existing,
                 ),
               );
+            }
+          }
+
+          for (final String chatId in _messageStreamSubs.keys.toList()) {
+            if (!updatedIds.contains(chatId)) {
+              unawaited(_unsubscribeFromMessages(chatId));
             }
           }
 
@@ -120,21 +126,25 @@ class ChatProvider extends ChangeNotifier {
   }
 
   List<ChatMessage> messagesByChat(String chatId) {
-    _messages.putIfAbsent(chatId, () => <ChatMessage>[]);
-    if (!_messageSubscriptions.containsKey(chatId)) {
-      _messageSubscriptions[chatId] =
+    final List<ChatMessage> existing =
+        _messages.putIfAbsent(chatId, () => <ChatMessage>[]);
+    if (_subscribedChatIds.add(chatId)) {
+      final StreamSubscription<List<ChatMessage>> subscription =
           _messagesRepository.watchLocal(familyId, chatId).listen(
         (List<ChatMessage> updated) {
           _messages[chatId] = updated;
           notifyListeners();
         },
       );
-      _messagesRepository.loadLocal(familyId, chatId).then((List<ChatMessage> cached) {
+      _messageStreamSubs[chatId] = subscription;
+      _messagesRepository
+          .loadLocal(familyId, chatId)
+          .then((List<ChatMessage> cached) {
         _messages[chatId] = cached;
         notifyListeners();
       });
     }
-    return List.unmodifiable(_messages[chatId] ?? const <ChatMessage>[]);
+    return List.unmodifiable(existing);
   }
 
   Future<Chat> createChat({
@@ -151,7 +161,9 @@ class ChatProvider extends ChangeNotifier {
     );
     await _chatsRepository.saveLocal(familyId, chat);
     _messages[chat.id] = <ChatMessage>[];
-    if (_subscribedChatIds.add(chat.id)) {
+
+    if (_activeTopicChatIds.add(chat.id)) {
+
       await _notifications.subscribeToChatTopic(
         familyId: familyId,
         chatId: chat.id,
@@ -176,8 +188,10 @@ class ChatProvider extends ChangeNotifier {
     await _chatsRepository.markDeleted(familyId, chatId);
     await _syncService.flush();
     _messages.remove(chatId);
-    await _messageSubscriptions.remove(chatId)?.cancel();
-    if (_subscribedChatIds.remove(chatId)) {
+
+    await _unsubscribeFromMessages(chatId);
+    if (_activeTopicChatIds.remove(chatId)) {
+
       await _notifications.unsubscribeFromChatTopic(
         familyId: familyId,
         chatId: chatId,
@@ -290,15 +304,9 @@ class ChatProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _chatsSubscription?.cancel();
-    for (final StreamSubscription<List<ChatMessage>> sub
-        in _messageSubscriptions.values) {
-      sub.cancel();
-    }
-    _messageSubscriptions.clear();
-    for (final String chatId in _subscribedChatIds) {
-
-      // ANDROID-ONLY FIX: release Android topic subscriptions when provider leaves scope.
+    unawaited(_unsubscribeFromChats());
+    _unsubscribeFromAllMessages();
+    for (final String chatId in _activeTopicChatIds) {
       unawaited(
         _notifications.unsubscribeFromChatTopic(
           familyId: familyId,
@@ -307,7 +315,31 @@ class ChatProvider extends ChangeNotifier {
       );
     }
 
-    _subscribedChatIds.clear();
+    _activeTopicChatIds.clear();
     super.dispose();
+  }
+
+  Future<void> _unsubscribeFromChats() async {
+    await _chatsStreamSub?.cancel();
+    _chatsStreamSub = null;
+  }
+
+  Future<void> _unsubscribeFromMessages(String chatId) async {
+    final StreamSubscription<List<ChatMessage>>? subscription =
+        _messageStreamSubs.remove(chatId);
+    if (subscription != null) {
+      await subscription.cancel();
+    }
+    _subscribedChatIds.remove(chatId);
+    _messages.remove(chatId);
+  }
+
+  void _unsubscribeFromAllMessages() {
+    for (final StreamSubscription<List<ChatMessage>> subscription
+        in _messageStreamSubs.values) {
+      unawaited(subscription.cancel());
+    }
+    _messageStreamSubs.clear();
+    _subscribedChatIds.clear();
   }
 }
