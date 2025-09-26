@@ -1,47 +1,65 @@
 plugins {
-        id("com.android.application")
-        id("kotlin-android")
-        // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
-        id("dev.flutter.flutter-gradle-plugin")
-        // Apply Google services plugin for Firebase
-        id("com.google.gms.google-services")
+    id("com.android.application")
+    id("kotlin-android")
+    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id("dev.flutter.flutter-gradle-plugin")
+    // ANDROID-ONLY FIX: Enable Google services plugin required for Android Firebase integration.
+    id("com.google.gms.google-services")
+    // ANDROID-ONLY FIX: Apply Crashlytics plugin for Android crash reporting.
+    id("com.google.firebase.crashlytics")
 }
 
 android {
-        // The application namespace and applicationId must match the package_name in google-services.json
-        namespace = "com.example.family_app"
-        compileSdk = flutter.compileSdkVersion
-        ndkVersion = flutter.ndkVersion
+    // ANDROID-ONLY FIX: Align namespace with the Android-only applicationId.
+    namespace = "com.familyapp.android"
+    // ANDROID-ONLY FIX: Target the mandated Android API level.
+    compileSdk = 34
+    ndkVersion = flutter.ndkVersion
 
-        compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_11
-            targetCompatibility = JavaVersion.VERSION_11
-        }
+    compileOptions {
+        // ANDROID-ONLY FIX: Use Java 8 compatibility for Android builds.
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
 
-        kotlinOptions {
-            jvmTarget = JavaVersion.VERSION_11.toString()
-        }
+    kotlinOptions {
+        // ANDROID-ONLY FIX: Ensure Kotlin bytecode targets JVM 1.8 for Android.
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
+    }
 
-        defaultConfig {
-            // Application ID must match the package_name in google-services.json for Firebase
-            applicationId = "com.example.family_app"
-            // You can update the following values to match your application needs.
-            // For more information, see: https://flutter.dev/to/review-gradle-config.
-            minSdk = flutter.minSdkVersion
-            targetSdk = flutter.targetSdkVersion
-            versionCode = flutter.versionCode
-            versionName = flutter.versionName
-        }
+    defaultConfig {
+        // ANDROID-ONLY FIX: Application ID matches Firebase configuration for Android-only build.
+        applicationId = "com.familyapp.android"
+        // ANDROID-ONLY FIX: Enforce Android-only minimum and target SDK versions.
+        minSdk = 23
+        targetSdk = 34
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
+        // ANDROID-ONLY FIX: Enable multidex support required by expanded Android dependencies.
+        multiDexEnabled = true
+    }
 
-        buildTypes {
-            release {
-                // TODO: Add your own signing config for the release build.
-                // Signing with the debug keys for now, so 'flutter run --release' works.
-                signingConfig = signingConfigs.getByName("debug")
-            }
+    buildTypes {
+        release {
+            // TODO: Add your own signing config for the release build.
+            // Signing with the debug keys for now, so 'flutter run --release' works.
+            signingConfig = signingConfigs.getByName("debug")
         }
+    }
 
-        flutter {
-            source = "../.."
+    packaging {
+        resources {
+            // ANDROID-ONLY FIX: Resolve WebRTC shared library conflicts in Android packaging.
+            pickFirst("lib/**/libjingle_peerconnection_so.so")
         }
+    }
+
+    flutter {
+        source = "../.."
+    }
+}
+
+dependencies {
+    // ANDROID-ONLY FIX: Add multidex support for the Android-only application.
+    implementation("androidx.multidex:multidex:2.0.1")
 }
