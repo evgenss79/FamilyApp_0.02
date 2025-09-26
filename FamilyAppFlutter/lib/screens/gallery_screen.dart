@@ -73,9 +73,11 @@ class GalleryScreen extends StatelessWidget {
                     child: Ink(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
+
                         color: Theme.of(context)
                             .colorScheme
                             .surfaceContainerHighest,
+
                       ),
                       child: Stack(
                         children: [
@@ -93,7 +95,9 @@ class GalleryScreen extends StatelessWidget {
                               child: Container(
                                 padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
+
                                   color: Colors.black.withValues(alpha: 0.45),
+
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -115,6 +119,7 @@ class GalleryScreen extends StatelessWidget {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .surfaceContainerHighest,
+
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Padding(
@@ -133,6 +138,7 @@ class GalleryScreen extends StatelessWidget {
                               ),
                             ),
                           ),
+
                           if (canDelete)
                             Positioned(
                               top: 4,
@@ -142,11 +148,14 @@ class GalleryScreen extends StatelessWidget {
                                 backgroundColor: Theme.of(context)
                                     .colorScheme
                                     .surface
+
                                     .withValues(alpha: 0.85),
+
                                 child: IconButton(
                                   icon: const Icon(Icons.delete, size: 18),
                                   tooltip: context.tr('deleteAction'),
                                   onPressed: () async {
+
                                     final gallery =
                                         context.read<GalleryData>();
                                     final messenger =
@@ -160,11 +169,14 @@ class GalleryScreen extends StatelessWidget {
                                       );
                                     } catch (_) {
                                       messenger
+
                                         ..clearSnackBars()
                                         ..showSnackBar(
                                           SnackBar(
                                             content: Text(
+
                                               deleteNotAllowedMessage,
+
                                             ),
                                           ),
                                         );
@@ -214,9 +226,11 @@ class _GalleryThumbnail extends StatelessWidget {
       child = Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
+
           color: Theme.of(context)
               .colorScheme
               .surfaceContainerHighest,
+
         ),
         child: Icon(
           item.isVideo ? Icons.videocam : Icons.photo,
@@ -259,9 +273,11 @@ class _GalleryThumbnail extends StatelessWidget {
             return Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
+
                 color: Theme.of(context)
                     .colorScheme
                     .surfaceContainerHighest,
+
               ),
               child: Icon(
                 item.isVideo ? Icons.videocam_off : Icons.broken_image,
@@ -287,7 +303,9 @@ class _GalleryThumbnail extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             child: DecoratedBox(
               decoration: BoxDecoration(
+
                 color: Colors.black.withValues(alpha: 0.45),
+
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Padding(
