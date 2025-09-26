@@ -13,6 +13,8 @@ import 'member_detail_screen.dart';
 class MembersScreen extends StatelessWidget {
   const MembersScreen({super.key});
 
+  static const String routeName = 'MembersScreen';
+
   @override
   Widget build(BuildContext context) {
     return Consumer<FamilyData>(
@@ -60,6 +62,9 @@ class MembersScreen extends StatelessWidget {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (_) => MemberDetailScreen(memberId: member.id),
+                                  settings: RouteSettings(
+                                    name: MemberDetailScreen.routeName,
+                                  ),
                                 ),
                               );
                             },
@@ -70,6 +75,9 @@ class MembersScreen extends StatelessWidget {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
                                         builder: (_) => AddMemberScreen(initialMember: member),
+                                        settings: const RouteSettings(
+                                          name: AddMemberScreen.routeName,
+                                        ),
                                       ),
                                     );
                                     break;
@@ -104,7 +112,12 @@ class MembersScreen extends StatelessWidget {
           floatingActionButton: FloatingActionButton(
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const AddMemberScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const AddMemberScreen(),
+                  settings: const RouteSettings(
+                    name: AddMemberScreen.routeName,
+                  ),
+                ),
               );
             },
             tooltip: context.tr('addMember'),

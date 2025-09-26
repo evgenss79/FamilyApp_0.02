@@ -21,6 +21,8 @@ class CallScreen extends StatefulWidget {
     this.isCaller = false,
   });
 
+  static const String routeName = 'CallScreen';
+
   final Conversation conversation;
   final String callType; // 'audio' or 'video'
   final bool isCaller;

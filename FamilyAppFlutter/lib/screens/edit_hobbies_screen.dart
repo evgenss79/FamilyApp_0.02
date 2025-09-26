@@ -10,6 +10,8 @@ class EditHobbiesScreen extends StatefulWidget {
   final FamilyMember member;
   const EditHobbiesScreen({super.key, required this.member});
 
+  static const String routeName = 'EditHobbiesScreen';
+
   @override
   State<EditHobbiesScreen> createState() => _EditHobbiesScreenState();
 }

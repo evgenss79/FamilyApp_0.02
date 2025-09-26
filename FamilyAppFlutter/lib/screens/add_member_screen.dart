@@ -16,6 +16,8 @@ class AddMemberScreen extends StatefulWidget {
   final FamilyMember? initialMember;
   const AddMemberScreen({super.key, this.initialMember});
 
+  static const String routeName = 'AddMemberScreen';
+
   @override
   State<AddMemberScreen> createState() => _AddMemberScreenState();
 }

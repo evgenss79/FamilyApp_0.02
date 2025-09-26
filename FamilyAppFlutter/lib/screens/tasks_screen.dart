@@ -11,6 +11,8 @@ import 'add_task_screen.dart';
 class TasksScreen extends StatefulWidget {
   const TasksScreen({super.key});
 
+  static const String routeName = 'TasksScreen';
+
   @override
   State<TasksScreen> createState() => _TasksScreenState();
 }
@@ -190,7 +192,12 @@ class _TasksScreenState extends State<TasksScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AddTaskScreen()),
+            MaterialPageRoute(
+              builder: (_) => const AddTaskScreen(),
+              settings: const RouteSettings(
+                name: AddTaskScreen.routeName,
+              ),
+            ),
           );
         },
         tooltip: context.tr('addTaskTitle'),
