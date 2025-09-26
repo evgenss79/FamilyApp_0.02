@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:developer' as developer;
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -13,7 +12,6 @@ class NotificationsService {
   NotificationsService._();
 
   static final NotificationsService instance = NotificationsService._();
-
   static const String _generalChannelId = 'familyapp_general';
   static const String _geoChannelId = 'familyapp_geo';
 
@@ -219,12 +217,14 @@ class NotificationsService {
     const InitializationSettings settings = InitializationSettings(
       android: androidSettings,
     );
+
     await _localNotifications.initialize(
       settings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         _handleNotificationPayload(response.payload);
       },
     );
+
     await _createNotificationChannels();
   }
 

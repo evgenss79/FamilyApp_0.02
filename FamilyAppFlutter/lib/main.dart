@@ -230,6 +230,7 @@ class _AuthenticatedScopeState extends State<_AuthenticatedScope> {
     if (disposeFuture != null) {
       unawaited(disposeFuture);
     }
+
     unawaited(_callService.dispose());
     _notificationSubscription?.cancel();
     super.dispose();
