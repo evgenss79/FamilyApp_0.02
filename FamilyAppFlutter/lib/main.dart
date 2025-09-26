@@ -13,7 +13,9 @@ import 'providers/friends_data.dart';
 import 'providers/gallery_data.dart';
 import 'providers/language_provider.dart';
 import 'providers/schedule_data.dart';
+
 import 'models/chat.dart';
+
 import 'repositories/call_messages_repository.dart';
 import 'repositories/calls_repository.dart';
 import 'repositories/chat_messages_repository.dart';
@@ -28,9 +30,9 @@ import 'screens/auth/complete_profile_screen.dart';
 import 'screens/auth/sign_in_screen.dart';
 
 import 'screens/chat_screen.dart';
+
 import 'screens/home_screen.dart';
 import 'services/auth_service.dart';
-import 'services/call_service.dart';
 import 'services/notifications_service.dart';
 import 'services/remote_config_service.dart';
 import 'services/storage_service.dart';
@@ -41,7 +43,6 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await bootstrap(); // ANDROID-ONLY FIX: serialized Android bootstrap flow.
   runApp(const FamilyApp());
-
 }
 
 class FamilyApp extends StatefulWidget {
@@ -153,11 +154,6 @@ class _AuthenticatedScopeState extends State<_AuthenticatedScope> {
       CallMessagesRepository();
   final NotificationsService _notifications = NotificationsService.instance;
 
-  late final CallService _callService = CallService(
-    callsRepository: _callsRepository,
-  );
-
-
   SyncService? _syncService;
   bool _initializing = true;
   String? _activeFamilyId;
@@ -232,9 +228,6 @@ class _AuthenticatedScopeState extends State<_AuthenticatedScope> {
     if (disposeFuture != null) {
       unawaited(disposeFuture);
     }
-
-    unawaited(_callService.dispose());
-
     _notificationSubscription?.cancel();
     super.dispose();
   }
@@ -260,8 +253,6 @@ class _AuthenticatedScopeState extends State<_AuthenticatedScope> {
     return MultiProvider(
       providers: [
         Provider<SyncService>.value(value: syncService),
-        Provider<CallService>.value(value: _callService),
-
         ChangeNotifierProvider<ChatProvider>(
           key: ValueKey<String>('chat-$familyId'),
           create: (_) => ChatProvider(
