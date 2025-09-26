@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -6,26 +7,42 @@ import 'package:uuid/uuid.dart';
 import '../models/chat.dart';
 import '../models/chat_message.dart';
 import '../models/message_type.dart';
-import '../services/firestore_service.dart';
+import '../repositories/chat_messages_repository.dart';
+import '../repositories/chats_repository.dart';
+import '../services/notifications_service.dart';
 import '../services/storage_service.dart';
+import '../services/sync_service.dart';
 
-/// Provider that manages chats and chat messages backed by Firestore.
+/// Provider that manages chats and chat messages via the repository +
+/// [SyncService] stack.
 class ChatProvider extends ChangeNotifier {
   ChatProvider({
-    required FirestoreService firestore,
+    required ChatsRepository chatsRepository,
+    required ChatMessagesRepository messagesRepository,
     required StorageService storage,
+    required SyncService syncService,
+    required NotificationsService notificationsService,
     required this.familyId,
-  })  : _firestore = firestore,
-        _storage = storage;
+  })  : _chatsRepository = chatsRepository,
+        _messagesRepository = messagesRepository,
+        _storage = storage,
+        _syncService = syncService,
+        _notifications = notificationsService;
 
-  final FirestoreService _firestore;
+  final ChatsRepository _chatsRepository;
+  final ChatMessagesRepository _messagesRepository;
   final StorageService _storage;
+  final SyncService _syncService;
+  final NotificationsService _notifications;
   final String familyId;
 
   final List<Chat> _chats = <Chat>[];
   final Map<String, List<ChatMessage>> _messages = <String, List<ChatMessage>>{};
-  final Set<String> _loadedChatMessages = <String>{};
-  final Set<String> _loadingChatMessages = <String>{};
+
+  StreamSubscription<List<Chat>>? _chatListSubscription;
+  final Map<String, StreamSubscription<List<ChatMessage>>> _messageStreamSubscriptions =
+      <String, StreamSubscription<List<ChatMessage>>>{};
+  final Set<String> _subscribedTopicChatIds = <String>{};
 
   final Uuid _uuid = const Uuid();
 
@@ -45,16 +62,54 @@ class ChatProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      final List<Chat> fetchedChats = await _firestore.fetchChats(familyId);
       _chats
         ..clear()
-        ..addAll(fetchedChats);
+        ..addAll(await _chatsRepository.loadLocal(familyId));
       _messages.clear();
       for (final Chat chat in _chats) {
-        _messages[chat.id] = <ChatMessage>[];
+        _messages[chat.id] = await _messagesRepository.loadLocal(familyId, chat.id);
+        if (_subscribedTopicChatIds.add(chat.id)) {
+          await _notifications.subscribeToChatTopic(
+            familyId: familyId,
+            chatId: chat.id,
+          );
+        }
       }
+      _chatListSubscription = _chatsRepository.watchLocal(familyId).listen(
+        (List<Chat> updated) {
+          final Set<String> updatedIds =
+              updated.map((Chat chat) => chat.id).toSet();
+          for (final Chat chat in updated) {
+            if (_subscribedTopicChatIds.add(chat.id)) {
+              unawaited(
+                _notifications.subscribeToChatTopic(
+                  familyId: familyId,
+                  chatId: chat.id,
+                ),
+              );
+            }
+          }
+          for (final String existing in _subscribedTopicChatIds.toList()) {
+            if (!updatedIds.contains(existing)) {
+              _subscribedTopicChatIds.remove(existing);
+              unawaited(
+                _notifications.unsubscribeFromChatTopic(
+                  familyId: familyId,
+                  chatId: existing,
+                ),
+              );
+            }
+          }
+          _chats
+            ..clear()
+            ..addAll(updated);
+          _resortChats();
+          notifyListeners();
+        },
+      );
       _loaded = true;
       _resortChats();
+      await _syncService.flush();
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -62,16 +117,18 @@ class ChatProvider extends ChangeNotifier {
   }
 
   List<ChatMessage> messagesByChat(String chatId) {
-    if (!_loadedChatMessages.contains(chatId) &&
-        !_loadingChatMessages.contains(chatId)) {
-      _loadingChatMessages.add(chatId);
-      _firestore.fetchChatMessages(familyId, chatId).then((List<ChatMessage> messages) {
-        _messages[chatId] = List<ChatMessage>.from(messages);
-        _loadedChatMessages.add(chatId);
-        _loadingChatMessages.remove(chatId);
+    _messages.putIfAbsent(chatId, () => <ChatMessage>[]);
+    if (!_messageStreamSubscriptions.containsKey(chatId)) {
+      _messageStreamSubscriptions[chatId] =
+          _messagesRepository.watchLocal(familyId, chatId).listen(
+        (List<ChatMessage> updated) {
+          _messages[chatId] = updated;
+          notifyListeners();
+        },
+      );
+      _messagesRepository.loadLocal(familyId, chatId).then((List<ChatMessage> cached) {
+        _messages[chatId] = cached;
         notifyListeners();
-      }).catchError((_) {
-        _loadingChatMessages.remove(chatId);
       });
     }
     return List.unmodifiable(_messages[chatId] ?? const <ChatMessage>[]);
@@ -89,29 +146,39 @@ class ChatProvider extends ChangeNotifier {
       updatedAt: now,
       lastMessagePreview: null,
     );
-    await _firestore.upsertChat(familyId, chat);
-    _chats.add(chat);
+    await _chatsRepository.saveLocal(familyId, chat);
     _messages[chat.id] = <ChatMessage>[];
-    _loadedChatMessages.add(chat.id);
+    if (_subscribedTopicChatIds.add(chat.id)) {
+      await _notifications.subscribeToChatTopic(
+        familyId: familyId,
+        chatId: chat.id,
+      );
+    }
+    await _syncService.flush();
     _resortChats();
     notifyListeners();
     return chat;
   }
 
   Future<void> deleteChat(String chatId) async {
-    final List<ChatMessage> messages = _loadedChatMessages.contains(chatId)
-        ? List<ChatMessage>.from(_messages[chatId] ?? const <ChatMessage>[])
-        : await _firestore.fetchChatMessages(familyId, chatId);
+    final List<ChatMessage> messages =
+        List<ChatMessage>.from(_messages[chatId] ?? await _messagesRepository.loadLocal(familyId, chatId));
     for (final ChatMessage message in messages) {
       if (message.storagePath != null) {
         await _storage.deleteByPath(message.storagePath!);
       }
+      await _messagesRepository.markDeleted(familyId, chatId, message.id);
     }
-    await _firestore.deleteChatMessages(familyId, chatId);
-    await _firestore.deleteChat(familyId, chatId);
+    await _chatsRepository.markDeleted(familyId, chatId);
+    await _syncService.flush();
     _messages.remove(chatId);
-    _loadedChatMessages.remove(chatId);
-    _chats.removeWhere((Chat chat) => chat.id == chatId);
+    await _messageStreamSubscriptions.remove(chatId)?.cancel();
+    if (_subscribedTopicChatIds.remove(chatId)) {
+      await _notifications.unsubscribeFromChatTopic(
+        familyId: familyId,
+        chatId: chatId,
+      );
+    }
     notifyListeners();
   }
 
@@ -130,10 +197,9 @@ class ChatProvider extends ChangeNotifier {
       type: MessageType.text,
       isRead: false,
     );
-    await _firestore.upsertChatMessage(familyId, chatId, message);
+    await _messagesRepository.saveLocal(familyId, chatId, message);
     await _updateChatMetadata(chatId, updatedAt: now, preview: text);
-    _messages.putIfAbsent(chatId, () => <ChatMessage>[]).add(message);
-    _loadedChatMessages.add(chatId);
+    await _syncService.flush();
     _resortChats();
     notifyListeners();
     return message;
@@ -169,10 +235,9 @@ class ChatProvider extends ChangeNotifier {
       isRead: false,
       storagePath: upload.storagePath,
     );
-    await _firestore.upsertChatMessage(familyId, chatId, message);
+    await _messagesRepository.saveLocal(familyId, chatId, message);
     await _updateChatMetadata(chatId, updatedAt: now, preview: preview);
-    _messages.putIfAbsent(chatId, () => <ChatMessage>[]).add(message);
-    _loadedChatMessages.add(chatId);
+    await _syncService.flush();
     _resortChats();
     notifyListeners();
     return message;
@@ -180,7 +245,7 @@ class ChatProvider extends ChangeNotifier {
 
   Future<void> markRead(String chatId) async {
     final List<ChatMessage> messages =
-        await _firestore.fetchChatMessages(familyId, chatId);
+        await _messagesRepository.loadLocal(familyId, chatId);
     bool changed = false;
     final List<ChatMessage> updatedMessages = <ChatMessage>[];
     for (final ChatMessage message in messages) {
@@ -189,13 +254,13 @@ class ChatProvider extends ChangeNotifier {
         continue;
       }
       final ChatMessage updated = message.copyWith(isRead: true);
-      await _firestore.upsertChatMessage(familyId, chatId, updated);
+      await _messagesRepository.saveLocal(familyId, chatId, updated);
       updatedMessages.add(updated);
       changed = true;
     }
     if (changed) {
       _messages[chatId] = updatedMessages;
-      _loadedChatMessages.add(chatId);
+      await _syncService.flush();
       notifyListeners();
     }
   }
@@ -211,10 +276,31 @@ class ChatProvider extends ChangeNotifier {
       lastMessagePreview: preview,
     );
     _chats[index] = updated;
-    await _firestore.upsertChat(familyId, updated);
+    await _chatsRepository.saveLocal(familyId, updated);
   }
 
   void _resortChats() {
     _chats.sort((Chat a, Chat b) => b.updatedAt.compareTo(a.updatedAt));
+  }
+
+  @override
+  void dispose() {
+    _chatListSubscription?.cancel();
+    for (final StreamSubscription<List<ChatMessage>> sub
+        in _messageStreamSubscriptions.values) {
+      sub.cancel();
+    }
+    _messageStreamSubscriptions.clear();
+    for (final String chatId in _subscribedTopicChatIds) {
+      // ANDROID-ONLY FIX: release Android topic subscriptions when provider leaves scope.
+      unawaited(
+        _notifications.unsubscribeFromChatTopic(
+          familyId: familyId,
+          chatId: chatId,
+        ),
+      );
+    }
+    _subscribedTopicChatIds.clear();
+    super.dispose();
   }
 }
