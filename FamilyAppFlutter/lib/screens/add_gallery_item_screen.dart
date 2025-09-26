@@ -16,6 +16,8 @@ import '../services/storage_service.dart';
 class AddGalleryItemScreen extends StatefulWidget {
   const AddGalleryItemScreen({super.key});
 
+  static const String routeName = 'AddGalleryItemScreen';
+
   @override
   State<AddGalleryItemScreen> createState() => _AddGalleryItemScreenState();
 }

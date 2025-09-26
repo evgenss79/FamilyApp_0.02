@@ -40,10 +40,25 @@ android {
     }
 
     buildTypes {
-        release {
+        getByName("debug") {
+            // ANDROID-ONLY FIX: keep debug builds debuggable without minification.
+            isMinifyEnabled = false
+        }
+        getByName("release") {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so 'flutter run --release' works.
             signingConfig = signingConfigs.getByName("debug")
+            // ANDROID-ONLY FIX: enable R8 shrinking with explicit keep rules for Firebase/WebRTC.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+            firebaseCrashlytics {
+                // ANDROID-ONLY FIX: upload mapping files so Crashlytics symbols resolve on Android.
+                mappingFileUploadEnabled = true
+            }
         }
     }
 

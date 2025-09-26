@@ -47,6 +47,13 @@ flutter run
 - Ключ `feature_onboarding_tips` дополнительно управляет Android-баннером быстрых подсказок на домашнем экране; состояние скрытия сохраняется в зашифрованном боксе Hive.
 - Ключи: `feature_ai_suggestions`, `feature_webrtc_enabled`, `feature_onboarding_tips`. Значения по умолчанию — `true`.
 
+### Crashlytics и аналитика
+
+- Firebase Crashlytics и Analytics инициализируются в `bootstrap()` и вешают глобальные обработчики ошибок (FlutterError, `runZonedGuarded`), чтобы Android-сборки сразу отдавали телеметрию.
+- Пользовательский контекст (`memberId`, `familyId`, email) прокидывается в оба сервиса после входа, а при выходе очищается.
+- На домашнем экране в боковом меню появилась кнопка «Send test crash» — она вызывает тестовый краш Crashlytics и позволяет быстро проверить доставку отчёта.
+- Основные пользовательские события (`chat_message_sent`, `task_created`, screen_view) логируются через `AnalyticsService`, который также подключён к `MaterialApp.navigatorObservers`.
+
 
 ### Чаты, медиа и уведомления
 

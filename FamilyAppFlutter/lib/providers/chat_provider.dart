@@ -9,6 +9,8 @@ import '../models/chat_message.dart';
 import '../models/message_type.dart';
 import '../repositories/chat_messages_repository.dart';
 import '../repositories/chats_repository.dart';
+import '../services/analytics_service.dart';
+import '../services/crashlytics_service.dart';
 import '../services/notifications_service.dart';
 import '../services/storage_service.dart';
 import '../services/sync_service.dart';
@@ -221,6 +223,19 @@ class ChatProvider extends ChangeNotifier {
     await _syncService.flush();
     _resortChats();
     notifyListeners();
+    unawaited(
+      AnalyticsService.instance.logMessageSent(
+        familyId: familyId,
+        chatId: chatId,
+        messageId: message.id,
+        senderId: senderId,
+        type: 'text',
+      ),
+    );
+    unawaited(
+      CrashlyticsService.instance
+          .log('chat_message_sent:$familyId:$chatId:${message.id}'),
+    );
     return message;
   }
 
@@ -259,6 +274,19 @@ class ChatProvider extends ChangeNotifier {
     await _syncService.flush();
     _resortChats();
     notifyListeners();
+    unawaited(
+      AnalyticsService.instance.logMessageSent(
+        familyId: familyId,
+        chatId: chatId,
+        messageId: message.id,
+        senderId: senderId,
+        type: type.name,
+      ),
+    );
+    unawaited(
+      CrashlyticsService.instance
+          .log('chat_attachment_sent:$familyId:$chatId:${message.id}:${type.name}'),
+    );
     return message;
   }
 

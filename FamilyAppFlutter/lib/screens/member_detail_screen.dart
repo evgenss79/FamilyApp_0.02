@@ -14,6 +14,8 @@ class MemberDetailScreen extends StatelessWidget {
   final String memberId;
   const MemberDetailScreen({super.key, required this.memberId});
 
+  static const String routeName = 'MemberDetailScreen';
+
   @override
   Widget build(BuildContext context) {
     return Consumer<FamilyData>(
@@ -38,6 +40,9 @@ class MemberDetailScreen extends StatelessWidget {
                   await Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => AddMemberScreen(initialMember: member),
+                      settings: const RouteSettings(
+                        name: AddMemberScreen.routeName,
+                      ),
                     ),
                   );
                 },
@@ -121,6 +126,9 @@ class MemberDetailScreen extends StatelessWidget {
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => MemberDocumentsScreen(member: member),
+                          settings: const RouteSettings(
+                            name: MemberDocumentsScreen.routeName,
+                          ),
                         ),
                       );
                     },
@@ -132,6 +140,9 @@ class MemberDetailScreen extends StatelessWidget {
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => EditDocumentsScreen(member: member),
+                          settings: const RouteSettings(
+                            name: EditDocumentsScreen.routeName,
+                          ),
                         ),
                       );
                     },
@@ -143,6 +154,9 @@ class MemberDetailScreen extends StatelessWidget {
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => MemberHobbiesScreen(member: member),
+                          settings: const RouteSettings(
+                            name: MemberHobbiesScreen.routeName,
+                          ),
                         ),
                       );
                     },
@@ -154,6 +168,9 @@ class MemberDetailScreen extends StatelessWidget {
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => EditHobbiesScreen(member: member),
+                          settings: const RouteSettings(
+                            name: EditHobbiesScreen.routeName,
+                          ),
                         ),
                       );
                     },

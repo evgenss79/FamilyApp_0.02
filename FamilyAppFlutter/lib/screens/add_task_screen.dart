@@ -12,6 +12,8 @@ import '../services/geo_service.dart';
 class AddTaskScreen extends StatefulWidget {
   const AddTaskScreen({super.key});
 
+  static const String routeName = 'AddTaskScreen';
+
   @override
   State<AddTaskScreen> createState() => _AddTaskScreenState();
 }

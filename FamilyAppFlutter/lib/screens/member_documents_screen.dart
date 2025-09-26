@@ -8,6 +8,8 @@ class MemberDocumentsScreen extends StatelessWidget {
   final FamilyMember member;
   const MemberDocumentsScreen({super.key, required this.member});
 
+  static const String routeName = 'MemberDocumentsScreen';
+
   @override
   Widget build(BuildContext context) {
     final docs = member.documentsList ?? const <Map<String, String>>[];
