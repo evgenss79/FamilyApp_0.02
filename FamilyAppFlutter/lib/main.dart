@@ -32,6 +32,7 @@ import 'services/auth_service.dart';
 import 'services/call_service.dart';
 import 'services/notifications_service.dart';
 import 'services/remote_config_service.dart';
+import 'services/geo_reminders_service.dart';
 import 'services/storage_service.dart';
 import 'services/sync_service.dart';
 import 'storage/local_store.dart';
@@ -150,10 +151,10 @@ class _AuthenticatedScopeState extends State<_AuthenticatedScope> {
   final CallMessagesRepository _callMessagesRepository =
       CallMessagesRepository();
   final NotificationsService _notifications = NotificationsService.instance;
+  final GeoRemindersService _geoReminders = GeoRemindersService.instance;
   late final CallService _callService = CallService(
     callsRepository: _callsRepository,
   );
-
 
   SyncService? _syncService;
   bool _initializing = true;
@@ -257,6 +258,7 @@ class _AuthenticatedScopeState extends State<_AuthenticatedScope> {
       providers: [
         Provider<SyncService>.value(value: syncService),
         Provider<CallService>.value(value: _callService),
+        Provider<GeoRemindersService>.value(value: _geoReminders),
         ChangeNotifierProvider<ChatProvider>(
           key: ValueKey<String>('chat-$familyId'),
           create: (_) => ChatProvider(
@@ -276,6 +278,8 @@ class _AuthenticatedScopeState extends State<_AuthenticatedScope> {
             tasksRepository: _tasksRepository,
             eventsRepository: _eventsRepository,
             syncService: syncService,
+            notificationsService: _notifications,
+            geoRemindersService: _geoReminders,
           )..load(),
         ),
         ChangeNotifierProvider<FriendsData>(

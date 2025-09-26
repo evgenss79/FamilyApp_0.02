@@ -12,6 +12,32 @@ class NotificationsService {
   NotificationsService._();
 
   static final NotificationsService instance = NotificationsService._();
+  static const String _generalChannelId = 'familyapp_general';
+  static const String _geoChannelId = 'familyapp_geo';
+
+  static const AndroidNotificationDetails _generalAndroidDetails =
+      AndroidNotificationDetails(
+    _generalChannelId,
+    'Family updates',
+    channelDescription: 'Family task, chat and calendar reminders.',
+    importance: Importance.high,
+    priority: Priority.high,
+  );
+
+  static const AndroidNotificationDetails _geoAndroidDetails =
+      AndroidNotificationDetails(
+    _geoChannelId,
+    'Geo reminders',
+    channelDescription:
+        'Notifications that trigger when you arrive near saved locations.',
+    importance: Importance.high,
+    priority: Priority.high,
+  );
+
+  static const NotificationDetails _generalNotificationDetails =
+      NotificationDetails(android: _generalAndroidDetails);
+  static const NotificationDetails _geoNotificationDetails =
+      NotificationDetails(android: _geoAndroidDetails);
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications =
@@ -199,16 +225,44 @@ class NotificationsService {
       },
     );
 
-    const AndroidNotificationChannel defaultChannel = AndroidNotificationChannel(
-      'familyapp_default',
-      'FamilyApp Notifications',
-      description: 'Default notification channel for FamilyApp alerts.',
-      importance: Importance.high,
+    await _createNotificationChannels();
+  }
+
+  Future<void> ensureGeoReminderChannel() async {
+    await _createNotificationChannels();
+  }
+
+  Future<void> scheduleDeadlineNotification({
+    required String key,
+    required DateTime scheduledFor,
+    required String title,
+    required String body,
+  }) async {
+    await _createNotificationChannels();
+    final int id = _notificationIdFromKey(key);
+    if (scheduledFor.isBefore(DateTime.now())) {
+      await _localNotifications.show(
+        id,
+        title,
+        body,
+        _generalNotificationDetails,
+        payload: key,
+      );
+      return;
+    }
+    await _localNotifications.schedule(
+      id,
+      title,
+      body,
+      scheduledFor,
+      _generalNotificationDetails,
+      androidAllowWhileIdle: true,
+      payload: key,
     );
-    final AndroidFlutterLocalNotificationsPlugin? androidPlugin =
-        _localNotifications.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
-    await androidPlugin?.createNotificationChannel(defaultChannel);
+  }
+
+  Future<void> cancelNotificationForKey(String key) async {
+    await _localNotifications.cancel(_notificationIdFromKey(key));
   }
 
   Future<void> _requestPermissions() async {
@@ -229,24 +283,12 @@ class NotificationsService {
       return;
     }
 
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'familyapp_default',
-      'FamilyApp Notifications',
-      channelDescription: 'Default notification channel for FamilyApp alerts.',
-      importance: Importance.high,
-      priority: Priority.high,
-    );
-    const NotificationDetails details = NotificationDetails(
-      android: androidDetails,
-    );
-
-
     final String? payload = _extractPayload(message);
     await _localNotifications.show(
       notification.hashCode,
       notification.title ?? 'FamilyApp',
       notification.body,
-      details,
+      _generalNotificationDetails,
       payload: payload,
     );
   }
@@ -293,6 +335,69 @@ class NotificationsService {
 
   String _chatTopic(String familyId, String chatId) =>
       'family_${familyId}_chat_$chatId';
+
+  Future<void> _createNotificationChannels() async {
+    final AndroidFlutterLocalNotificationsPlugin? androidPlugin =
+        _localNotifications.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin == null) {
+      return;
+    }
+    // ANDROID-ONLY FIX: ensure Android notification channels exist for local
+    // reminders and background geo alerts.
+    await androidPlugin.createNotificationChannel(
+      const AndroidNotificationChannel(
+        _generalChannelId,
+        'Family updates',
+        description: 'Family task, chat and calendar reminders.',
+        importance: Importance.high,
+      ),
+    );
+    await androidPlugin.createNotificationChannel(
+      const AndroidNotificationChannel(
+        _geoChannelId,
+        'Geo reminders',
+        description: 'Notifications that trigger near saved locations.',
+        importance: Importance.high,
+      ),
+    );
+  }
+
+  int _notificationIdFromKey(String key) => key.hashCode & 0x7fffffff;
+
+  @pragma('vm:entry-point')
+  static Future<void> showGeoReminderFromBackground({
+    required String title,
+    required String body,
+    required String payload,
+  }) async {
+    final FlutterLocalNotificationsPlugin plugin =
+        FlutterLocalNotificationsPlugin();
+    const AndroidInitializationSettings androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const InitializationSettings settings = InitializationSettings(
+      android: androidSettings,
+    );
+    await plugin.initialize(settings);
+    final AndroidFlutterLocalNotificationsPlugin? androidPlugin =
+        plugin.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    await androidPlugin?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        _geoChannelId,
+        'Geo reminders',
+        description: 'Notifications that trigger near saved locations.',
+        importance: Importance.high,
+      ),
+    );
+    await plugin.show(
+      payload.hashCode & 0x7fffffff,
+      title,
+      body,
+      _geoNotificationDetails,
+      payload: payload,
+    );
+  }
 }
 
 @pragma('vm:entry-point')
@@ -316,15 +421,16 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     return;
   }
 
-  const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-    'familyapp_default',
-    'FamilyApp Notifications',
-    channelDescription: 'Default notification channel for FamilyApp alerts.',
-    importance: Importance.high,
-    priority: Priority.high,
-  );
-  const NotificationDetails details = NotificationDetails(
-    android: androidDetails,
+  final AndroidFlutterLocalNotificationsPlugin? androidPlugin =
+      plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+  await androidPlugin?.createNotificationChannel(
+    const AndroidNotificationChannel(
+      _generalChannelId,
+      'Family updates',
+      description: 'Family task, chat and calendar reminders.',
+      importance: Importance.high,
+    ),
   );
 
   final String? payload = _extractPayload(message);
@@ -332,7 +438,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     notification.hashCode,
     notification.title ?? 'FamilyApp',
     notification.body,
-    details,
+    _generalNotificationDetails,
     payload: payload,
   );
 }

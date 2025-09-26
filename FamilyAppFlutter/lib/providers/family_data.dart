@@ -8,6 +8,8 @@ import '../models/task.dart';
 import '../repositories/events_repository.dart';
 import '../repositories/members_repository.dart';
 import '../repositories/tasks_repository.dart';
+import '../services/geo_reminders_service.dart';
+import '../services/notifications_service.dart';
 import '../services/sync_service.dart';
 
 /// Holds shared state for family members, tasks and events. The provider reads
@@ -20,10 +22,14 @@ class FamilyData extends ChangeNotifier {
     required TasksRepository tasksRepository,
     required EventsRepository eventsRepository,
     required SyncService syncService,
+    required NotificationsService notificationsService,
+    required GeoRemindersService geoRemindersService,
   })  : _membersRepository = membersRepository,
         _tasksRepository = tasksRepository,
         _eventsRepository = eventsRepository,
-        _syncService = syncService;
+        _syncService = syncService,
+        _notifications = notificationsService,
+        _geoReminders = geoRemindersService;
 
   final String familyId;
 
@@ -31,7 +37,8 @@ class FamilyData extends ChangeNotifier {
   final TasksRepository _tasksRepository;
   final EventsRepository _eventsRepository;
   final SyncService _syncService;
-
+  final NotificationsService _notifications;
+  final GeoRemindersService _geoReminders;
   final List<FamilyMember> members = <FamilyMember>[];
   final List<Task> tasks = <Task>[];
   final List<Event> events = <Event>[];
@@ -78,6 +85,7 @@ class FamilyData extends ChangeNotifier {
             ..addAll(updatedTasks);
           _sortTasks();
           notifyListeners();
+          unawaited(_rescheduleTaskReminders());
         },
       );
       _eventsSubscription = _eventsRepository.watchLocal(familyId).listen(
@@ -86,6 +94,7 @@ class FamilyData extends ChangeNotifier {
             ..clear()
             ..addAll(updatedEvents);
           notifyListeners();
+          unawaited(_rescheduleEventReminders());
         },
       );
       _loaded = true;
@@ -184,11 +193,13 @@ class FamilyData extends ChangeNotifier {
   Future<void> addTask(Task task) async {
     await _tasksRepository.saveLocal(familyId, task);
     await _syncService.flush();
+    await _rescheduleTaskReminders();
   }
 
   Future<void> updateTask(Task task) async {
     await _tasksRepository.saveLocal(familyId, task);
     await _syncService.flush();
+    await _rescheduleTaskReminders();
   }
 
   Future<void> updateTaskStatus(String taskId, TaskStatus status) async {
@@ -202,6 +213,7 @@ class FamilyData extends ChangeNotifier {
     );
     await _tasksRepository.saveLocal(familyId, updated);
     await _syncService.flush();
+    await _rescheduleTaskReminders();
   }
 
   Future<void> assignTask(String id, String? assigneeId) async {
@@ -212,11 +224,14 @@ class FamilyData extends ChangeNotifier {
     final Task updated = tasks[index].copyWith(assigneeId: assigneeId);
     await _tasksRepository.saveLocal(familyId, updated);
     await _syncService.flush();
+    await _rescheduleTaskReminders();
   }
 
   Future<void> removeTask(String id) async {
     await _tasksRepository.markDeleted(familyId, id);
     await _syncService.flush();
+    await _notifications.cancelNotificationForKey(_taskNotificationKey(id));
+    await _geoReminders.removeTaskReminder(familyId, id);
   }
 
   Event? eventById(String id) {
@@ -230,16 +245,20 @@ class FamilyData extends ChangeNotifier {
   Future<void> addEvent(Event event) async {
     await _eventsRepository.saveLocal(familyId, event);
     await _syncService.flush();
+    await _rescheduleEventReminders();
   }
 
   Future<void> updateEvent(Event event) async {
     await _eventsRepository.saveLocal(familyId, event);
     await _syncService.flush();
+    await _rescheduleEventReminders();
   }
 
   Future<void> removeEvent(String id) async {
     await _eventsRepository.markDeleted(familyId, id);
     await _syncService.flush();
+    await _notifications.cancelNotificationForKey(_eventNotificationKey(id));
+    await _geoReminders.removeEventReminder(familyId, id);
   }
 
   @override
@@ -257,4 +276,47 @@ class FamilyData extends ChangeNotifier {
       return aDue.compareTo(bDue);
     });
   }
+
+  Future<void> _rescheduleTaskReminders() async {
+    await _geoReminders.syncTaskReminders(familyId, tasks);
+    for (final Task task in tasks) {
+      final String key = _taskNotificationKey(task.id);
+      if (task.reminderEnabled && task.dueDate != null) {
+        final DateTime scheduled = task.dueDate!;
+        await _notifications.scheduleDeadlineNotification(
+          key: key,
+          scheduledFor: scheduled,
+          title: task.title,
+          body: task.description ?? task.title,
+        );
+      } else {
+        await _notifications.cancelNotificationForKey(key);
+      }
+    }
+  }
+
+  Future<void> _rescheduleEventReminders() async {
+    await _geoReminders.syncEventReminders(familyId, events);
+    for (final Event event in events) {
+      final String key = _eventNotificationKey(event.id);
+      if (event.reminderEnabled) {
+        final Duration offset = Duration(
+          minutes: event.reminderMinutesBefore ?? 15,
+        );
+        final DateTime scheduled = event.startDateTime.subtract(offset);
+        await _notifications.scheduleDeadlineNotification(
+          key: key,
+          scheduledFor: scheduled,
+          title: event.title,
+          body: event.description ?? event.title,
+        );
+      } else {
+        await _notifications.cancelNotificationForKey(key);
+      }
+    }
+  }
+
+  String _taskNotificationKey(String id) => 'task:$familyId:$id';
+
+  String _eventNotificationKey(String id) => 'event:$familyId:$id';
 }

@@ -17,6 +17,11 @@ class Task {
     this.points,
     this.createdAt,
     this.updatedAt,
+    this.reminderEnabled = false,
+    this.locationLabel,
+    this.latitude,
+    this.longitude,
+    this.radiusMeters,
   });
 
   final String id;
@@ -28,6 +33,11 @@ class Task {
   final int? points;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final bool reminderEnabled;
+  final String? locationLabel;
+  final double? latitude;
+  final double? longitude;
+  final double? radiusMeters;
 
   factory Task.fromMap(Map<String, dynamic> map) {
     return Task(
@@ -40,6 +50,11 @@ class Task {
       points: _parsePoints(map['points']),
       createdAt: parseNullableDateTime(map['createdAt']),
       updatedAt: parseNullableDateTime(map['updatedAt']),
+      reminderEnabled: map['reminderEnabled'] == true,
+      locationLabel: map['locationLabel'] as String?,
+      latitude: (map['latitude'] as num?)?.toDouble(),
+      longitude: (map['longitude'] as num?)?.toDouble(),
+      radiusMeters: (map['radiusMeters'] as num?)?.toDouble(),
     );
   }
 
@@ -53,6 +68,11 @@ class Task {
         'points': points,
         'createdAt': createdAt?.toIso8601String(),
         'updatedAt': updatedAt?.toIso8601String(),
+        'reminderEnabled': reminderEnabled,
+        'locationLabel': locationLabel,
+        'latitude': latitude,
+        'longitude': longitude,
+        'radiusMeters': radiusMeters,
       };
 
   Task copyWith({
@@ -64,6 +84,11 @@ class Task {
     Object? points = _sentinel,
     Object? createdAt = _sentinel,
     Object? updatedAt = _sentinel,
+    Object? reminderEnabled = _sentinel,
+    Object? locationLabel = _sentinel,
+    Object? latitude = _sentinel,
+    Object? longitude = _sentinel,
+    Object? radiusMeters = _sentinel,
   }) {
     return Task(
       id: id,
@@ -80,6 +105,19 @@ class Task {
           createdAt == _sentinel ? this.createdAt : createdAt as DateTime?,
       updatedAt:
           updatedAt == _sentinel ? this.updatedAt : updatedAt as DateTime?,
+      reminderEnabled: reminderEnabled == _sentinel
+          ? this.reminderEnabled
+          : reminderEnabled as bool,
+      locationLabel: locationLabel == _sentinel
+          ? this.locationLabel
+          : locationLabel as String?,
+      latitude:
+          latitude == _sentinel ? this.latitude : latitude as double?,
+      longitude:
+          longitude == _sentinel ? this.longitude : longitude as double?,
+      radiusMeters: radiusMeters == _sentinel
+          ? this.radiusMeters
+          : radiusMeters as double?,
     );
   }
 
