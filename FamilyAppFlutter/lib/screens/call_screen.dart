@@ -179,10 +179,11 @@ class _CallScreenState extends State<CallScreen> {
         : context.tr('audioLabel');
     return PopScope(
       canPop: true,
-      onPopInvoked: (bool didPop) async {
+      onPopInvokedWithResult: (bool didPop, Object? result) async {
+        final NavigatorState navigator = Navigator.of(context);
         await _endCall();
         if (!didPop && mounted) {
-          Navigator.of(context).pop();
+          navigator.pop(result);
         }
       },
       child: Scaffold(
