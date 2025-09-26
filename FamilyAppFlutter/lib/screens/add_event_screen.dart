@@ -241,7 +241,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
                 ),
                 if (_reminderEnabled)
                   DropdownButtonFormField<int>(
-                    value: _reminderMinutes,
+                    initialValue: _reminderMinutes,
                     decoration:
                         InputDecoration(labelText: context.tr('eventReminderMinutesLabel')),
                     items: const [5, 15, 30, 60, 120]

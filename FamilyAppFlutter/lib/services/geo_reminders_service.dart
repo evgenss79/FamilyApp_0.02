@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:hive/hive.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../models/event.dart';
@@ -44,7 +45,7 @@ class GeoRemindersService {
       frequency: const Duration(minutes: 15),
       initialDelay: const Duration(minutes: 5),
       existingWorkPolicy: ExistingWorkPolicy.keep,
-      constraints: const Constraints(
+      constraints: Constraints(
         networkType: NetworkType.not_required,
         requiresBatteryNotLow: false,
       ),

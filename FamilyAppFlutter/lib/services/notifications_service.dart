@@ -4,6 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+
 
 import '../firebase_options.dart';
 import '../storage/local_store.dart';
@@ -47,10 +50,13 @@ class NotificationsService {
 
   String? _activeFamilyId;
   final Set<String> _chatTopics = <String>{};
+  bool _timeZoneInitialized = false;
 
   Stream<String> get payloadStream => _payloadController.stream;
 
   Future<void> init() async {
+    await _ensureTimeZones();
+
     // ANDROID-ONLY FIX: configure combined local + push notifications stack.
     await _initializeLocalNotifications();
     await _requestPermissions();
@@ -238,6 +244,8 @@ class NotificationsService {
     required String title,
     required String body,
   }) async {
+
+    await _ensureTimeZones();
     await _createNotificationChannels();
     final int id = _notificationIdFromKey(key);
     if (scheduledFor.isBefore(DateTime.now())) {
@@ -250,13 +258,18 @@ class NotificationsService {
       );
       return;
     }
-    await _localNotifications.schedule(
+
+    final tz.TZDateTime scheduleDate =
+        tz.TZDateTime.from(scheduledFor.toUtc(), tz.UTC);
+    await _localNotifications.zonedSchedule(
       id,
       title,
       body,
-      scheduledFor,
+      scheduleDate,
       _generalNotificationDetails,
-      androidAllowWhileIdle: true,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       payload: key,
     );
   }
@@ -276,6 +289,17 @@ class NotificationsService {
       sound: true,
     );
   }
+
+
+  Future<void> _ensureTimeZones() async {
+    if (_timeZoneInitialized) {
+      return;
+    }
+    tz.initializeTimeZones();
+    tz.setLocalLocation(tz.UTC);
+    _timeZoneInitialized = true;
+  }
+
 
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
     final RemoteNotification? notification = message.notification;
@@ -383,8 +407,8 @@ class NotificationsService {
         plugin.resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
     await androidPlugin?.createNotificationChannel(
-      const AndroidNotificationChannel(
-        _geoChannelId,
+      AndroidNotificationChannel(
+        NotificationsService._geoChannelId,
         'Geo reminders',
         description: 'Notifications that trigger near saved locations.',
         importance: Importance.high,
@@ -394,7 +418,7 @@ class NotificationsService {
       payload.hashCode & 0x7fffffff,
       title,
       body,
-      _geoNotificationDetails,
+      NotificationsService._geoNotificationDetails,
       payload: payload,
     );
   }
@@ -425,8 +449,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       plugin.resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>();
   await androidPlugin?.createNotificationChannel(
-    const AndroidNotificationChannel(
-      _generalChannelId,
+    AndroidNotificationChannel(
+      NotificationsService._generalChannelId,
       'Family updates',
       description: 'Family task, chat and calendar reminders.',
       importance: Importance.high,
@@ -438,7 +462,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     notification.hashCode,
     notification.title ?? 'FamilyApp',
     notification.body,
-    _generalNotificationDetails,
+    NotificationsService._generalNotificationDetails,
     payload: payload,
   );
 }
