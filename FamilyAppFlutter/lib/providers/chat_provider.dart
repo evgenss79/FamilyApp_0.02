@@ -42,20 +42,6 @@ class ChatProvider extends ChangeNotifier {
   final Map<String, StreamSubscription<List<ChatMessage>>> _messageSubscriptions =
       <String, StreamSubscription<List<ChatMessage>>>{};
   final Set<String> _subscribedChatIds = <String>{};
-
-
-
-  StreamSubscription<List<Chat>>? _chatListSubscription;
-  final Map<String, StreamSubscription<List<ChatMessage>>> _messageStreamSubscriptions =
-      <String, StreamSubscription<List<ChatMessage>>>{};
-  final Set<String> _subscribedTopicChatIds = <String>{};
-
-
-  StreamSubscription<List<Chat>>? _chatsSubscription;
-  final Map<String, StreamSubscription<List<ChatMessage>>> _messageSubscriptions =
-      <String, StreamSubscription<List<ChatMessage>>>{};
-
-  final Set<String> _subscribedChatIds = <String>{};
   final Uuid _uuid = const Uuid();
 
   bool _loaded = false;
