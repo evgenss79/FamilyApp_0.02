@@ -4,9 +4,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../config/app_config.dart';
 import '../l10n/app_localizations.dart';
 import '../models/family_member.dart';
+import '../providers/auth_provider.dart';
 import '../providers/family_data.dart';
 import '../services/storage_service.dart';
 
@@ -124,6 +124,8 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
   }
 
   Future<void> _pickAvatar() async {
+    final String? familyId = context.read<AuthProvider>().familyId;
+    if (familyId == null) return;
     final storage = context.read<StorageService>();
     final result = await FilePicker.platform.pickFiles(type: FileType.image);
     if (result == null || result.files.isEmpty) return;
@@ -135,7 +137,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
     });
     try {
       final upload = await storage.uploadMemberAvatar(
-        familyId: AppConfig.familyId,
+        familyId: familyId,
         file: file,
       );
       if (_avatarStoragePath != null &&
@@ -161,6 +163,11 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
     final form = _formKey.currentState;
     if (form == null || !form.validate()) return;
 
+    final String? familyId = context.read<AuthProvider>().familyId;
+    if (familyId == null) {
+      return;
+    }
+
     final name = _nameController.text.trim();
     final relationship = _relationshipController.text.trim();
     final phone = _phoneController.text.trim();
@@ -185,6 +192,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
     final existing = widget.initialMember;
     final member = FamilyMember(
       id: existing?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      familyId: familyId,
       name: name,
       relationship: relationship.isEmpty ? null : relationship,
       birthday: _birthday,
