@@ -35,7 +35,6 @@ class ChatProvider extends ChangeNotifier {
   final SyncService _syncService;
   final NotificationsService _notifications;
   final String familyId;
-
   final List<Chat> _chats = <Chat>[];
   final Map<String, List<ChatMessage>> _messages = <String, List<ChatMessage>>{};
 
@@ -44,6 +43,15 @@ class ChatProvider extends ChangeNotifier {
       <String, StreamSubscription<List<ChatMessage>>>{};
   final Set<String> _chatTopicSubscriptions = <String>{};
 
+  StreamSubscription<List<Chat>>? _chatsSubscription;
+  final Map<String, StreamSubscription<List<ChatMessage>>> _messageSubscriptions =
+      <String, StreamSubscription<List<ChatMessage>>>{};
+  final Set<String> _subscribedChatIds = <String>{};
+
+  StreamSubscription<List<Chat>>? _chatsSubscription;
+  final Map<String, StreamSubscription<List<ChatMessage>>> _messageSubscriptions =
+      <String, StreamSubscription<List<ChatMessage>>>{};
+  final Set<String> _subscribedChatIds = <String>{};
   final Uuid _uuid = const Uuid();
 
   bool _loaded = false;
@@ -75,6 +83,7 @@ class ChatProvider extends ChangeNotifier {
           );
         }
       }
+
       _chatsWatcher = _chatsRepository.watchLocal(familyId).listen(
         (List<Chat> updated) {
           final Set<String> updatedIds =
@@ -89,6 +98,7 @@ class ChatProvider extends ChangeNotifier {
               );
             }
           }
+          
           for (final String existing in _chatTopicSubscriptions.toList()) {
             if (!updatedIds.contains(existing)) {
               _chatTopicSubscriptions.remove(existing);
@@ -100,6 +110,7 @@ class ChatProvider extends ChangeNotifier {
               );
             }
           }
+
           _chats
             ..clear()
             ..addAll(updated);
@@ -154,6 +165,7 @@ class ChatProvider extends ChangeNotifier {
         chatId: chat.id,
       );
     }
+
     await _syncService.flush();
     _resortChats();
     notifyListeners();
@@ -172,6 +184,7 @@ class ChatProvider extends ChangeNotifier {
     await _chatsRepository.markDeleted(familyId, chatId);
     await _syncService.flush();
     _messages.remove(chatId);
+
     await _messageWatchers.remove(chatId)?.cancel();
     if (_chatTopicSubscriptions.remove(chatId)) {
       await _notifications.unsubscribeFromChatTopic(
@@ -179,6 +192,7 @@ class ChatProvider extends ChangeNotifier {
         chatId: chatId,
       );
     }
+
     notifyListeners();
   }
 
@@ -292,6 +306,7 @@ class ChatProvider extends ChangeNotifier {
     }
     _messageWatchers.clear();
     for (final String chatId in _chatTopicSubscriptions) {
+
       // ANDROID-ONLY FIX: release Android topic subscriptions when provider leaves scope.
       unawaited(
         _notifications.unsubscribeFromChatTopic(
@@ -300,7 +315,9 @@ class ChatProvider extends ChangeNotifier {
         ),
       );
     }
+
     _chatTopicSubscriptions.clear();
+
     super.dispose();
   }
 }

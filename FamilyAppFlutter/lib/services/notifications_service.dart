@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:developer' as developer;
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+
 
 import '../firebase_options.dart';
 import '../storage/local_store.dart';
@@ -15,7 +15,6 @@ class NotificationsService {
   NotificationsService._();
 
   static final NotificationsService instance = NotificationsService._();
-
   static const String _generalChannelId = 'familyapp_general';
   static const String _geoChannelId = 'familyapp_geo';
 
@@ -57,6 +56,7 @@ class NotificationsService {
 
   Future<void> init() async {
     await _ensureTimeZones();
+
     // ANDROID-ONLY FIX: configure combined local + push notifications stack.
     await _initializeLocalNotifications();
     await _requestPermissions();
@@ -223,12 +223,14 @@ class NotificationsService {
     const InitializationSettings settings = InitializationSettings(
       android: androidSettings,
     );
+
     await _localNotifications.initialize(
       settings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         _handleNotificationPayload(response.payload);
       },
     );
+
     await _createNotificationChannels();
   }
 
@@ -242,6 +244,7 @@ class NotificationsService {
     required String title,
     required String body,
   }) async {
+
     await _ensureTimeZones();
     await _createNotificationChannels();
     final int id = _notificationIdFromKey(key);
@@ -255,6 +258,7 @@ class NotificationsService {
       );
       return;
     }
+
     final tz.TZDateTime scheduleDate =
         tz.TZDateTime.from(scheduledFor.toUtc(), tz.UTC);
     await _localNotifications.zonedSchedule(
@@ -286,6 +290,7 @@ class NotificationsService {
     );
   }
 
+
   Future<void> _ensureTimeZones() async {
     if (_timeZoneInitialized) {
       return;
@@ -294,6 +299,7 @@ class NotificationsService {
     tz.setLocalLocation(tz.UTC);
     _timeZoneInitialized = true;
   }
+
 
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
     final RemoteNotification? notification = message.notification;
