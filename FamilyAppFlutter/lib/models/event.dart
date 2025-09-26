@@ -13,6 +13,12 @@ class Event {
     List<String>? participantIds,
     this.createdAt,
     this.updatedAt,
+    this.locationLabel,
+    this.latitude,
+    this.longitude,
+    this.radiusMeters,
+    this.reminderEnabled = false,
+    this.reminderMinutesBefore,
   }) : participantIds = List.unmodifiable(participantIds ?? <String>[]);
 
   final String id;
@@ -23,6 +29,12 @@ class Event {
   final List<String> participantIds;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final String? locationLabel;
+  final double? latitude;
+  final double? longitude;
+  final double? radiusMeters;
+  final bool reminderEnabled;
+  final int? reminderMinutesBefore;
 
   factory Event.fromMap(Map<String, dynamic> map) {
     return Event(
@@ -34,6 +46,12 @@ class Event {
       participantIds: parseStringList(map['participantIds']),
       createdAt: parseNullableDateTime(map['createdAt']),
       updatedAt: parseNullableDateTime(map['updatedAt']),
+      locationLabel: map['locationLabel'] as String?,
+      latitude: (map['latitude'] as num?)?.toDouble(),
+      longitude: (map['longitude'] as num?)?.toDouble(),
+      radiusMeters: (map['radiusMeters'] as num?)?.toDouble(),
+      reminderEnabled: map['reminderEnabled'] == true,
+      reminderMinutesBefore: (map['reminderMinutesBefore'] as num?)?.toInt(),
     );
   }
 
@@ -46,6 +64,12 @@ class Event {
         'participantIds': participantIds,
         'createdAt': createdAt?.toIso8601String(),
         'updatedAt': updatedAt?.toIso8601String(),
+        'locationLabel': locationLabel,
+        'latitude': latitude,
+        'longitude': longitude,
+        'radiusMeters': radiusMeters,
+        'reminderEnabled': reminderEnabled,
+        'reminderMinutesBefore': reminderMinutesBefore,
       };
 
   Event copyWith({
@@ -56,6 +80,12 @@ class Event {
     List<String>? participantIds,
     Object? createdAt = _sentinel,
     Object? updatedAt = _sentinel,
+    Object? locationLabel = _sentinel,
+    Object? latitude = _sentinel,
+    Object? longitude = _sentinel,
+    Object? radiusMeters = _sentinel,
+    Object? reminderEnabled = _sentinel,
+    Object? reminderMinutesBefore = _sentinel,
   }) {
     return Event(
 
@@ -76,6 +106,22 @@ class Event {
           createdAt == _sentinel ? this.createdAt : createdAt as DateTime?,
       updatedAt:
           updatedAt == _sentinel ? this.updatedAt : updatedAt as DateTime?,
+      locationLabel: locationLabel == _sentinel
+          ? this.locationLabel
+          : locationLabel as String?,
+      latitude:
+          latitude == _sentinel ? this.latitude : latitude as double?,
+      longitude:
+          longitude == _sentinel ? this.longitude : longitude as double?,
+      radiusMeters: radiusMeters == _sentinel
+          ? this.radiusMeters
+          : radiusMeters as double?,
+      reminderEnabled: reminderEnabled == _sentinel
+          ? this.reminderEnabled
+          : reminderEnabled as bool,
+      reminderMinutesBefore: reminderMinutesBefore == _sentinel
+          ? this.reminderMinutesBefore
+          : reminderMinutesBefore as int?,
     );
   }
 }
