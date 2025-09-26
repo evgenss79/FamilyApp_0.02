@@ -58,6 +58,38 @@ class EventsScreen extends StatelessWidget {
                             '${context.tr('participantsLabel')}: ${participants.join(', ')}',
                           ),
                         ),
+                      if (event.locationLabel != null ||
+                          (event.latitude != null && event.longitude != null))
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.place, size: 18),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  event.locationLabel ??
+                                      '${event.latitude!.toStringAsFixed(4)}, ${event.longitude!.toStringAsFixed(4)}',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (event.reminderEnabled)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.alarm, size: 18),
+                              const SizedBox(width: 4),
+                              Text(
+                                context.loc.eventReminderMinutes(
+                                  event.reminderMinutesBefore ?? 15,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                     ],
                   ),
                   trailing: IconButton(
