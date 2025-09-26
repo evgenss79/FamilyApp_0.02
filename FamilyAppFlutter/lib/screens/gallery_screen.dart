@@ -96,7 +96,7 @@ class GalleryScreen extends StatelessWidget {
                                 padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
 
-                                  color: Colors.black.withOpacity(0.45),
+                                  color: Colors.black.withValues(alpha: 0.45),
 
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -116,7 +116,6 @@ class GalleryScreen extends StatelessWidget {
                             top: 8,
                             child: DecoratedBox(
                               decoration: BoxDecoration(
-
                                 color: Theme.of(context)
                                     .colorScheme
                                     .surfaceContainerHighest,
@@ -148,7 +147,7 @@ class GalleryScreen extends StatelessWidget {
                                     .colorScheme
                                     .surface
 
-                                    .withOpacity(0.85),
+                                    .withValues(alpha: 0.85),
 
                                 child: IconButton(
                                   icon: const Icon(Icons.delete, size: 18),
@@ -303,7 +302,7 @@ class _GalleryThumbnail extends StatelessWidget {
             child: DecoratedBox(
               decoration: BoxDecoration(
 
-                color: Colors.black.withOpacity(0.45),
+                color: Colors.black.withValues(alpha: 0.45),
 
                 borderRadius: BorderRadius.circular(20),
               ),
