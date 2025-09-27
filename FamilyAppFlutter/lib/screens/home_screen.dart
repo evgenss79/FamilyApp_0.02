@@ -5,6 +5,7 @@ import '../l10n/app_localizations.dart';
 import '../providers/auth_provider.dart';
 import '../providers/language_provider.dart';
 import '../services/remote_config_service.dart';
+import '../services/crashlytics_service.dart';
 import '../storage/local_store.dart';
 import 'ai_suggestions_screen.dart';
 import 'calendar_feed_screen.dart';
@@ -29,78 +30,91 @@ class HomeScreen extends StatefulWidget {
       titleKey: 'members',
       descriptionKey: 'membersDescription',
       icon: Icons.group,
+      routeName: MembersScreen.routeName,
       builder: (_) => const MembersScreen(),
     ),
     HomeFeature(
       titleKey: 'tasks',
       descriptionKey: 'tasksDescription',
       icon: Icons.checklist,
+      routeName: TasksScreen.routeName,
       builder: (_) => const TasksScreen(),
     ),
     HomeFeature(
       titleKey: 'events',
       descriptionKey: 'eventsDescription',
       icon: Icons.event,
+      routeName: EventsScreen.routeName,
       builder: (_) => const EventsScreen(),
     ),
     HomeFeature(
       titleKey: 'calendar',
       descriptionKey: 'calendarDescription',
       icon: Icons.calendar_today,
+      routeName: CalendarScreen.routeName,
       builder: (_) => const CalendarScreen(),
     ),
     HomeFeature(
       titleKey: 'schedule',
       descriptionKey: 'scheduleDescription',
       icon: Icons.schedule,
+      routeName: ScheduleScreen.routeName,
       builder: (_) => const ScheduleScreen(),
     ),
     HomeFeature(
       titleKey: 'scoreboard',
       descriptionKey: 'scoreboardDescription',
       icon: Icons.leaderboard,
+      routeName: ScoreboardScreen.routeName,
       builder: (_) => const ScoreboardScreen(),
     ),
     HomeFeature(
       titleKey: 'gallery',
       descriptionKey: 'galleryDescription',
       icon: Icons.photo_library,
+      routeName: GalleryScreen.routeName,
       builder: (_) => const GalleryScreen(),
     ),
     HomeFeature(
       titleKey: 'friends',
       descriptionKey: 'friendsDescription',
       icon: Icons.people_alt,
+      routeName: FriendsScreen.routeName,
       builder: (_) => const FriendsScreen(),
     ),
     HomeFeature(
       titleKey: 'chats',
       descriptionKey: 'chatsDescription',
       icon: Icons.chat_bubble_outline,
+      routeName: ChatListScreen.routeName,
       builder: (_) => const ChatListScreen(),
     ),
     HomeFeature(
       titleKey: 'aiSuggestions',
       descriptionKey: 'aiSuggestionsDescription',
       icon: Icons.auto_awesome,
+      routeName: AiSuggestionsScreen.routeName,
       builder: (_) => const AiSuggestionsScreen(),
     ),
     HomeFeature(
       titleKey: 'calendarFeed',
       descriptionKey: 'calendarFeedDescription',
       icon: Icons.rss_feed,
+      routeName: CalendarFeedScreen.routeName,
       builder: (_) => const CalendarFeedScreen(),
     ),
     HomeFeature(
       titleKey: 'startCall',
       descriptionKey: 'startCallDescription',
       icon: Icons.call,
+      routeName: CallSetupScreen.routeName,
       builder: (_) => const CallSetupScreen(),
     ),
     HomeFeature(
       titleKey: 'cloudCall',
       descriptionKey: 'cloudCallDescription',
       icon: Icons.cloud,
+      routeName: CloudCallScreen.routeName,
       builder: (_) => const CloudCallScreen(),
     ),
   ];
@@ -186,7 +200,10 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: () {
                 Navigator.of(context).pop();
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const ProfileScreen(),
+                    settings: const RouteSettings(name: ProfileScreen.routeName),
+                  ),
                 );
               },
             ),
@@ -222,6 +239,42 @@ class _HomeScreenState extends State<HomeScreen> {
                 await context.read<AuthProvider>().signOut();
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.bug_report_outlined),
+              title: Text(context.tr('triggerTestCrashTitle')),
+              subtitle: Text(context.tr('triggerTestCrashSubtitle')),
+              onTap: () async {
+                final bool? confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (BuildContext dialogContext) {
+                    return AlertDialog(
+                      title: Text(context.tr('triggerTestCrashTitle')),
+                      content: Text(context.tr('triggerTestCrashSubtitle')),
+                      actions: [
+                        TextButton(
+                          onPressed: () =>
+                              Navigator.of(dialogContext).pop(false),
+                          child: Text(context.tr('triggerTestCrashCancel')),
+                        ),
+                        TextButton(
+                          onPressed: () =>
+                              Navigator.of(dialogContext).pop(true),
+                          child: Text(context.tr('triggerTestCrashConfirm')),
+                        ),
+                      ],
+                    );
+                  },
+                );
+                if (!context.mounted) {
+                  return;
+                }
+                if (confirmed == true) {
+                  Navigator.of(context).pop();
+                  // ANDROID-ONLY FIX: allow manual Crashlytics verification from Android builds.
+                  await CrashlyticsService.instance.triggerTestCrash();
+                }
+              },
+            ),
             const Divider(height: 1),
             for (final feature in features)
               ListTile(
@@ -231,7 +284,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () {
                   Navigator.of(context).pop();
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: feature.builder),
+                    MaterialPageRoute(
+                      builder: feature.builder,
+                      settings:
+                          RouteSettings(name: feature.routeName),
+                    ),
                   );
                 },
               ),
@@ -277,7 +334,10 @@ class _FeatureCard extends StatelessWidget {
     return InkWell(
       onTap: () {
         Navigator.of(context).push(
-          MaterialPageRoute(builder: feature.builder),
+          MaterialPageRoute(
+            builder: feature.builder,
+            settings: RouteSettings(name: feature.routeName),
+          ),
         );
       },
       borderRadius: BorderRadius.circular(16),
@@ -315,12 +375,14 @@ class HomeFeature {
   final String titleKey;
   final String descriptionKey;
   final IconData icon;
+  final String routeName;
   final WidgetBuilder builder;
 
   const HomeFeature({
     required this.titleKey,
     required this.descriptionKey,
     required this.icon,
+    required this.routeName,
     required this.builder,
   });
 }

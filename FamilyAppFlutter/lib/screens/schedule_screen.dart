@@ -13,6 +13,8 @@ import 'add_schedule_item_screen.dart';
 class ScheduleScreen extends StatelessWidget {
   const ScheduleScreen({super.key});
 
+  static const String routeName = 'ScheduleScreen';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,7 +76,12 @@ class ScheduleScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AddScheduleItemScreen()),
+            MaterialPageRoute(
+              builder: (_) => const AddScheduleItemScreen(),
+              settings: const RouteSettings(
+                name: AddScheduleItemScreen.routeName,
+              ),
+            ),
           );
         },
         tooltip: context.tr('addScheduleItemTitle'),

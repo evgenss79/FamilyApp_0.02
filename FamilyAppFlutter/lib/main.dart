@@ -28,8 +28,10 @@ import 'screens/auth/complete_profile_screen.dart';
 import 'screens/auth/sign_in_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/home_screen.dart';
+import 'services/analytics_service.dart';
 import 'services/auth_service.dart';
 import 'services/call_service.dart';
+import 'services/crashlytics_service.dart';
 import 'services/notifications_service.dart';
 import 'services/remote_config_service.dart';
 import 'services/geo_reminders_service.dart';
@@ -40,7 +42,13 @@ import 'storage/local_store.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await bootstrap(); // ANDROID-ONLY FIX: serialized Android bootstrap flow.
-  runApp(const FamilyApp());
+  runZonedGuarded(
+    () => runApp(const FamilyApp()),
+    (Object error, StackTrace stackTrace) {
+      // ANDROID-ONLY FIX: forward uncaught async exceptions to Crashlytics on Android.
+      unawaited(CrashlyticsService.instance.recordFatal(error, stackTrace));
+    },
+  );
 }
 
 class FamilyApp extends StatefulWidget {
@@ -94,6 +102,9 @@ class _FamilyAppState extends State<FamilyApp> {
             supportedLocales: AppLocalizations.supportedLocales,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             onGenerateTitle: (BuildContext context) => context.tr('appTitle'),
+            navigatorObservers: <NavigatorObserver>[
+              AnalyticsService.instance.navigatorObserver,
+            ],
             home: _AuthRouter(storage: _storage, status: auth.status),
           );
         },
@@ -359,7 +370,10 @@ class _AuthenticatedScopeState extends State<_AuthenticatedScope> {
         return;
       }
       Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => ChatScreen(chat: target)),
+        MaterialPageRoute(
+          builder: (_) => ChatScreen(chat: target),
+          settings: const RouteSettings(name: ChatScreen.routeName),
+        ),
       );
     });
   }

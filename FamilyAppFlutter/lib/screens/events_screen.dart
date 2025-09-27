@@ -11,6 +11,8 @@ import 'add_event_screen.dart';
 class EventsScreen extends StatelessWidget {
   const EventsScreen({super.key});
 
+  static const String routeName = 'EventsScreen';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -106,7 +108,12 @@ class EventsScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AddEventScreen()),
+            MaterialPageRoute(
+              builder: (_) => const AddEventScreen(),
+              settings: const RouteSettings(
+                name: AddEventScreen.routeName,
+              ),
+            ),
           );
         },
         tooltip: context.tr('addEventTitle'),
