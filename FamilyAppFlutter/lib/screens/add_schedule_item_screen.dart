@@ -10,6 +10,8 @@ import '../providers/schedule_data.dart';
 class AddScheduleItemScreen extends StatefulWidget {
   const AddScheduleItemScreen({super.key});
 
+  static const String routeName = 'AddScheduleItemScreen';
+
   @override
   State<AddScheduleItemScreen> createState() => _AddScheduleItemScreenState();
 }

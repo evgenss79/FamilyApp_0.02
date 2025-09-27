@@ -10,6 +10,8 @@ import 'call_screen.dart';
 class CallSetupScreen extends StatefulWidget {
   const CallSetupScreen({super.key});
 
+  static const String routeName = 'CallSetupScreen';
+
   @override
   State<CallSetupScreen> createState() => _CallSetupScreenState();
 }
@@ -60,6 +62,7 @@ class _CallSetupScreenState extends State<CallSetupScreen> {
           callType: _callType,
           isCaller: true,
         ),
+        settings: const RouteSettings(name: CallScreen.routeName),
       ),
     );
   }

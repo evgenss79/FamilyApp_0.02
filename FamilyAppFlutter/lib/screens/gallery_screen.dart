@@ -14,6 +14,8 @@ import 'gallery_viewer_screen.dart';
 class GalleryScreen extends StatelessWidget {
   const GalleryScreen({super.key});
 
+  static const String routeName = 'GalleryScreen';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,6 +68,9 @@ class GalleryScreen extends StatelessWidget {
                           builder: (_) => GalleryViewerScreen(
                             item: item,
                             heroTag: heroTag,
+                          ),
+                          settings: const RouteSettings(
+                            name: GalleryViewerScreen.routeName,
                           ),
                         ),
                       );
@@ -198,7 +203,12 @@ class GalleryScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AddGalleryItemScreen()),
+            MaterialPageRoute(
+              builder: (_) => const AddGalleryItemScreen(),
+              settings: const RouteSettings(
+                name: AddGalleryItemScreen.routeName,
+              ),
+            ),
           );
         },
         tooltip: context.tr('addGalleryItemTitle'),

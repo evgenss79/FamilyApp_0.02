@@ -8,6 +8,8 @@ class MemberHobbiesScreen extends StatelessWidget {
   final FamilyMember member;
   const MemberHobbiesScreen({super.key, required this.member});
 
+  static const String routeName = 'MemberHobbiesScreen';
+
   @override
   Widget build(BuildContext context) {
     final hobbies = member.hobbies;

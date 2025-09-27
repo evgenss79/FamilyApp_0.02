@@ -13,6 +13,8 @@ import '../services/storage_service.dart';
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
+  static const String routeName = 'ProfileScreen';
+
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }

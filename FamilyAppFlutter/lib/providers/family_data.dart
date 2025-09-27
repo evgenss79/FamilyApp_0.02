@@ -8,6 +8,8 @@ import '../models/task.dart';
 import '../repositories/events_repository.dart';
 import '../repositories/members_repository.dart';
 import '../repositories/tasks_repository.dart';
+import '../services/analytics_service.dart';
+import '../services/crashlytics_service.dart';
 import '../services/geo_reminders_service.dart';
 import '../services/notifications_service.dart';
 import '../services/sync_service.dart';
@@ -195,6 +197,15 @@ class FamilyData extends ChangeNotifier {
     await _tasksRepository.saveLocal(familyId, task);
     await _syncService.flush();
     await _rescheduleTaskReminders();
+    unawaited(
+      AnalyticsService.instance.logTaskCreated(
+        familyId: familyId,
+        task: task,
+      ),
+    );
+    unawaited(
+      CrashlyticsService.instance.log('task_created:$familyId:${task.id}'),
+    );
   }
 
   Future<void> updateTask(Task task) async {

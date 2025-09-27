@@ -13,6 +13,8 @@ import '../providers/family_data.dart';
 class ScoreboardScreen extends StatelessWidget {
   const ScoreboardScreen({super.key});
 
+  static const String routeName = 'ScoreboardScreen';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
