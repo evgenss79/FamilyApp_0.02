@@ -265,6 +265,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                 );
+
+                if (!mounted) {
+                  return;
+                }
+
                 if (confirmed == true) {
                   Navigator.of(context).pop();
                   // ANDROID-ONLY FIX: allow manual Crashlytics verification from Android builds.
@@ -283,7 +288,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: feature.builder,
-                      settings: RouteSettings(name: feature.routeName),
+
+                      settings:
+                          RouteSettings(name: feature.routeName),
+
                     ),
                   );
                 },

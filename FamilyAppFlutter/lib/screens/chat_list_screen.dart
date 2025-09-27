@@ -60,7 +60,9 @@ class ChatListScreen extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (_) => ChatScreen(chat: chat),
                       settings:
-                          RouteSettings(name: ChatScreen.routeName),
+
+                          const RouteSettings(name: ChatScreen.routeName),
+
                     ),
                   );
                 },

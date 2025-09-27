@@ -65,7 +65,9 @@ class AnalyticsService {
   }) async {
     await _analytics.logEvent(
       name: 'chat_message_sent',
-      parameters: <String, Object?>{
+
+      parameters: <String, Object>{
+
         'family_id': familyId,
         'chat_id': chatId,
         'message_id': messageId,
@@ -81,7 +83,9 @@ class AnalyticsService {
   }) async {
     await _analytics.logEvent(
       name: 'task_created',
-      parameters: <String, Object?>{
+
+      parameters: <String, Object>{
+
         'family_id': familyId,
         'task_id': task.id,
         'status': task.status.name,
