@@ -69,7 +69,9 @@ class GalleryScreen extends StatelessWidget {
                             item: item,
                             heroTag: heroTag,
                           ),
+
                           settings: const RouteSettings(
+
                             name: GalleryViewerScreen.routeName,
                           ),
                         ),
