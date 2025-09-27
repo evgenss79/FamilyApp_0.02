@@ -431,7 +431,10 @@ class NotificationsService {
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (Firebase.apps.isEmpty) {
     // ANDROID-ONLY FIX: background isolate needs its own Firebase bootstrap.
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+      name: 'background',
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
   }
 
   final FlutterLocalNotificationsPlugin plugin =

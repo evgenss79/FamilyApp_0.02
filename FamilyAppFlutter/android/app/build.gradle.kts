@@ -17,14 +17,14 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        // ANDROID-ONLY FIX: Use Java 8 compatibility for Android builds.
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        // ANDROID-ONLY FIX: Use Java 17 compatibility for Android builds.
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        // ANDROID-ONLY FIX: Ensure Kotlin bytecode targets JVM 1.8 for Android.
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
+        // ANDROID-ONLY FIX: Ensure Kotlin bytecode targets JVM 17 for Android.
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     defaultConfig {

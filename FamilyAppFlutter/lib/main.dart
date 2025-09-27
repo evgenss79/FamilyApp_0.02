@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 // ANDROID-ONLY FIX: centralized bootstrap injects Firebase/config without direct AppConfig wiring.
 import 'bootstrap.dart';
+import 'core/firebase_boot.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/auth_provider.dart';
 import 'providers/chat_provider.dart';
@@ -41,6 +42,7 @@ import 'storage/local_store.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initFirebaseOnce();
   await bootstrap(); // ANDROID-ONLY FIX: serialized Android bootstrap flow.
   runZonedGuarded(
     () => runApp(const FamilyApp()),
