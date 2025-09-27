@@ -18,6 +18,8 @@ class ChatScreen extends StatefulWidget {
 
   const ChatScreen({super.key, required this.chat});
 
+  static const String routeName = 'ChatScreen';
+
   @override
   State<ChatScreen> createState() => _ChatScreenState();
 }

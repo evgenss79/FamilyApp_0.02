@@ -7,6 +7,8 @@ import '../l10n/app_localizations.dart';
 class CloudCallScreen extends StatelessWidget {
   const CloudCallScreen({super.key});
 
+  static const String routeName = 'CloudCallScreen';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

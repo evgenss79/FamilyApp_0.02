@@ -10,6 +10,8 @@ class EditDocumentsScreen extends StatefulWidget {
   final FamilyMember member;
   const EditDocumentsScreen({super.key, required this.member});
 
+  static const String routeName = 'EditDocumentsScreen';
+
   @override
   State<EditDocumentsScreen> createState() => _EditDocumentsScreenState();
 }
