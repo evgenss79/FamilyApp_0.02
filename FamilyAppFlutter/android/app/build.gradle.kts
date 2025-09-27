@@ -24,7 +24,7 @@ android {
 
     kotlinOptions {
         // ANDROID-ONLY FIX: Ensure Kotlin bytecode targets JVM 17 for Android.
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        jvmTarget = "17"
     }
 
     defaultConfig {
