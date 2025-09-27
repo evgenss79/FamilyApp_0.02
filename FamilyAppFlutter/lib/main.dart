@@ -372,7 +372,9 @@ class _AuthenticatedScopeState extends State<_AuthenticatedScope> {
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => ChatScreen(chat: target),
+
           settings: const RouteSettings(name: ChatScreen.routeName),
+
         ),
       );
     });

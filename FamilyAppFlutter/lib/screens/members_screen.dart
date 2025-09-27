@@ -62,7 +62,9 @@ class MembersScreen extends StatelessWidget {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (_) => MemberDetailScreen(memberId: member.id),
+
                                   settings: const RouteSettings(
+
                                     name: MemberDetailScreen.routeName,
                                   ),
                                 ),
