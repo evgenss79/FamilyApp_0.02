@@ -9,7 +9,9 @@ android {
     val appId = "com.familyapp.android"
     namespace = appId
 
+
     compileSdk = 34
+
 
     defaultConfig {
         applicationId = appId
