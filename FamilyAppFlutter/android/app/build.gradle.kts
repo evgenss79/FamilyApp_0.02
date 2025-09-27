@@ -1,80 +1,51 @@
 plugins {
     id("com.android.application")
-    id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id("org.jetbrains.kotlin.android")
     id("dev.flutter.flutter-gradle-plugin")
-    // ANDROID-ONLY FIX: Enable Google services plugin required for Android Firebase integration.
     id("com.google.gms.google-services")
-    // ANDROID-ONLY FIX: Apply Crashlytics plugin for Android crash reporting.
-    id("com.google.firebase.crashlytics")
 }
 
 android {
-    // ANDROID-ONLY FIX: Align namespace with the Android-only applicationId.
-    namespace = "com.familyapp.android"
-    // ANDROID-ONLY FIX: Target the mandated Android API level.
+    val appId = "com.familyapp.android"
+    namespace = appId
+
     compileSdk = 34
-    ndkVersion = flutter.ndkVersion
-
-    compileOptions {
-        // ANDROID-ONLY FIX: Use Java 17 compatibility for Android builds.
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        // ANDROID-ONLY FIX: Ensure Kotlin bytecode targets JVM 17 for Android.
-        jvmTarget = JavaVersion.VERSION_17.toString()
-    }
 
     defaultConfig {
-        // ANDROID-ONLY FIX: Application ID matches Firebase configuration for Android-only build.
-        applicationId = "com.familyapp.android"
-        // ANDROID-ONLY FIX: Enforce Android-only minimum and target SDK versions.
-        minSdk = 23
+        applicationId = appId
+        minSdk = 21
         targetSdk = 34
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
-        // ANDROID-ONLY FIX: Enable multidex support required by expanded Android dependencies.
+        versionCode = 1
+        versionName = "1.0"
         multiDexEnabled = true
     }
 
     buildTypes {
-        getByName("debug") {
-            // ANDROID-ONLY FIX: keep debug builds debuggable without minification.
+        release {
             isMinifyEnabled = false
-        }
-        getByName("release") {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so 'flutter run --release' works.
-            signingConfig = signingConfigs.getByName("debug")
-            // ANDROID-ONLY FIX: enable R8 shrinking with explicit keep rules for Firebase/WebRTC.
-            isMinifyEnabled = true
-            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro",
+                "proguard-rules.pro"
             )
-            firebaseCrashlytics {
-                // ANDROID-ONLY FIX: upload mapping files so Crashlytics symbols resolve on Android.
-                mappingFileUploadEnabled = true
-            }
+        }
+        debug {
         }
     }
 
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
     packaging {
         resources {
-            // ANDROID-ONLY FIX: Resolve WebRTC shared library conflicts in Android packaging.
-            pickFirst("lib/**/libjingle_peerconnection_so.so")
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
-    }
-
-    flutter {
-        source = "../.."
     }
 }
 
 dependencies {
-    // ANDROID-ONLY FIX: Add multidex support for the Android-only application.
-    implementation("androidx.multidex:multidex:2.0.1")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib")
 }

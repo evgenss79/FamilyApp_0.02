@@ -2,13 +2,12 @@ import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
-import '../firebase_options.dart';
+import '../core/firebase_boot.dart';
 import '../storage/local_store.dart';
 
 class NotificationsService {
@@ -429,13 +428,8 @@ class NotificationsService {
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  if (Firebase.apps.isEmpty) {
-    // ANDROID-ONLY FIX: background isolate needs its own Firebase bootstrap.
-    await Firebase.initializeApp(
-      name: 'background',
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  }
+  // ANDROID-ONLY FIX: background isolate needs its own Firebase bootstrap.
+  await FirebaseBoot.ensureInitialized();
 
   final FlutterLocalNotificationsPlugin plugin =
       FlutterLocalNotificationsPlugin();
