@@ -14,6 +14,8 @@ class GalleryViewerScreen extends StatefulWidget {
     required this.heroTag,
   });
 
+  static const String routeName = 'GalleryViewerScreen';
+
   final GalleryItem item;
   final String heroTag;
 

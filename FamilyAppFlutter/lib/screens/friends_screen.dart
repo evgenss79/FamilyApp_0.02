@@ -10,6 +10,8 @@ import 'add_friend_screen.dart';
 class FriendsScreen extends StatelessWidget {
   const FriendsScreen({super.key});
 
+  static const String routeName = 'FriendsScreen';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,7 +50,11 @@ class FriendsScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AddFriendScreen()),
+            MaterialPageRoute(
+              builder: (_) => const AddFriendScreen(),
+              settings:
+                  const RouteSettings(name: AddFriendScreen.routeName),
+            ),
           );
         },
         tooltip: context.tr('addFriendTitle'),

@@ -12,6 +12,8 @@ import 'chat_screen.dart';
 class ChatListScreen extends StatelessWidget {
   const ChatListScreen({super.key});
 
+  static const String routeName = 'ChatListScreen';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,6 +59,10 @@ class ChatListScreen extends StatelessWidget {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => ChatScreen(chat: chat),
+                      settings:
+
+                          const RouteSettings(name: ChatScreen.routeName),
+
                     ),
                   );
                 },
@@ -68,7 +74,11 @@ class ChatListScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AddChatScreen()),
+            MaterialPageRoute(
+              builder: (_) => const AddChatScreen(),
+              settings:
+                  const RouteSettings(name: AddChatScreen.routeName),
+            ),
           );
         },
         tooltip: context.tr('createChatTitle'),

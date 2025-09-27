@@ -13,6 +13,8 @@ import '../services/geo_service.dart';
 class AddEventScreen extends StatefulWidget {
   const AddEventScreen({super.key});
 
+  static const String routeName = 'AddEventScreen';
+
   @override
   State<AddEventScreen> createState() => _AddEventScreenState();
 }

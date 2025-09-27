@@ -5,7 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 import '../models/family_member.dart';
+import '../services/analytics_service.dart';
 import '../services/auth_service.dart';
+import '../services/crashlytics_service.dart';
 import '../services/notifications_service.dart';
 
 enum AuthStatus { loading, unauthenticated, needsProfile, authenticated }
@@ -166,6 +168,8 @@ class AuthProvider extends ChangeNotifier {
       _currentMember = null;
       _status = AuthStatus.unauthenticated;
       notifyListeners();
+      unawaited(AnalyticsService.instance.clearUserContext());
+      unawaited(CrashlyticsService.instance.clearUserContext());
       return;
     }
     _status = AuthStatus.loading;
@@ -193,6 +197,20 @@ class AuthProvider extends ChangeNotifier {
     await _notificationsService.syncTokenToMember(
       familyId: context.familyId,
       memberId: context.member.id,
+    );
+    unawaited(
+      AnalyticsService.instance.setUserContext(
+        userId: context.member.id,
+        familyId: context.familyId,
+        email: context.member.email,
+      ),
+    );
+    unawaited(
+      CrashlyticsService.instance.setUserContext(
+        memberId: context.member.id,
+        familyId: context.familyId,
+        email: context.member.email,
+      ),
     );
   }
 }

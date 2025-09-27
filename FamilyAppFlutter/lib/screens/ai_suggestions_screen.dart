@@ -8,6 +8,8 @@ import '../services/ai_suggestions_service.dart';
 class AiSuggestionsScreen extends StatefulWidget {
   const AiSuggestionsScreen({super.key});
 
+  static const String routeName = 'AiSuggestionsScreen';
+
   @override
   State<AiSuggestionsScreen> createState() => _AiSuggestionsScreenState();
 }

@@ -9,6 +9,8 @@ import '../providers/friends_data.dart';
 class AddFriendScreen extends StatefulWidget {
   const AddFriendScreen({super.key});
 
+  static const String routeName = 'AddFriendScreen';
+
   @override
   State<AddFriendScreen> createState() => _AddFriendScreenState();
 }

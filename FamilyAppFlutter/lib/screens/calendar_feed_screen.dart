@@ -9,6 +9,8 @@ import '../l10n/app_localizations.dart';
 class CalendarFeedScreen extends StatelessWidget {
   const CalendarFeedScreen({super.key});
 
+  static const String routeName = 'CalendarFeedScreen';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

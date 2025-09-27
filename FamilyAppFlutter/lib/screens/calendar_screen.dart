@@ -11,6 +11,8 @@ import '../providers/family_data.dart';
 class CalendarScreen extends StatelessWidget {
   const CalendarScreen({super.key});
 
+  static const String routeName = 'CalendarScreen';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
