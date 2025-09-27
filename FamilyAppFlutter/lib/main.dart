@@ -42,7 +42,7 @@ import 'storage/local_store.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initFirebaseOnce();
+  await FirebaseBoot.ensureInitialized(); // единственная инициализация
   await bootstrap(); // ANDROID-ONLY FIX: serialized Android bootstrap flow.
   runZonedGuarded(
     () => runApp(const FamilyApp()),
