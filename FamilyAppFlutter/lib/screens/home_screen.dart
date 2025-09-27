@@ -266,7 +266,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 );
 
-                if (!mounted) {
+                if (!context.mounted) {
                   return;
                 }
 
