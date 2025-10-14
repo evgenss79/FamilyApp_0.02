@@ -1,5 +1,3 @@
-import java.util.Properties
-
 pluginManagement {
     repositories {
         google()
@@ -7,7 +5,7 @@ pluginManagement {
         gradlePluginPortal()
     }
 
-    val properties = Properties()
+    val properties = java.util.Properties()
     val localProperties = file("local.properties")
     if (localProperties.exists()) {
         localProperties.inputStream().use { properties.load(it) }
