@@ -1,5 +1,14 @@
-import java.util.Properties
+fun flutterSdkPath(): String? {
+    val localPropertiesFile = file("local.properties")
+    if (!localPropertiesFile.exists()) {
+        return null
+    }
 
+    return java.util.Properties().let { props ->
+        localPropertiesFile.inputStream().use { props.load(it) }
+        props.getProperty("flutter.sdk")
+    }
+}
 pluginManagement {
     repositories {
         google()
@@ -7,22 +16,20 @@ pluginManagement {
         gradlePluginPortal()
     }
 
-    val properties = Properties()
-    val localProperties = file("local.properties")
-    if (localProperties.exists()) {
-        localProperties.inputStream().use { properties.load(it) }
-        val flutterSdkPath = properties.getProperty("flutter.sdk")
-        if (flutterSdkPath != null) {
-            includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
-        }
+    flutterSdkPath()?.let { sdkPath ->
+        includeBuild("$sdkPath/packages/flutter_tools/gradle")
     }
 }
 
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
     repositories {
         google()
         mavenCentral()
+        flutterSdkPath()?.let { sdkPath ->
+            maven { url = uri("$sdkPath/bin/cache/artifacts/engine/android") }
+        }
+        maven { url = uri("https://storage.googleapis.com/download.flutter.io") }
     }
 }
 
