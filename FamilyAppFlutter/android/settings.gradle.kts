@@ -1,7 +1,7 @@
-val localProperties = file("local.properties")
-val properties = java.util.Properties()
-if (localProperties.exists()) {
-    localProperties.inputStream().use { properties.load(it) }
+val localPropertiesFile = file("local.properties")
+val localProps = java.util.Properties()
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use { localProps.load(it) }
 }
 pluginManagement {
     repositories {
@@ -10,7 +10,7 @@ pluginManagement {
         gradlePluginPortal()
     }
 
-    val flutterSdkPath = properties.getProperty("flutter.sdk")
+    val flutterSdkPath = localProps.getProperty("flutter.sdk")
     if (flutterSdkPath != null) {
         includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
     }
@@ -21,7 +21,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        val flutterSdkPath = properties.getProperty("flutter.sdk")
+        val flutterSdkPath = localProps.getProperty("flutter.sdk")
         if (flutterSdkPath != null) {
             maven { url = uri("$flutterSdkPath/bin/cache/artifacts/engine/android") }
         }
