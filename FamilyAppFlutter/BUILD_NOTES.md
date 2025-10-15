@@ -5,3 +5,10 @@
 - Added Gradle settings repositories and Java toolchain path to support standalone Gradle builds.
 - Fixed Android manifest and Firebase configuration package names for Google services processing.
 - Provisioned the Android SDK locally to satisfy Gradle builds without Flutter tooling.
+- Modernised the Android Gradle configuration to use the Flutter Gradle Plugin v2 with centralized repository management.
+
+## Building
+
+1. `flutter pub get`
+2. `flutter build apk --debug`
+3. (optional for local testing) `flutter run -d emulator-5554`
