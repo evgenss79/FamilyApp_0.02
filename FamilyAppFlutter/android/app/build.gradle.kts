@@ -55,6 +55,7 @@ android {
     lint {
         disable.add("PermissionImpliesUnsupportedChromeOsHardware")
     }
+    sourceSets["main"].manifest.srcFile("src/main/AndroidManifest.xml")
     sourceSets["main"].java.srcDir(flutterStubDir)
 }
 
