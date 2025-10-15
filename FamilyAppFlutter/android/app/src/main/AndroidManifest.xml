@@ -1,6 +1,5 @@
 <manifest
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.familyapp.android">
+    xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- ANDROID-ONLY FIX: declare the Android permissions required for Firebase,
          background sync and geo-reminders. -->
     <uses-permission android:name="android.permission.INTERNET" />

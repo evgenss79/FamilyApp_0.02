@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    val appId = "com.familyapp.android"
+    val appId = "com.example.family_app"
     namespace = appId
 
     compileSdk = 34
@@ -41,9 +41,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
         isCoreLibraryDesugaringEnabled = true
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -59,6 +56,10 @@ android {
         disable.add("PermissionImpliesUnsupportedChromeOsHardware")
     }
     sourceSets["main"].java.srcDir(flutterStubDir)
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 dependencies {

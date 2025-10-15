@@ -1,0 +1,7 @@
+# Build Notes
+
+- Updated the Android app ID and namespace to `com.example.family_app` to match Firebase.
+- Switched the Android toolchains to Java 17 with core library desugaring and Kotlin JVM toolchain configuration.
+- Added Gradle settings repositories and Java toolchain path to support standalone Gradle builds.
+- Fixed Android manifest and Firebase configuration package names for Google services processing.
+- Provisioned the Android SDK locally to satisfy Gradle builds without Flutter tooling.
