@@ -1,44 +1,45 @@
-import java.io.File
 import java.util.Properties
+import java.io.File
 
-fun resolveFlutterSdkPath(): String? {
-    System.getenv("FLUTTER_SDK")?.takeIf { it.isNotBlank() }?.let { return it }
+rootProject.name = "android"
 
-    val localPropertiesFile = File(rootDir, "local.properties")
-    if (!localPropertiesFile.exists()) {
-        return null
-    }
+// ---- Resolve flutterSdkPath from env or local.properties
+val localProps = Properties().apply {
+    val f = File(rootDir, "local.properties")
+    if (f.exists()) f.reader().use { load(it) }
+}
+val flutterSdkPath: String? =
+    System.getenv("FLUTTER_SDK")
+        ?: localProps.getProperty("flutter.sdk")
 
-    return Properties().let { props ->
-        localPropertiesFile.inputStream().use { props.load(it) }
-        props.getProperty("flutter.sdk")
-    }
+require(!flutterSdkPath.isNullOrBlank()) {
+    "Flutter SDK path is not set. Define FLUTTER_SDK env var or flutter.sdk in android/local.properties"
 }
 
-val flutterSdkPath: String? = resolveFlutterSdkPath()
+// ---- Repositories for plugin & dependency resolution live in SETTINGS (not in project build.gradle)
 pluginManagement {
     repositories {
         google()
         mavenCentral()
         gradlePluginPortal()
+        // Flutter artifacts (embeddings, etc.)
+        maven { url = uri("https://storage.googleapis.com/download.flutter.io") }
     }
-
-    flutterSdkPath?.let { sdkPath ->
-        includeBuild("$sdkPath/packages/flutter_tools/gradle")
-    }
+    includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
 }
 
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
         google()
         mavenCentral()
-        flutterSdkPath?.let { sdkPath ->
-            maven { url = uri("$sdkPath/bin/cache/artifacts/engine/android") }
-        }
         maven { url = uri("https://storage.googleapis.com/download.flutter.io") }
     }
 }
 
-rootProject.name = "FamilyAppFlutter"
+plugins {
+    // Loads Flutter’s Gradle integration
+    id("dev.flutter.flutter-plugin-loader") version "1.0.0"
+}
+
 include(":app")
