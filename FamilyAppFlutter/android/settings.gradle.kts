@@ -5,18 +5,22 @@ pluginManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
-        // Репозиторий Flutter для бинарей плагина и артефактов
+        maven { url = uri("https://plugins.gradle.org/m2") }
+        // Хранилище Flutter для артефактов и плагина
         maven { url = uri("https://storage.googleapis.com/download.flutter.io") }
+    }
+    plugins {
+        id("com.android.application") version "8.9.1"
+        // Версию Flutter Gradle Plugin оставляем неопределённой — её предоставляет Flutter SDK.
     }
 }
 
 dependencyResolutionManagement {
-    // все репозитории объявляем здесь, чтобы не плодить дубли и ошибки "prefer settings repositories"
     repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
         google()
         mavenCentral()
-        // хранилище Flutter
+        maven { url = uri("https://plugins.gradle.org/m2") }
         maven { url = uri("https://storage.googleapis.com/download.flutter.io") }
     }
 }
