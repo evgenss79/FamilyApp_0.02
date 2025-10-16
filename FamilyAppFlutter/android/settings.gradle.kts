@@ -16,6 +16,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // хранилище Flutter
         maven { url = uri("https://storage.googleapis.com/download.flutter.io") }
     }
 }
