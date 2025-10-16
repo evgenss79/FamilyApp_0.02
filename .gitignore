@@ -25,3 +25,7 @@ DerivedData/
 
 # Misc
 *.lock
+FamilyAppFlutter/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+!FamilyAppFlutter/android/buildSrc/src/main/java/com/android/build/
+!FamilyAppFlutter/android/buildSrc/src/main/java/com/android/build/gradle/
+!FamilyAppFlutter/android/buildSrc/src/main/java/com/android/build/gradle/*.java
