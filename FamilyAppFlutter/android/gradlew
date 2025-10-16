@@ -1,13 +1,41 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/usr/bin/env sh
+set -eu
 
-DIR="$(cd "$(dirname "$0")" && pwd)"
+APP_BASE_NAME=${0##*/}
+APP_HOME=$(cd "$(dirname "$0")" && pwd)
+WRAPPER_JAR="$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
+BOOTSTRAP_SCRIPT="$APP_HOME/../../scripts/bootstrap-gradle-wrapper.sh"
 
-if [ -z "${JAVA_HOME:-}" ]; then
-  CANDIDATE="$HOME/.local/share/mise/installs/java/17.0.2"
-  if [ -d "$CANDIDATE" ]; then
-    export JAVA_HOME="$CANDIDATE"
+if [ ! -f "$WRAPPER_JAR" ]; then
+  if [ -x "$BOOTSTRAP_SCRIPT" ]; then
+    bash "$BOOTSTRAP_SCRIPT"
+  else
+    echo "Bootstrap script not found: $BOOTSTRAP_SCRIPT" >&2
+    exit 1
   fi
 fi
 
-exec gradle -p "$DIR" "$@"
+if [ -n "${JAVA_HOME:-}" ]; then
+  JAVA_CMD="$JAVA_HOME/bin/java"
+  if [ ! -x "$JAVA_CMD" ]; then
+    echo "ERROR: JAVA_HOME is set to an invalid directory: $JAVA_HOME" >&2
+    exit 1
+  fi
+else
+  JAVA_CMD="java"
+  if ! command -v "$JAVA_CMD" >/dev/null 2>&1; then
+    echo "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH." >&2
+    exit 1
+  fi
+fi
+
+CLASSPATH="$WRAPPER_JAR"
+DEFAULT_JVM_OPTS=${DEFAULT_JVM_OPTS:-'-Djava.net.preferIPv4Stack=true'}
+
+cd "$APP_HOME"
+
+# shellcheck disable=SC2086
+exec "$JAVA_CMD" $DEFAULT_JVM_OPTS \
+  -Dorg.gradle.appname="$APP_BASE_NAME" \
+  -classpath "$CLASSPATH" \
+  org.gradle.wrapper.GradleWrapperMain "$@"

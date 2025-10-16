@@ -1,0 +1,31 @@
+# Build artifacts
+build/
+**/build/
+**/outputs/
+**/.gradle/
+**/.cxx/
+*.iml
+
+# Android/NDK/Java binaries
+*.jar
+*.aar
+*.so
+*.jks
+*.keystore
+*.apk
+*.aab
+
+# Gradle wrapper JAR (будем качать при сборке)
+FamilyAppFlutter/android/gradle/wrapper/gradle-wrapper.jar
+
+# iOS (если есть)
+ios/Pods/
+*.xcworkspace/
+DerivedData/
+
+# Misc
+*.lock
+FamilyAppFlutter/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+!FamilyAppFlutter/android/buildSrc/src/main/java/com/android/build/
+!FamilyAppFlutter/android/buildSrc/src/main/java/com/android/build/gradle/
+!FamilyAppFlutter/android/buildSrc/src/main/java/com/android/build/gradle/*.java
