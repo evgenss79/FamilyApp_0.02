@@ -31,7 +31,7 @@ else
 fi
 
 CLASSPATH="$WRAPPER_JAR"
-DEFAULT_JVM_OPTS=${DEFAULT_JVM_OPTS:-'-Djava.net.preferIPv4Stack=true'}
+DEFAULT_JVM_OPTS=${DEFAULT_JVM_OPTS:--Djava.net.preferIPv4Stack=true}
 
 cd "$APP_HOME"
 

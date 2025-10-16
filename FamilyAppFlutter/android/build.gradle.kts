@@ -1,1 +1,2 @@
-// Stub root build script for offline build
+// FamilyAppFlutter/android/build.gradle.kts
+// Корневой скрипт без явного применения плагинов — всё в :app.
