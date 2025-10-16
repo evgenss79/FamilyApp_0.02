@@ -1,0 +1,5 @@
+# Ignore locally-provided plugin artifacts used for offline Android builds.
+*.jar
+*.pom
+*.module
+!.gitignore
