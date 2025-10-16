@@ -1,14 +1,18 @@
+// FamilyAppFlutter/android/settings.gradle.kts
+
 pluginManagement {
     repositories {
         google()
         mavenCentral()
         gradlePluginPortal()
+        // Репозиторий Flutter для бинарей плагина и артефактов
         maven { url = uri("https://storage.googleapis.com/download.flutter.io") }
     }
 }
 
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    // все репозитории объявляем здесь, чтобы не плодить дубли и ошибки "prefer settings repositories"
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
         google()
         mavenCentral()
@@ -16,5 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "FamilyAppFlutter"
+rootProject.name = "android"
 include(":app")
