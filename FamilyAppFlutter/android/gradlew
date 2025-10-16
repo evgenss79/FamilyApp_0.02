@@ -30,7 +30,7 @@ else
 fi
 
 cd "$APP_HOME"
-DEFAULT_JVM_OPTS=""
+DEFAULT_JVM_OPTS="\"-Djava.net.preferIPv4Stack=true\""
 
 exec "$JAVA_CMD" \
   ${DEFAULT_JVM_OPTS:+$DEFAULT_JVM_OPTS }\
