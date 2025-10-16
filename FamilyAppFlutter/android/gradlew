@@ -4,11 +4,12 @@ set -eu
 APP_BASE_NAME=${0##*/}
 APP_HOME=$(cd "$(dirname "$0")" && pwd)
 WRAPPER_JAR="$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
-PROPERTIES="$APP_HOME/gradle/wrapper/gradle-wrapper.properties"
 BOOTSTRAP_SCRIPT="$APP_HOME/../../scripts/bootstrap-gradle-wrapper.sh"
 
 if [ ! -f "$WRAPPER_JAR" ]; then
-  if [ ! -x "$BOOTSTRAP_SCRIPT" ]; then
+  if [ -x "$BOOTSTRAP_SCRIPT" ]; then
+    bash "$BOOTSTRAP_SCRIPT"
+  else
     echo "Bootstrap script not found: $BOOTSTRAP_SCRIPT" >&2
     exit 1
   fi
@@ -29,11 +30,13 @@ else
   fi
 fi
 
-cd "$APP_HOME"
-DEFAULT_JVM_OPTS="\"-Djava.net.preferIPv4Stack=true\""
+CLASSPATH="$WRAPPER_JAR"
+DEFAULT_JVM_OPTS=${DEFAULT_JVM_OPTS:-'-Djava.net.preferIPv4Stack=true'}
 
-exec "$JAVA_CMD" \
-  ${DEFAULT_JVM_OPTS:+$DEFAULT_JVM_OPTS }\
+cd "$APP_HOME"
+
+# shellcheck disable=SC2086
+exec "$JAVA_CMD" $DEFAULT_JVM_OPTS \
   -Dorg.gradle.appname="$APP_BASE_NAME" \
-  -classpath "$WRAPPER_JAR" \
+  -classpath "$CLASSPATH" \
   org.gradle.wrapper.GradleWrapperMain "$@"
