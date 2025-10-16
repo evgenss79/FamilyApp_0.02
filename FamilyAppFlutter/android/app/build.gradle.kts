@@ -1,7 +1,11 @@
 // FamilyAppFlutter/android/app/build.gradle.kts
 plugins {
     id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    // очень важно: Flutter gradle plugin
     id("dev.flutter.flutter-gradle-plugin")
+    // Google services (ниже мы синхронизируем applicationId)
+    id("com.google.gms.google-services")
 }
 
 android {
