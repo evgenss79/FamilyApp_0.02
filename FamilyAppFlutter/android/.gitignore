@@ -15,3 +15,7 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Never commit Flutter generated registrant
+app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+.gradle-home/
